@@ -147,7 +147,7 @@ def chi_square_independence(dataset):
 
     for xixj in List1:
         # ii. X1 = X1 + (E(xi,xj) - Obs(xi,xj))^2 / E(xi,xj)
-        X1 += pow(E[xixj] - Obs[xixj], 2)/E[xixj]
+        X1 += pow(E[xixj] - Obs.get(xixj,0), 2)/E[xixj]
 
     # 7.c. X2 = 0
     X2 = 0
