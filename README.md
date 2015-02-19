@@ -23,10 +23,13 @@ If the program outputs `IID = False`, try increasing number_of_shuffles, or proc
 
 
 * The same data passing when more shuffles are added:
+
 	` >python python iid_main.py truerand_4bit.bin 4 10`
 
 	`IID = True
+	
 	min-entropy = 3.97271
+	
 	sanity check = PASS`
 
 ##Using noniid_main.py
@@ -36,9 +39,11 @@ The file noniid_main.py calls all of the min-entropy estimation methods. The pro
 
 ###Example
 *	Non-IID estimators applied to same data as above:
+
 	`> python noniid_main.py truerand_4bit.bin 4`
 
 	`min-entropy = 3.66238
+	
 	sanity check = PASS`
 
 
