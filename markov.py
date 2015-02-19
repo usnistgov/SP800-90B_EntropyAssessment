@@ -36,7 +36,13 @@ def markov_test(dataset, n, alpha):
     # 4. Using the transition matrix S, find the probability of the most likely
     #    sequence of states (pmax) ...
     for j in range(k-1):
-        P = [max([P[i] * S[row][i] for i in range(n)]) for row in range(n)]
+        h = [0 for i in range(n)]
+        for c in range(n):
+            Pp = [0 for i in range(n)]
+            for i in range(n):
+                Pp[i] = P[i]*S[i][c]
+            h[c] = max(Pp)
+        P[:] = h[:]
     pmax = max(P)
 
     # 5. The min-entropy is the negative logarithm of the probability of the
