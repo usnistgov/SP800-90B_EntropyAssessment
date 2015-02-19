@@ -16,21 +16,20 @@ The program takes three arguments:
 If the program outputs `IID = False`, try increasing number_of_shuffles, or proceed to noniid_main.py.
 
 ###Examples
-*	An example that fails due to too few shuffles:
-	`>python python iid_main.py truerand_4bit.bin 4 1`
+An example that fails due to too few shuffles:
 
-	`IID = False`
+`>python python iid_main.py truerand_4bit.bin 4 1`
+
+> IID = False
 
 
-* The same data passing when more shuffles are added:
+The same data passing when more shuffles are added:
 
-	` >python python iid_main.py truerand_4bit.bin 4 10`
+` >python python iid_main.py truerand_4bit.bin 4 10`
 
-	`IID = True
-	
-	min-entropy = 3.97271
-	
-	sanity check = PASS`
+> IID = True
+> min-entropy = 3.97271
+> sanity check = PASS
 
 ##Using noniid_main.py
 The file noniid_main.py calls all of the min-entropy estimation methods. The program requires two arguments:
@@ -38,13 +37,12 @@ The file noniid_main.py calls all of the min-entropy estimation methods. The pro
 2. bits_per_symbol: the number of bits required to represent the largest output symbol from the noise source. E.g., if the largest value is 12, this would be 4.
 
 ###Example
-*	Non-IID estimators applied to same data as above:
+Non-IID estimators applied to same data as above:
 
-	`> python noniid_main.py truerand_4bit.bin 4`
+`> python noniid_main.py truerand_4bit.bin 4`
 
-	`min-entropy = 3.66238
-	
-	sanity check = PASS`
+> min-entropy = 3.66238
+> sanity check = PASS
 
 
 ##More Information
