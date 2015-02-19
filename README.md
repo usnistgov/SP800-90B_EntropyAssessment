@@ -13,26 +13,27 @@ The program takes three arguments:
 1. datafile: a binary file containing the samples to be tested.
 2. bits_per_symbol: the number of bits required to represent the largest output symbol from the noise source. E.g., if the largest value is 12, this would be 4.
 3. number_of_shuffles: number of shuffles for the shuffling tests to determine whether data appears to be IID. Note that too few shuffles will cause IID to fail the tests.
-If the program outputs `IID = False`, try increasing number_of_shuffles, or proceed to the noniid_main.py.
+If the program outputs `IID = False`, try increasing number_of_shuffles, or proceed to noniid_main.py.
 
 ###Examples
-The command
+*	The command
 
-`python python iid_main.py truerand_4bit.bin 4 1`
+	`python python iid_main.py truerand_4bit.bin 4 1`
 
-produces the output:
+	produces the output:
 
-`IID = False`
+	`IID = False`
 
-The command
 
-`python python iid_main.py truerand_4bit.bin 4 10`
+*	The command
 
-produces the output:
+	`python python iid_main.py truerand_4bit.bin 4 10`
 
-`IID = True
-min-entropy = 3.97271
-sanity check = PASS`
+	produces the output:
+
+	`IID = True
+	min-entropy = 3.97271
+	sanity check = PASS`
 
 ##Using noniid_main.py
 The file noniid_main.py calls all of the min-entropy estimation methods. The program requires two arguments:
@@ -40,14 +41,14 @@ The file noniid_main.py calls all of the min-entropy estimation methods. The pro
 2. bits_per_symbol: the number of bits required to represent the largest output symbol from the noise source. E.g., if the largest value is 12, this would be 4.
 
 ###Example
-The command
+*The command
 
-`python noniid_main.py truerand_4bit.bin 4`
+	`python noniid_main.py truerand_4bit.bin 4`
 
-produces the output:
+	produces the output:
 
-`min-entropy = 3.66238
-sanity check = PASS`
+	`min-entropy = 3.66238
+	sanity check = PASS`
 
 
 ##More Information
