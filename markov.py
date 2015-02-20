@@ -22,6 +22,11 @@ def markov_test(dataset, n, alpha):
     epsilon = math.sqrt(epsilon_term/(2 * N))
     P = [min(1.0, count[i]/float(N) + epsilon) for i in range(n)]
 
+    # added by KM: need to subtract 1 from count of last symbol for
+    # bounding matrix construction. Nothing follows the last occurance,
+    # therefore it should not be included in transition proportion.
+    count[dataset[-1]] -= 1
+
     # 3. Estimate the probabilities in the transition matrix S, overestimating where...
     #    Si,j = 1 if o_i = 0
     #           min(1, oi,j + eps_i) otherwise

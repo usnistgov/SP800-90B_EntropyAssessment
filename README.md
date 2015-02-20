@@ -3,7 +3,10 @@ Cryptographic random bit generators (RBGs), also known as random number generato
 The SP800-90B_EntropyAssessment python package implements the min-entropy assessment methods included in the 2012 draft of Special Publication 800-90B.
 
 ##Disclaimer
-The United States Department of Commerce (DOC) GitHub project code is provided on an "as is" basis and the user assumes responsibility for its use. DOC has relinquished control of the information and no longer has responsibility to protect the integrity, confidentiality, or availability of the information. Any claims against the Department of Commerce stemming from the use of its GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation or favoring by the Department of Commerce. The Department of Commerce seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by DOC or the United States Government.
+This software was developed at the National Institute of Standards and Technology by employees of the Federal Government in the course of their official duties. Pursuant to Title 17 Section 105 of the United States Code this software is not subject to copyright protection and is in the public domain. This software is an experimental system. NIST assumes no responsibility whatsoever for its use by other parties, and makes no guarantees, expressed or implied, about its quality, reliability, or any other characteristic.
+
+##Software License
+Public domain (http://creativecommons.org/publicdomain/zero/1.0/deed.en)
 
 ##Basic Usage
 
@@ -20,7 +23,7 @@ The program takes three arguments:
 If the program outputs `IID = False`, try increasing number_of_shuffles (up to 1,000), or proceed to noniid_main.py.
 
 ###Examples
-An example that fails due to too few shuffles:
+An example that fails (too few shuffles):
 
 	> python python iid_main.py truerand_4bit.bin 4 1
 	IID = False
@@ -52,4 +55,4 @@ For more information on using this code, such as optional arguments, see the use
 For more information on the estimation methods, see draft SP at (http://csrc.nist.gov/publications/drafts/800-90/draft-sp800-90b.pdf
 
 ###Contact Information
-This code is maintained by Kerry McKay.
+This code was originally developed by Tim Hall and is currently maintained by Kerry McKay and John Kelsey.
