@@ -9,9 +9,6 @@ This software is provided by NIST as a service and is expressly provided "AS IS"
 
 Permission to use this software is contingent upon your acceptance of the terms of this agreement.
 
-##Software License
-Public domain (http://creativecommons.org/publicdomain/zero/1.0/deed.en)
-
 ##Basic Usage
 
 There are two main files in this code package: iid_main.py and noniid_main.py. 
