@@ -11,11 +11,11 @@ Permission to use this software is contingent upon your acceptance of the terms 
 
 ## Requirements
 
-This code package requires python 2.6 or later.
+This code package requires Python 2.6+ or Python 3.
 
 ##Basic Usage
 
-There are two main files in this code package: iid_main.py and noniid_main.py. 
+There are two main files in this code package: iid_main.py and noniid_main.py. Brief usage descriptions are listed below. For further details, please refer to the user guide.
 
 ##Using iid_main.py
 The file iid_main.py calls all of the tests that determine whether or not the input file appears to contain independent and identically distributed (IID) samples, and if so, gives an entropy assessment. 
