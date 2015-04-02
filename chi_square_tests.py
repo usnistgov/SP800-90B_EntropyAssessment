@@ -319,7 +319,7 @@ def goodness_of_fit(datasets):
         #    least 5 times):
         #        X1 = X1 + (Obs(xi) - E(xi))^2 / E(xi)
         for xi in List3:
-            X1 += pow(Obs[xi] - E[xi], 2) / E[xi]
+            X1 += pow(Obs.get(xi, 0) - E[xi], 2) / E[xi]
   
         # c. Obs_other = number of occurrences of values in List4 in the data
         #    subset.

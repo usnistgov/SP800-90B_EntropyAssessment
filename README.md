@@ -30,13 +30,13 @@ If the program outputs `IID = False`, try increasing number_of_shuffles (up to 1
 ###Examples
 An example that fails (too few shuffles):
 
-	> python python iid_main.py truerand_4bit.bin 4 1
+	> python iid_main.py truerand_4bit.bin 4 1
 	IID = False
 
 
 The same data passing when more shuffles are added:
 
-	> python python iid_main.py truerand_4bit.bin 4 10
+	> python iid_main.py truerand_4bit.bin 4 10
 	IID = True
 	min-entropy = 3.97271
 	sanity check = PASS
@@ -57,7 +57,7 @@ Non-IID estimators applied to same data as above:
 
 ##More Information
 For more information on using this code, such as optional arguments, see the user guide in this repository.
-For more information on the estimation methods, see draft SP at (http://csrc.nist.gov/publications/drafts/800-90/draft-sp800-90b.pdf
+For more information on the estimation methods, see draft SP at (http://csrc.nist.gov/publications/drafts/800-90/draft-sp800-90b.pdf).
 
 ###Contact Information
 This code was originally developed by Tim Hall and is currently maintained by Kerry McKay and John Kelsey.
