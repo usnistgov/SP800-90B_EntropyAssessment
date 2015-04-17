@@ -25,7 +25,7 @@ The program takes three arguments:
 2. 	bits_per_symbol: the number of bits required to represent the largest output symbol from the noise source. E.g., if the largest value is 12, this would be 4.
 3. 	number_of_shuffles: number of shuffles for the shuffling tests to determine whether data appears to be IID. Note that too few shuffles will cause IID to fail the tests.
 
-If the program outputs `IID = False`, try increasing number_of_shuffles (up to 1,000), or proceed to noniid_main.py.
+If the program outputs `IID = False`, try increasing number_of_shuffles (up to 1 000), or proceed to noniid_main.py.
 
 ###Examples
 An example that fails (too few shuffles):
