@@ -91,7 +91,7 @@ if __name__ == '__main__':
             if verbose:
                 print("- Markov test (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
         else:
-            pmax, minH = markov_test(dataset, n, 0.95)
+            pmax, minH = markov_test(dataset, n, 0.99)
             if verbose:
                 print("- Markov test             : p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
@@ -114,9 +114,11 @@ if __name__ == '__main__':
         # frequency test can give a negative result in extreme cases, so do following:
         minEntropy = max(0.0, minEntropy)
 
-        pmax, minH = LZ78Y(dataset)
         
-
+        pmax, minH = LZ78Y(dataset, verbose)
+        if verbose:
+            print("- LZ78Y predictor: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
         print("min-entropy = %g" % (minEntropy))
 
         # run_sanity_check:

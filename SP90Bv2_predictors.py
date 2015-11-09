@@ -12,15 +12,15 @@ def calcPavg(C,N, verbose=False):
     alpha=0.01
     pavg_hat = float(C)/N
     pavg_dot = None
-    if verbose:
-        print "p_hat",pavg_hat
+##    if verbose:
+##        print "p_hat",pavg_hat
 
     if pavg_hat == 1:
         pavg_dot = 1
     elif pavg_hat == 0:
         pavg_dot = 1-(float(alpha)/2)**(float(1)/N)
-        if verbose:
-            print (float(alpha)/2)**(float(1)/N)
+##        if verbose:
+##            print (float(alpha)/2)**(float(1)/N)
     else:
         pavg_dot = pavg_hat + 2.576*math.sqrt(float(pavg_hat)*(1-pavg_hat)/(N-1))
 
@@ -73,8 +73,11 @@ def findMaxRun(correct):
 
     return maxrun
 
-def calcRun(correct, alpha=0.01):
+def calcRun(correct, verbose=False):
     N = len(correct)
+##    alpha = 0.01
+    alpha = 0.99
+    
     #find the longest run
     run = 0
     maxrun = 0
@@ -90,7 +93,7 @@ def calcRun(correct, alpha=0.01):
     if run > maxrun:
         maxrun = run
     if verbose:
-        print "N:",N,"longest run:", maxrun
+        print "\n\tN:",N,"longest run:", maxrun
         
     r = maxrun
     alpha = Decimal(str(alpha))
@@ -499,14 +502,14 @@ def MultiMMC(S, example=False):
 ##############################
 # LZ78Y Prediction Estimate  #
 ##############################
-def LZ78Y(S, example=False):
+def LZ78Y(S, verbose=False):
     L = len(S)
     symbols = len(set(S))
 
     #step 1
     B = 16
-    if example:
-        B = 4
+##    if example:
+##        B = 4
     N = L-B-1
     correct = [0 for i in range(N)]
     maxDictionarySize = 65536
@@ -519,10 +522,10 @@ def LZ78Y(S, example=False):
     # step 3
     for i in range(B+2, L+1):
 
-        if example:
-            print "\n=== i:",i,"==="
-        elif i%10000 ==0:
-            sys.stdout.write("\r%d samples processed" % i)
+##        if example:
+##            print "\n=== i:",i,"==="
+        if verbose and i%10000==0:
+            sys.stdout.write("\rLZ78Y:\t%d samples processed" % i)
             sys.stdout.flush()
 
         #step 3a: add previous element to dictionary
@@ -544,7 +547,6 @@ def LZ78Y(S, example=False):
         predict = None
         for j in range(B,0,-1):
             prev = tuple(S[i-j-1:i-1])
-##            print "prev:",prev
             highprev = 0
             prevPredict = None
             if D.get(prev,0) > 0:
@@ -552,34 +554,28 @@ def LZ78Y(S, example=False):
                     if D[prev][y] >= highprev:
                         prevPredict = y
                         highprev = D[prev][y]
-##                        print prev,"->",y
                     if D[prev][y] > maxcount:
                         predict = y
                         maxcount = D[prev][y]
-##            print "prevPredict:",prevPredict
-
-            
-##        print "prediction:", predict
-##        print "si:",S[i-1]
                 
         if predict == S[i-1]:
             correct[i-B-1-1] += 1
-##        print "correct:", correct
         
     #step 5
     C = sum(correct)
 
     #step 6
-    Pavg = calcPavg(C, N)
-##    print correct
-    print "Pglobal:",Pavg
+    Pavg = calcPavg(C, N, verbose)
 
     #step 7
-    Prun = calcRun(correct)
-    print "Plocal:", Prun
+    Prun = calcRun(correct, verbose)
 
     #step 8
     minH = -math.log(max(Pavg, Prun),2)
-    print "min-entropy:", minH
+    if verbose:
+        print "\tPglobal:",Pavg
+        print "\tPlocal:", Prun
+        print "\tmin-entropy:", minH
 
-    return [len(correct), findMaxRun(correct), -math.log(Pavg,2), -math.log(Prun,2)]
+    return [max(Pavg, Prun), minH]
+  
