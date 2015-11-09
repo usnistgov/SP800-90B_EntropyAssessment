@@ -21,6 +21,7 @@ from markov import markov_test
 from maurer import maurer_universal_statistic
 from frequency import frequency_test
 from sanity_checks import compression_sanity_check, collision_sanity_check
+from SP90Bv2_predictors import MultiMCW, Lag, MultiMMC, LZ78Y
 
 
 ##################
@@ -112,6 +113,9 @@ if __name__ == '__main__':
 
         # frequency test can give a negative result in extreme cases, so do following:
         minEntropy = max(0.0, minEntropy)
+
+        pmax, minH = LZ78Y(dataset)
+        
 
         print("min-entropy = %g" % (minEntropy))
 
