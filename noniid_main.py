@@ -61,30 +61,13 @@ if __name__ == '__main__':
         n = 2 ** use_bits
         minEntropy = float(use_bits)
 
-        # Section 9.3.3 The Collision Test
-        valid, pmax, minH = collision_test(dataset, n)
-        if valid:
-            if verbose:
-                print("- Collision test          : p(max) = %g, min-entropy = %g" % (pmax, minH))
-            minEntropy = min(minH, minEntropy)
-        else:
-            print("- Collision test *not valid* for this data set.")
+        # Section 6.3.2 The Collision Estimate
+        pmax, minH = collision_test(dataset, n)
+        if verbose:
+            print("- Collision test          : p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
-        # Section 9.3.4 The Partial Collection Test
-        # Check for 500 event criterion in Step 3 of Section 9.3.4.3:
-        if use_bits > 10:
-            # map to 10 bits per symbol (10 bits is largest that works for 1,000,000 samples)
-            valid, pmax, minH = partial_collection_test([s&1023 for s in dataset], 1024)
-        else:
-            valid, pmax, minH = partial_collection_test(dataset, n)
-        if valid:
-            if verbose:
-                print("- Partial collection test : p(max) = %g, min-entropy = %g" % (pmax, minH))
-            minEntropy = min(minH, minEntropy)
-        else:
-            print("- Partial collection test *not valid* for this data set.")
-
-        # Section 9.3.5 The Markov Test
+        # Section 6.3.3 The Markov Estimate
         # If more than 6 bits per symbol, map down to 6 bits per symbol and run Markov test
         if use_bits > 6:
             pmax, minH = markov_test([s&63 for s in dataset], 64, 0.95)
