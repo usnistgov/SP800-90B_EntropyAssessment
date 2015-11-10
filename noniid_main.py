@@ -97,7 +97,27 @@ if __name__ == '__main__':
         # frequency test can give a negative result in extreme cases, so do following:
         minEntropy = max(0.0, minEntropy)
 
+        # Section 6.3.7 Multi Most Common in Window prediction estimate
+        pmax, minH = MultiMCW(dataset, verbose)
+        if verbose:
+            print("- MultiMCW predictor: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+        # Section 6.3.8 Lag prediction estimate
+        pmax, minH = Lag(dataset, verbose)
+        if verbose:
+            print("- Lag predictor: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+
+        # Section 6.3.9 MultiMMC prediction estimate
+        pmax, minH = MultiMMC(dataset, verbose)
+        if verbose:
+            print("- MultiMMC predictor: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
         
+
+        # Section 6.3.10 LZ78Y prediction estimate
         pmax, minH = LZ78Y(dataset, verbose)
         if verbose:
             print("- LZ78Y predictor: p(max) = %g, min-entropy = %g" % (pmax, minH))
