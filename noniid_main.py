@@ -13,6 +13,7 @@
 
 import sys
 import time
+import math
 
 from util90b import get_parser, to_dataset
 from noniid_collision import collision_test
@@ -58,11 +59,14 @@ if __name__ == '__main__':
                 print ("* Using only low %d bits out of %d." % (use_bits, bits_per_symbol))
                 print ("* Using output symbol values: min = %d, max = %d" % (min(dataset), max(dataset)))
 
-        n = 2 ** use_bits
-        minEntropy = float(use_bits)
+        # KM TODO: use k as number of symbols, not n=2**bits
+        k = len(set(dataset))
+        minEntropy = float(math.log(k,2))
+##        n = 2 ** use_bits
+##        minEntropy = float(use_bits)
 
         # Section 6.3.2 The Collision Estimate
-        pmax, minH = collision_test(dataset, n)
+        pmax, minH = collision_test(dataset, k)
         if verbose:
             print("- Collision test          : p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
@@ -74,19 +78,16 @@ if __name__ == '__main__':
             if verbose:
                 print("- Markov test (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
         else:
-            pmax, minH = markov_test(dataset, n, 0.99)
+            pmax, minH = markov_test(dataset, k, 0.99)
             if verbose:
                 print("- Markov test             : p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
-        # Section 9.3.6 The Compression Test
-        valid, pmax, minH = maurer_universal_statistic(dataset, n)
-        if valid:
-            if verbose:
-                print("- Compression test        : p(max) = %g, min-entropy = %g" % (pmax, minH))
-            minEntropy = min(minH, minEntropy)
-        else:
-            print("- Compression test *not valid* for this data set.")
+        # Section 6.3.4 The Compression Estimate
+        pmax, minH = maurer_universal_statistic(dataset, k)
+        if verbose:
+            print("- Compression test        : p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         # Section 9.3.7 The Frequency Test
         pmax, minH = frequency_test(dataset, n, 0.95)
