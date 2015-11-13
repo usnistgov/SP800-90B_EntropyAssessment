@@ -7,11 +7,11 @@ import math
 # CSD/ITL/NIST
 # 25 Feb 2013
 #
-# Updated by Kerry McKay, 2015
+# Updated by Kerry McKay, Nov 2015
 
 
 # Continued fraction for F(1/z) derived from Eq. 8.9.2 at http://dlmf.nist.gov/8.9
-# Used in Step 12 in Section 9.3.3.3
+# Used in Step 9 in Section 6.3.2
 def F(n, zInv):
     z = 1.0/zInv
     denom = 1.0 + n/z
@@ -25,7 +25,7 @@ def F(n, zInv):
 
 
 # Expected value of statistic based on one-parameter family of prob distributions
-# Steps 11, 12 of Section 9.3.3.3
+# Used in step 9 of Section 6.3.2 (right side of equation)
 def calcEpS(p, n):
     q = (1.0 - p)/float(n - 1)
     i_n = 1.0 / n
@@ -36,7 +36,7 @@ def calcEpS(p, n):
     return Ep
 
 
-# Binary search for p s.t. Ep(p) equals mu_bar
+# Binary search for p that solves equation in step 9 of Section 6.3.2
 def solve_for_p(mu_bar, n):
     p_c = 0.5
     adj = 0.5
@@ -60,7 +60,8 @@ def solve_for_p(mu_bar, n):
         #print('\tp = %g, Ep = %g, mu_bar = %g' % (p_c, Ep, mu_bar))
     return True, p_c
 
-# Section 9.3.3.3 - Collision Test Details
+
+# Section 6.3.2- Collision Estimate
 def collision_test(s, n):
     # 1. Set v=1, index=1
     # 2. Beginning with s_index, step through the dataset until any observed
@@ -101,6 +102,7 @@ def collision_test(s, n):
     # 10. The min-entropy is the negative logarithm of the parameter p:
     # min-entropy = -log2(p)
     min_entropy = -math.log(p, 2.0)
+    
     # If the search does not yield a solution, then estimate max min-entropy  
     if not valid:
         # No solution to equation. Assume max min-entropy.
