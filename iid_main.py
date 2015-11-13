@@ -14,11 +14,11 @@ import time
 import sys
 
 
-from iid_tests import the_test as min_entropy
 from util90b import get_parser, to_dataset
 from shuffle_tests import shuffle_test_scores, get_shuffle_tests
 from chi_square_tests import pass_chi_square_tests
 from sanity_checks import compression_sanity_check, collision_sanity_check
+from mostCommonValue import most_common
 
 
 ##################
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         ############################################
         # STEP 2: Calculate min-entropy of dataset #
         ############################################
-        minH = min_entropy(dataset)
+        minH = most_common(dataset)
         print("min-entropy = %g" % (minH))
 
         #######################################
