@@ -49,8 +49,8 @@ def solve_for_p(mu_bar, n, v, tolerance=0.00001):
 
     Ep_maxvalid = EppM(1.0/float(n), n, v)
     if mu_bar > Ep_maxvalid:
-        print("\tcompression (Maurer Universal Statistic) test not run:")
-        print("\tmu_bar = %g, max valid value for this test and model = %g" % (mu_bar, Ep_maxvalid))
+##        print("\tcompression (Maurer Universal Statistic) test not run:")
+##        print("\tmu_bar = %g, max valid value for this test and model = %g" % (mu_bar, Ep_maxvalid))
         return False, 0.0
 
     Ep = EppM(p, n, v)
@@ -123,7 +123,7 @@ def maurer_universal_statistic(dataset, k):
     valid, p = solve_for_p(mu_bar, k, v)
     if not valid:
         # No solution to equation. Assume max min-entropy.
-        return 1.0/k, math.log(k,2.0)
+        return 1.0/k, log(k,2.0)
 
     # 9. The min-entropy is the negative logarithm of the parameter, p
     min_entropy = -log(p, 2.0)

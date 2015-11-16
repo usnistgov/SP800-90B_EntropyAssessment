@@ -79,8 +79,8 @@ def findMaxRun(correct):
 
 def calcRun(correct, verbose=False):
     N = len(correct)
-##    alpha = 0.01
-    alpha = 0.99
+    alpha = 0.01
+##    alpha = 0.99
     
     #find the longest run
     run = 0
@@ -154,8 +154,6 @@ def MultiMCW(S, verbose=False):
 
     #step 1
     w = (63, 255, 1023, 4095)
-##    if example:
-##        w = (3, 5, 7, 9)
     N = L-w[0]
     correct = [0 for i in range(N)]
 
@@ -424,7 +422,7 @@ def LZ78Y(S, verbose=False):
     C = sum(correct)
 
     #step 6
-    Pavg = calcPavg(C, N, verbose)
+    Pavg = calcPavg(C, N)
 
     #step 7
     Prun = calcRun(correct)
