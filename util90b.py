@@ -25,9 +25,7 @@ def get_parser(test):
     parser.add_argument(dest='datafile', metavar='datafile', help='dataset on which to run tests')
     parser.add_argument(dest='bits_per_symbol',metavar='bits_per_symbol', help='number of bits used to represent sample output values')
 
-    if test == 'IID':
-        parser.add_argument(dest='number_of_shuffles', metavar='number_of_shuffles', help='number of shuffles per data subset for shuffle tests')
-    else:
+    if test == 'non-IID':
         parser.add_argument('-u', '--usebits', dest='use_bits', metavar='use_bits', help='use only the N lowest order bits per sample')
         
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='verbose mode: show detailed test results')
@@ -41,18 +39,42 @@ def get_parser(test):
 # not packed (i.e., 8 1-bit output samples are not packed into 1 byte)
 #
 # Does not handle > 32 bits per symbol.
+##def to_dataset(bytes, bits_per_symbol):
+##    assert bits_per_symbol > 0
+##    assert bits_per_symbol <= 32
+##
+##    if bits_per_symbol <= 8: # includes 1-bit per symbol
+##        return list(bytes)
+##    elif bits_per_symbol <= 16:
+##        return [bytes[i]*256 + bytes[i+1] for i in range(0,len(bytes),2)]
+##    elif bits_per_symbol <= 24:
+##        return [bytes[i]*(256*256) + bytes[i+1]*256 + bytes[i+2] for i in range(0,len(bytes),3)]
+##    elif bits_per_symbol <= 32:
+##        return [bytes[i]*(256*256*256) + bytes[i+1]*(256*256) + bytes[i+2]*256 + bytes[i+3] for i in range(0,len(bytes),4)]
+##    else:
+##        return list()
+
 def to_dataset(bytes, bits_per_symbol):
     assert bits_per_symbol > 0
     assert bits_per_symbol <= 32
 
+    # mask for relevant bits
+    mask = 2**bits_per_symbol - 1
+
+    # Ignore incomplete symbols. E.g., if there are 17 bytes of 16-bit symbols,
+    # only read first 16 bytes and disgard remaining 4 bits.
+    N = len(bytes)
+    print "reading %d bytes of data" % N
+
     if bits_per_symbol <= 8: # includes 1-bit per symbol
-        return list(bytes)
+##        return list(bytes)
+        return [b & mask for b in bytes]
     elif bits_per_symbol <= 16:
-        return [bytes[i]*256 + bytes[i+1] for i in range(0,len(bytes),2)]
+        return [(bytes[i]*256 + bytes[i+1]) & mask for i in range(0,N,2)]
     elif bits_per_symbol <= 24:
-        return [bytes[i]*(256*256) + bytes[i+1]*256 + bytes[i+2] for i in range(0,len(bytes),3)]
+        return [(bytes[i]*(256*256) + bytes[i+1]*256 + bytes[i+2])  & mask for i in range(0,N,3)]
     elif bits_per_symbol <= 32:
-        return [bytes[i]*(256*256*256) + bytes[i+1]*(256*256) + bytes[i+2]*256 + bytes[i+3] for i in range(0,len(bytes),4)]
+        return [(bytes[i]*(256*256*256) + bytes[i+1]*(256*256) + bytes[i+2]*256 + bytes[i+3]) & mask for i in range(0,N,4)]
     else:
         return list()
 
@@ -74,3 +96,15 @@ def Rank(S, L):
         rank = bisect.bisect_right(L, S)
 
     return min(rank + 1, length)
+
+
+# Map dataset to list 0..n. This is necessary for datasets here k is not
+# a power of 2 or not all symbols in the range are present in the dataset.
+# For example, a trinary source that outputs 13,14, and 15 would then
+# convert the sequence to 0, 1, and 2 so that it will play nicely with
+# the list indices used in the methods.
+def mapData(seq):
+    sortedData = sorted(list(set(seq))) #create new sorted list of unique symbols
+    return [sortedData.index(seq[i]) for i in range(len(seq))]
+
+
