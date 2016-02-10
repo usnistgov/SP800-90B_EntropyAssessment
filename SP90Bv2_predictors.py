@@ -1,5 +1,5 @@
 # Predictor estimates
-# Sections 6.3.7 - 6.3.10 of DRAFT NIST SP 800-90B (2015)
+# Sections 6.3.7 - 6.3.10 of DRAFT NIST SP 800-90B (January 2016)
 #
 # Kerry McKay
 # CSD/ITL/NIST
@@ -79,8 +79,7 @@ def findMaxRun(correct):
 
 def calcRun(correct, verbose=False):
     N = len(correct)
-    alpha = 0.01
-##    alpha = 0.99
+    alpha = 0.99
     
     #find the longest run
     run = 0
@@ -131,12 +130,9 @@ def calcRun(correct, verbose=False):
 ################################
 # MultiMCW Prediction Estimate #
 ################################
-def mostCommon(S):
-    maxcount = 0
-    maxsymb = None
-
-    c = Counter(S)
+def mostCommon(S,c):
     maxcount = c.most_common()[0][1]
+    maxsymb = None
 
     # find element with maxcount that occured most recently
     lastindex = len(S)
@@ -161,6 +157,8 @@ def MultiMCW(S, verbose=False):
     scoreboard = [0, 0, 0, 0]
     frequent = [None, None, None, None]
     winner = 0 #adjusted for index starting at 0
+    counters = [None, None, None, None]
+    lastPred = [None, None, None, None]
     
     #step 3
     for i in range(w[0]+1,L+1):
@@ -170,10 +168,20 @@ def MultiMCW(S, verbose=False):
         
         #step 3a
         for j in [0,1,2,3]: #adjusted for index starting at 0
-            if i>w[j]:
-                frequent[j] = mostCommon(S[i-w[j]-1:i-1])
+            if i>w[j]+1:
+                counters[j].subtract([S[i-w[j]-2]])
+                counters[j].update([S[i-2]])
+                if counters[j][S[i-2]] == counters[j].most_common()[0][1]:
+                    frequent[j] = S[i-2]
+                else:
+                    frequent[j] = lastPred[j]
+            elif i > w[j]:
+                #intialize counter
+                counters[j] = Counter(S[i-w[j]-1:i-1])
+                frequent[j] = mostCommon(S[i-w[j]-1:i-1],counters[j])
             else:
                 frequent[j] = None
+            lastPred[j] = frequent[j]
 
         #step 3b
         prediction = frequent[winner]
@@ -365,8 +373,6 @@ def LZ78Y(S, verbose=False):
 
     #step 1
     B = 16
-##    if example:
-##        B = 4
     N = L-B-1
     correct = [0 for i in range(N)]
     maxDictionarySize = 65536
@@ -379,21 +385,16 @@ def LZ78Y(S, verbose=False):
     # step 3
     for i in range(B+2, L+1):
 
-##        if example:
-##            print "\n=== i:",i,"==="
         if verbose and i%10000==0:
             sys.stdout.write("\rLZ78Y:\t%d percent" % (float(i)/L*100))
             sys.stdout.flush()
 
         #step 3a: add previous element to dictionary
         for j in range(B,0,-1):
-##            print "\n",i, j
-
             k = tuple(S[i-j-2:i-2]) 
             if k not in D and dictionarySize < maxDictionarySize:
                 D[k] = dict()
                 dictionarySize = dictionarySize + 1
-##                print "adding {0}->{1}".format(k, S[i-2])
             if k in D: 
                 D[k][S[i-2]] = D[k].get(S[i-2], 0) + 1
 
