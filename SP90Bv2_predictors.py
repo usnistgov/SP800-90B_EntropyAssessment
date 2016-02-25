@@ -432,5 +432,3 @@ def LZ78Y(S, verbose=False):
         print "\tPlocal:", Prun
 
     return [max(Pavg, Prun), minH]
-
-print calcRun([0,1,1,0,0,0,0,0,0], True)
