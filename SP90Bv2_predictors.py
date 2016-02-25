@@ -56,6 +56,7 @@ def calc_qn(p,r,n):
     
     qn = (1-p*x)/Decimal((r+1-r*x)*q)
     qn = qn/(x**(n+1))
+
     return qn
 
 def findMaxRun(correct):
@@ -100,8 +101,6 @@ def calcRun(correct, verbose=False):
         
     r = maxrun
     alpha = Decimal(str(alpha))
-    max_p = Decimal(str(r))/Decimal(str(r+1))
-    min_p = Decimal(str(1))/Decimal(str(r+1))
     
     # do a binary search for p
     p = Decimal(str(0.5))
@@ -115,8 +114,6 @@ def calcRun(correct, verbose=False):
             adj /= 2
             if qn > alpha:
                     p += adj
-                    if p > max_p:
-                            p = max_p
             else:
                     p -= adj
                     
@@ -435,4 +432,5 @@ def LZ78Y(S, verbose=False):
         print "\tPlocal:", Prun
 
     return [max(Pavg, Prun), minH]
-  
+
+print calcRun([0,1,1,0,0,0,0,0,0], True)
