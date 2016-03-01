@@ -44,7 +44,7 @@ def get_parser(test):
 # Does not handle > 32 bits per symbol.
 def to_dataset(bytes, bits_per_symbol):
     assert bits_per_symbol > 0
-    assert bits_per_symbol <= 32
+    assert bits_per_symbol <= 8
 
     # mask for relevant bits
     mask = 2**bits_per_symbol - 1
@@ -56,12 +56,12 @@ def to_dataset(bytes, bits_per_symbol):
 
     if bits_per_symbol <= 8: # includes 1-bit per symbol
         return [b & mask for b in bytes]
-    elif bits_per_symbol <= 16:
-        return [(bytes[i]*256 + bytes[i+1]) & mask for i in range(0,N,2)]
-    elif bits_per_symbol <= 24:
-        return [(bytes[i]*(256*256) + bytes[i+1]*256 + bytes[i+2])  & mask for i in range(0,N,3)]
-    elif bits_per_symbol <= 32:
-        return [(bytes[i]*(256*256*256) + bytes[i+1]*(256*256) + bytes[i+2]*256 + bytes[i+3]) & mask for i in range(0,N,4)]
+##    elif bits_per_symbol <= 16:
+##        return [(bytes[i]*256 + bytes[i+1]) & mask for i in range(0,N,2)]
+##    elif bits_per_symbol <= 24:
+##        return [(bytes[i]*(256*256) + bytes[i+1]*256 + bytes[i+2])  & mask for i in range(0,N,3)]
+##    elif bits_per_symbol <= 32:
+##        return [(bytes[i]*(256*256*256) + bytes[i+1]*(256*256) + bytes[i+2]*256 + bytes[i+3]) & mask for i in range(0,N,4)]
     else:
         return list()
 
