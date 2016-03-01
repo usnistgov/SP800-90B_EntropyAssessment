@@ -29,3 +29,18 @@ def most_common(s):
 
     # 3. The estimated min-entropy is -log_2(p_u)
     return -math.log(pu,2.0)
+
+
+
+# Section 3.1.4.3 Sanity Check - Most Common Value in the Rows and Columns
+def most_common_restart(s):
+
+    # Get a count of all the sample values.  
+    d = Counter(s)
+    L = float(len(s))
+
+    # 1. find the proportion of the most common value
+    cmax = d.most_common(1)[0][1]
+
+    return cmax
+
