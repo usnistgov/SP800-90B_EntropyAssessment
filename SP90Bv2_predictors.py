@@ -96,8 +96,8 @@ def calcRun(correct, verbose=False):
             raise ValueError("correct array contains non-binary values")
     if run > maxrun:
         maxrun = run
-    if verbose:
-        print "\n\tN:",N,"longest run:", maxrun
+##    if verbose:
+##        print "\n\tN:",N,"longest run:", maxrun
         
     r = maxrun
     alpha = Decimal(str(alpha))
@@ -432,3 +432,4 @@ def LZ78Y(S, verbose=False):
         print "\tPlocal:", Prun
 
     return [max(Pavg, Prun), minH]
+

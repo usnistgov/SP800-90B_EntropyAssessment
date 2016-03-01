@@ -85,7 +85,7 @@ if __name__ == '__main__':
         # 5. Let p = 2**-H_I. Find the upper bound U of the (1-alpha)% confidence
         #    interval
         p = math.pow(2, -H_I)
-        Z = get_z(alpha) #TO DO: find z
+        Z = get_z(alpha)
         U = 1000*p + Z*math.sqrt(1000*p*(1-p))
         if verbose: 
             print "alpha:", alpha          
