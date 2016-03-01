@@ -44,7 +44,8 @@ def EppM(p, n, v):
 # Binary search algorithm to find value of p s.t. the expected value
 # of the Maurer Universal Statistic equals mu_bar within tolerance
 def solve_for_p(mu_bar, n, v, tolerance=0.00001):
-    p = 0.5
+    minp = 1.0/float(n) 
+    p = (1-minp)/2.0
     adj = p
 
     Ep_maxvalid = EppM(1.0/float(n), n, v)

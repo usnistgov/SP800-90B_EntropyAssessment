@@ -38,14 +38,14 @@ def calcEpS(p, n):
 
 # Binary search for p that solves equation in step 9 of Section 6.3.2
 def solve_for_p(mu_bar, n):
-    p_c = 0.5
-    adj = 0.5
+    minp = 1.0/float(n) 
+    p_c = (1-minp)/2.0
+    adj = p_c
     Ep = calcEpS(p_c, n)
     Ep_maxvalid = calcEpS(1.0/float(n),n)
-    minp = 1.0/float(n) 
     if mu_bar > Ep_maxvalid:
-        print("\tcollision test not run:")
-        print("\tmu_bar = %g, max valid value for this test and model = %g" % (mu_bar, Ep_maxvalid))
+##        print("\tcollision test not run:")
+##        print("\tmu_bar = %g, max valid value for this test and model = %g" % (mu_bar, Ep_maxvalid))
         return False, 0.0
     while abs(mu_bar - Ep) > .0001:
         adj /= 2.0
