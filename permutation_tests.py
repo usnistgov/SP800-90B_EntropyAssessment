@@ -303,17 +303,10 @@ def findCollisions(s):
     i = 0 #adjusted for index starting at 0
 
     #3. While i<L
-##    while i<L:
     #   3a. Find the smallest j such that (s_i,...s_(i+j-1)) contains two identical values.
     #       If no such j exists, break out of the while loop.
-##        try:
-##            j = s[i+1:].index(s[i])+1
-##        except:
-##            break
-##    #   3b. Add j to the list C
-##        C.append(j)
-##    #   3c. i=i+j+1
-##        i=i+j+1
+    #   3b. Add j to the list C
+    #   3c. i = i+j +1
     index = 0
     for ell, i in enumerate(s):
         if i in s[index:ell]:
@@ -411,7 +404,7 @@ def permutation_test(s, verbose=False):
         print "Calculating statistics on permuted sequences"
     for j in range(10000):
         if verbose and j% 2 ==0:
-            sys.stdout.write("\rpermutation tests:\t%f percent " % (float(j)/100))
+            sys.stdout.write("\rpermutation tests:\t%f percent complete" % (float(j)/100))
             sys.stdout.flush()
         shuffle(s)
 
