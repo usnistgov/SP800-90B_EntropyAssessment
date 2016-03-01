@@ -18,6 +18,9 @@ from util90b import get_parser, to_dataset, get_z
 from mostCommonValue import most_common_restart
 
 
+# The input file is the row dataset. This program will derive the colomn dataset from the row dataset.
+
+
 ##################
 # main program
 ##################
@@ -50,9 +53,6 @@ if __name__ == '__main__':
     
         # 1. Let alpha be 0.01/(2000k), where k is the sample size
         alpha = 0.01/(2000*k)
-        print "alpha:", alpha
-        print "Z at alpha/2:", alpha/2
-        print "looking for %f  CI" % (1-alpha)
 
         # 2. For each row of the matrix, find the frequency of the most
         #    common sample value. Let F_R be the maximum.
@@ -62,7 +62,8 @@ if __name__ == '__main__':
         for i in range(1000):
             f[i] = most_common_restart(dataset[i*1000:(i+1)*1000])
         F_R = max(f)
-        print "F_R:", F_R
+        if verbose:
+            print "- F_R:", F_R
             
         # 3. repeat the sample process for the column matrix. Let F_C be the
         #    maximum.
@@ -75,7 +76,8 @@ if __name__ == '__main__':
                 column.append(dataset[j*1000+i])
             f[i] = most_common_restart(column)
         F_C = max(f)
-        print "F_C:", F_C
+        if verbose:
+            print "- F_C:", F_C
 
         # 4. Let F = max(F_R, F_C)
         F = max(F_R, F_C)
@@ -84,9 +86,11 @@ if __name__ == '__main__':
         #    interval
         p = math.pow(2, -H_I)
         Z = get_z(alpha) #TO DO: find z
-        print "z:",Z
         U = 1000*p + Z*math.sqrt(1000*p*(1-p))
-        print "U:",U
+        if verbose: 
+            print "alpha:", alpha          
+            print "z:",Z
+            print "U:",U
 
         # 6. If F is greater than U, the test fails
         if F > U:
