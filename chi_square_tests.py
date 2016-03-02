@@ -98,7 +98,7 @@ def chi_square_independence(s):
             more = False
 
     for i in range(L-1):
-        pair = s[i:i+2]
+        pair = tuple(s[i:i+2])
         pair_counts[pair] =  pair_counts.get(pair,0)+1
 
     # 2. Allocate the possible pairs, starting from the smallest expected value, 
@@ -187,7 +187,8 @@ def binary_chi_square_independence(s):
         m_tuples = itertools.product([0,1], repeat=m)
         o = {}
         for i in range(L-m+1):
-            o[str(s[i:i+m])[1:-1]] = o.get(str(s[i:i+m])[1:-1], 0) + 1
+            t = tuple(s[i:i+m])
+            o[t] = o.get(t, 0) + 1
 
         for t in m_tuples:
             # 2b. Let w be the number of ones in the tuple
@@ -197,7 +198,7 @@ def binary_chi_square_independence(s):
             e = math.pow(p1,w)*math.pow(p0,m-w)*(L-m+1)
 
             #update T
-            T += math.pow(o.get(str(t)[1:-1],0)-e,2)/float(e)
+            T += math.pow(o.get(tuple(t),0)-e,2)/float(e)
                 
         return T, math.pow(2,m)-1
     
