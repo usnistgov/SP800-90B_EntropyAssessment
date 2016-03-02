@@ -17,7 +17,7 @@ from tuple import find_tuples
 # binary and non-binary inputs.
 def lenLRS(s, verbose=True):
     if verbose:
-        print "LRS test"
+        print "\nLRS test"
     L = len(s)
 
     # 1. Find the proportion p_i of each possible input value x_i in S

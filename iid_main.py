@@ -76,8 +76,9 @@ if __name__ == '__main__':
         if lenLRS(dataset, verbose):
             if verbose:
                 print "** Passed LRS test"
-            print "IID = True"
+            print "\nIID = True"
         else:
+            print "** Failed LRS test"
             print "IID = False"
             sys.exit(0)
 
