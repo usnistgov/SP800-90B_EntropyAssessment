@@ -19,7 +19,7 @@ from tuple import find_tuples
 # substring. If this length is significantly longer than the expected value,
 # then the test invalidates the IID assumption. The test can be applied to
 # binary and non-binary inputs.
-def lenLRS(s, verbose=True):
+def lenLRS(s, verbose=False):
     if verbose:
         print "\nLRS test"
     L = len(s)

@@ -40,7 +40,7 @@ def pass_chi_square_tests(dataset, verbose=False):
             print("** Failed chi-square independence tests")
             return False
 
-    # chi-square stability test
+    # chi-square goodness-of-fit test
     # divide the dataset into 10 subsets of equal length
     sublength = len(dataset) // 10
     data_subsets = [dataset[i*sublength : (i+1)*sublength] for i in range(10)]
@@ -50,14 +50,14 @@ def pass_chi_square_tests(dataset, verbose=False):
         score, df = goodness_of_fit(data_subsets)
     cutoff = chi_square_cutoff(df)
     if verbose:
-        print("\nChi square stability\n\tscore = %g, degrees of freedom = %d cut-off = %g" % (score, df, cutoff))
+        print("\nChi square goodness-of-fit\n\tscore = %g, degrees of freedom = %d cut-off = %g" % (score, df, cutoff))
 
     if score < cutoff:
         if verbose:
-            print("** Passed chi-square stability test\n")
+            print("** Passed chi-square goodness-of-fit test\n")
     else:
         if verbose:
-            print("** Failed chi-square stability tests")
+            print("** Failed chi-square goodness-of-fit tests")
             return False
 
     return True
