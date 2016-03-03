@@ -2,15 +2,14 @@
 #
 # Estimating the Min-Entropy of non-IID Sources
 #
-#
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # Oriniginal code by T. A. Hall
 # tim.hall@nist.gov
 #
 # Updated by Kerry McKay
-# kerry.mckay@nist.gov
+# March 3, 2016
 
 
 import sys

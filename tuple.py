@@ -1,12 +1,14 @@
-import math
-from collections import Counter
-
-# Non-iid t-tuple estimate defined in Draft SP 800-90B (2016)
+# Non-iid t-tuple estimate defined in Draft SP 800-90B (January 2016)
+#
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # Kerry McKay
 # CSD/ITL/NIST
-# 2016
+# February 2016
 
+import math
+from collections import Counter
 
 def find_tuples(s, t):
     return zip(*[s[i:] for i in range(t)])

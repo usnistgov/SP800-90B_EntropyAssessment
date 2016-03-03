@@ -1,8 +1,12 @@
 # Longest Repeated Substring functions
-# Sections 5.2.5 and 6.3.6 of DRAFT NIST SP 800-90B (January 2016)
+# Sections 5.2.5 and 6.3.6 of DRAFT NIST SP 800-90B (January 2016)#
+#
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # Kerry McKay
 # CSD/ITL/NIST
+# March 3, 2016
 
 from collections import Counter
 import math
@@ -49,6 +53,9 @@ def lenLRS(s, verbose=True):
 
 
 #helper function to find u in LRS estimate
+#
+# Currently assumes u is low and does linear search - if average case is higher
+# u, consider changing
 def find_u(s, threshold):
     count = threshold+1 #loop control
     u = 0
@@ -61,6 +68,9 @@ def find_u(s, threshold):
 
 # helper function to find v in LRS estimate
 # starts at u
+#
+# Currently assumes v is near u and does linear search - if average case is higher
+# v, consider changing
 def find_v(s, u, threshold):
     L = len(s)
     count = threshold+1 #loop control

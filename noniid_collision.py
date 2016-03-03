@@ -1,7 +1,8 @@
-import math
-
 # The Collision Estimate
-# Section 6.3.2 of DRAFT NIST SP 800-90B (2015)
+# Section 6.3.2 of DRAFT NIST SP 800-90B (2016)
+#
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # T. A. Hall
 # CSD/ITL/NIST
@@ -9,6 +10,7 @@ import math
 #
 # Updated by Kerry McKay, Nov 2015
 
+import math
 
 # Continued fraction for F(1/z) derived from Eq. 8.9.2 at http://dlmf.nist.gov/8.9
 # Used in Step 9 in Section 6.3.2

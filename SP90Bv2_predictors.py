@@ -1,8 +1,12 @@
 # Predictor estimates
 # Sections 6.3.7 - 6.3.10 of DRAFT NIST SP 800-90B (January 2016)
 #
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
+#
 # Kerry McKay
 # CSD/ITL/NIST
+# March 3, 2106
 
 
 

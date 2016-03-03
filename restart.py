@@ -1,14 +1,13 @@
 # DRAFT NIST SP 800-90B (January 2016) Section 3.1.4 
 #
-# Estimating the Min-Entropy of non-IID Sources
+# Sanity checks on restart datasets
 #
 #
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness. See user guide for full disclaimer.
 #
-# Updated by Kerry McKay
-# kerry.mckay@nist.gov
-
+# Kerry McKay
+# March 3, 2016
 
 import sys
 import time
@@ -48,6 +47,8 @@ if __name__ == '__main__':
         minEntropy = float(math.log(k,2))
 
 
+        # make sure that the dataset is the expected size
+        # (otherwise, the column dataset won't be created correctly)
         assert len(dataset) == 1000000
 
     

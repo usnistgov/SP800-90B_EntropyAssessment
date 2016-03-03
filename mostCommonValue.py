@@ -1,9 +1,12 @@
-# Most Common Value Estimate
+# Most Common Value Functions
+#
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # Kerry McKay
 # CSD/ITL/NIST
 #
-# Nov 2015
+# February 2016
 
 import math
 from collections import Counter

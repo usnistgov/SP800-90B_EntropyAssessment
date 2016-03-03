@@ -1,9 +1,15 @@
 # Non-iid compression test using the Maurer universal statistic as defined
-# in Draft SP 800-90B (August 2012) Section 9.3.6.3
+# in Draft SP 800-90B (January 2016) Section 6.3.4
+#
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # T. A. Hall
 # tim.hall@nist.gov
 # 8 September 2014
+#
+# Updated by Kerry McKay
+# March 3, 2016
 
 from math import sqrt
 from math import log

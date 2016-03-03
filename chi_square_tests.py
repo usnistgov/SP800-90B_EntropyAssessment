@@ -1,15 +1,17 @@
 
-# DRAFT NIST SP 800-90B (August 2012)
+# DRAFT NIST SP 800-90B (January 2016)
 #
-# Section 9.1.3 - Specific Statistical Tests
+# Section 5.2 - Additional Chi-square Statistical Tests
 #
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # Tim Hall
 # tim.hall@nist.gov
-# 
 # 3 September 2014
+#
+# Updated by Kerry McKay
+# March 3, 2106
 
 import math
 from collections import OrderedDict, Counter

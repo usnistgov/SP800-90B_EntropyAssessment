@@ -1,12 +1,16 @@
 import math
 
-# Non-iid Markov test - DRAFT NIST SP 800-90B (2015) Section 6.3.3
+# Non-iid Markov test - DRAFT NIST SP 800-90B (2016) Section 6.3.3
+#
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # T. A. Hall
 # CSD/ITL/NIST
 # 25 February 2013
 #
-# Updated by Kerry McKay, 2015
+# Updated by Kerry McKay
+# March 3, 2016
 
 def markov_test(s, k, alpha):
     # 1. Re-define the confidence level to be alpha = min(alpha^k^2,alpha^d)

@@ -1,14 +1,15 @@
-## @package permutation_tests
-#
 # Permutation Tests on Independence
 # DRAFT NIST SP 800-90B (January 2016) Section 5.1
 #
-# Oriniginal code by T. A. Hall, 2012
+# NOTE: this software is made available with no guarantee - implied or otherwise -
+# of correctness or completeness. See user guide for full disclaimer.
+#
+# T. A. Hall, 2012
 # tim.hall@nist.gov
 #
 # Updated by Kerry McKay
-# kerry.mckay@nist.gov
-#
+# March 3, 2016
+
 
 import bz2
 import sys

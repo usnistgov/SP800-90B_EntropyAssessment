@@ -3,7 +3,7 @@
 # Estimating the Min-Entropy of IID Sources
 #
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness.  See user guide for full disclaimer.
 #
 # Tim Hall
 # tim.hall@nist.gov

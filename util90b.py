@@ -3,13 +3,13 @@
 # Utility and helper functions for NIST SP 800-90B Testing
 #
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # 2012 code by Tim Hall
 # tim.hall@nist.gov
 #
 # Updated for January 2016 draft by Kerry McKay
-# kerry.mckay@nist.gov
+# March 3, 2016
 
 import argparse
 import bisect
