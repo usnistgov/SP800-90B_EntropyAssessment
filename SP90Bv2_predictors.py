@@ -22,17 +22,19 @@ getcontext().prec = 10
 #############################
 def calcPavg(C,N):
     alpha=0.01
-    pavg_hat = float(C)/N
-    pavg_dot = None
+    p_global = float(C)/N
+##    pavg_dot = None
 
-    if pavg_hat == 1:
-        pavg_dot = 1
-    elif pavg_hat == 0:
-        pavg_dot = 1-(float(alpha)/2)**(float(1)/N)
-    else:
-        pavg_dot = pavg_hat + 2.576*math.sqrt(float(pavg_hat)*(1-pavg_hat)/(N-1))
+##    if pavg_hat == 1:
+##        pavg_dot = 1
+##    elif pavg_hat == 0:
+##        pavg_dot = 1-(float(alpha)/2)**(float(1)/N)
+##    else:
+##        pavg_dot = pavg_hat + 2.576*math.sqrt(float(pavg_hat)*(1-pavg_hat)/(N-1))
 
-    return pavg_dot
+    p_globalprime = p_global + 2.576*math.sqrt(float(p_global)*(1-p_global)/(N-1))
+
+    return p_globalprime
 
 ############################
 # Local performance metric #
@@ -64,7 +66,6 @@ def calc_qn(p,r,n):
     return qn
 
 def findMaxRun(correct):
-    N = len(correct)
     #find the longest run
     run = 0
     maxrun = 0
@@ -86,24 +87,8 @@ def calcRun(correct, verbose=False):
     N = len(correct)
     alpha = 0.99
     
-    #find the longest run
-    run = 0
-    maxrun = 0
-    for i in correct:
-        if i == 0:
-            if run > maxrun:
-                maxrun = run
-            run = 0
-        elif i==1:
-            run += 1
-        else:
-            raise ValueError("correct array contains non-binary values")
-    if run > maxrun:
-        maxrun = run
-##    if verbose:
-##        print "\n\tN:",N,"longest run:", maxrun
-        
-    r = maxrun
+    #find the longest run        
+    r = findMaxRun(correct)
     alpha = Decimal(str(alpha))
     
     # do a binary search for p
@@ -420,16 +405,14 @@ def LZ78Y(S, verbose=False):
         if predict == S[i-1]:
             correct[i-B-1-1] += 1
         
-    #step 5
+    #step 4
     C = sum(correct)
-
-    #step 6
     Pavg = calcPavg(C, N)
 
-    #step 7
+    #step 5
     Prun = calcRun(correct)
 
-    #step 8
+    #step 6
     minH = -math.log(max(Pavg, Prun),2)
     if verbose:
         print "\n\tPglobal:",Pavg
