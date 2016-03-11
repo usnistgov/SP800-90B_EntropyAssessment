@@ -106,7 +106,7 @@ def numDirectionalRuns(s):
     # 1. Construct the sequence s'
     # We've given s' as input. just double check
     if set(s) != set([1, -1]):
-        print "error - input string is not sequence of 1's and -1's"
+        print ("error - input string is not sequence of 1's and -1's")
         quit()
 
     # 2. The test statistic T is the number of runs in s'
@@ -124,7 +124,7 @@ def lenDirectionalRuns(s):
     # 1. Construct the sequence s'
     # We've given s' as input. just double check
     if set(s) != set([1, -1]):
-        print "error - input string is not sequence of 1's and -1's"
+        print ("error - input string is not sequence of 1's and -1's")
         quit()
     
     # 2. The test statistic T is the length of the longest run in s'
@@ -147,7 +147,7 @@ def numIncreasesDecreases(s):
     # 1. Construct the sequence s'
     # We've given s' as input. just double check
     if set(s) != set([1, -1]):
-        print "error - input string is not sequence of 1's and -1's"
+        print ("error - input string is not sequence of 1's and -1's")
         quit()
 
         
@@ -328,7 +328,7 @@ def permutation_test(s, verbose=False):
         C[i] = [0,0]
 
     if verbose:
-        print "Calculating statistics on original sequence"
+        print ("Calculating statistics on original sequence")
 
     # 1.2 Calculate the test statistic T_i on s; denote the result as t[i]
     t = {}
@@ -402,7 +402,7 @@ def permutation_test(s, verbose=False):
         # 2.1 Permute the input data using Fisher-Yates
     
     if verbose:
-        print "Calculating statistics on permuted sequences"
+        print ("Calculating statistics on permuted sequences")
     for j in range(10000):
         if verbose:
             sys.stdout.write("\rpermutation tests:\t%.2f percent complete" % (float(j)/100))
@@ -486,9 +486,9 @@ def permutation_test(s, verbose=False):
                 C[i][1] += 1
 
     if verbose:
-        print "\nstatistic\t\t\tC[i][0]  C[i][1]"
+        print ("\nstatistic\t\t\tC[i][0]  C[i][1]")
         for i in get_test_names():
-            print "%25s %8d %8d" % (i, C[i][0], C[i][1])
+            print ("%25s %8d %8d" % (i, C[i][0], C[i][1]))
 
     # 3. If (C[i][0]+C[i][1] <= 5) or (C[i][0] >= 9995) for any i, reject the IID assumption
     #    Else assume the noise source produces IID output.

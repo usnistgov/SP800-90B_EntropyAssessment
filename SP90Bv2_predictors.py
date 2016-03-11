@@ -197,8 +197,8 @@ def MultiMCW(S, verbose=False):
     minH = -math.log(max(Pavg, Prun),2)
     
     if verbose:
-        print "\n\tPglobal:",Pavg
-        print "\tPlocal:", Prun
+        print ("\n\tPglobal:",Pavg)
+        print ("\tPlocal:", Prun)
 
     return [max(Pavg, Prun), minH]
 
@@ -261,8 +261,8 @@ def Lag(S, verbose=False):
     
     
     if verbose:
-        print "\n\tPglobal:",Pavg
-        print "\tPlocal:", Prun
+        print ("\n\tPglobal:",Pavg)
+        print ("\tPlocal:", Prun)
 
     return [max(Pavg, Prun), minH]
 
@@ -343,8 +343,8 @@ def MultiMMC(S, verbose=False):
     minH = -math.log(max(Pavg, Prun),2)
     
     if verbose:
-        print "\n\tPglobal:",Pavg
-        print "\tPlocal:", Prun
+        print ("\n\tPglobal:",Pavg)
+        print ("\tPlocal:", Prun)
 
     return [max(Pavg, Prun), minH]
 
@@ -415,8 +415,8 @@ def LZ78Y(S, verbose=False):
     #step 6
     minH = -math.log(max(Pavg, Prun),2)
     if verbose:
-        print "\n\tPglobal:",Pavg
-        print "\tPlocal:", Prun
+        print ("\n\tPglobal:",Pavg)
+        print ("\tPlocal:", Prun)
 
     return [max(Pavg, Prun), minH]
 

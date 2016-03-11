@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
 
         if verbose:
-            print "\nRunning entropic statistic estimates:"
+            print ("\nRunning entropic statistic estimates:")
             
         # Section 6.3.1 The Most Common Value Estimate
         minH = most_common(dataset)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
 
         if verbose:
-            print "\nRunning predictor estimates:"
+            print ("\nRunning predictor estimates:")
 
         # Section 6.3.7 Multi Most Common in Window prediction estimate
         pmax, minH = MultiMCW(dataset, verbose)

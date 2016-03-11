@@ -52,7 +52,7 @@ def to_dataset(bytes, bits_per_symbol):
     # Ignore incomplete symbols. E.g., if there are 17 bytes of 16-bit symbols,
     # only read first 16 bytes and disgard remaining 4 bits.
     N = len(bytes)
-    print "reading %d bytes of data" % N
+    print ("reading %d bytes of data" % N)
 
     if bits_per_symbol <= 8: # includes 1-bit per symbol
         return [b & mask for b in bytes]

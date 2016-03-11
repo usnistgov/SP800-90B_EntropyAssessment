@@ -55,31 +55,31 @@ if __name__ == '__main__':
 
         if passed_permutation_tests:
             if verbose:
-                print "** Passed iid permutation tests"
+                print ("** Passed iid permutation tests")
         else:
             if verbose:
-                print "** Failed iid permutation tests"
-            print "IID = False"
+                print ("** Failed iid permutation tests")
+            print ("IID = False")
             sys.exit(0)
 
         # run chi-square tests on dataset
         if pass_chi_square_tests(dataset, verbose):
             if verbose:
-                print "** Passed chi square tests"
+                print ("** Passed chi square tests")
         else:
             if verbose:
-                print"** Failed chi square tests"
-            print "IID = False"
+                print ("** Failed chi square tests")
+            print ("IID = False")
             sys.exit(0)
 
         # run LRS test
         if lenLRS(dataset, verbose):
             if verbose:
-                print "** Passed LRS test"
-            print "\nIID = True"
+                print ("** Passed LRS test")
+            print ("\nIID = True")
         else:
-            print "** Failed LRS test"
-            print "IID = False"
+            print ("** Failed LRS test")
+            print ("IID = False")
             sys.exit(0)
 
         ############################################

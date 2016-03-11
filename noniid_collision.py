@@ -85,7 +85,7 @@ def collision_test(s, n):
     diff_t = [t[i]-t[i-1] for i in range(1,len(t))]
     v = float(len(diff_t)) # float() so it works in Python 2.6,2.7
     if v < 1000:
-        print "Must map down data for collision estimate, then retest"
+        print ("Must map down data for collision estimate, then retest")
         return 0.0, 0.0
 
     # 7. Calculate sample mean, mu, and sample stddev, sigma of the differences

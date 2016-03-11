@@ -29,8 +29,8 @@ def t_tuple(s, verbose=False):
         i += 1
         c = Counter(find_tuples(s, i))
         if verbose:
-          print "\ntuples (and counts):", c
-          print "max occurances:",c.most_common(1)
+          print ("\ntuples (and counts):", c)
+          print ("max occurances:",c.most_common(1))
         count = c.most_common(1)[0][1]
         Q.append(c.most_common(1)[0][1])
 
@@ -41,8 +41,8 @@ def t_tuple(s, verbose=False):
     t = i-1
 
     if verbose:
-        print "\nt:", t
-        print "Q:", Q
+        print ("\nt:", t)
+        print ("Q:", Q)
 
 
     # 3. For i=1 to t, an estimate for pmax is computed as:
@@ -52,13 +52,13 @@ def t_tuple(s, verbose=False):
     Pmax = [P[i]**(1.0/(i+1)) for i in range(t)]
 
     if verbose:
-        print "P:", P
-        print "Pmax:", Pmax
+        print ("P:", P)
+        print ("Pmax:", Pmax)
     
     # 4. The entropy estimate is calculated as -log_2 max(P_max[1],...,P_max[t]).
     min_h = -math.log(max(Pmax),2)
     if verbose:
-      print "min-entropy:",min_h
+      print ("min-entropy:",min_h)
 
     return max(Pmax), min_h
 

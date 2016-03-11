@@ -21,7 +21,7 @@ from tuple import find_tuples
 # binary and non-binary inputs.
 def lenLRS(s, verbose=False):
     if verbose:
-        print "\nLRS test"
+        print ("\nLRS test")
     L = len(s)
 
     # 1. Find the proportion p_i of each possible input value x_i in S
@@ -43,7 +43,7 @@ def lenLRS(s, verbose=False):
     #    probability that E is greater than or equal to 1.
     PrE = 1-math.pow(1-p_col,N)
     if verbose:
-        print "\tW:",W,"Pr(E>=1):",PrE
+        print ("\tW:",W,"Pr(E>=1):", PrE)
 
     if PrE < 0.001:
         return False
@@ -90,14 +90,14 @@ def LRS_estimate(s, verbose=False):
     #    common u-tuple in S is less than 20.
     u = find_u(s, 20)
     if verbose:
-        print "u:",u
+        print ("u:",u)
 
     # 2. Find the largest v such that the number of occurrences of the most
     #    common v-tuple in S is at least 2 and the most common (v+1)-tuple in S
     #    occurs once. 
     v = find_v(s, u, 2)
     if verbose:
-        print "v:",v
+        print ("v:",v)
 
     # 3. For W=u to v, compute the estimated W-tuple collision probability
     # 4. For each P_w, compute the estimated average collision probability per

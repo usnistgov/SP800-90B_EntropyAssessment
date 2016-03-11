@@ -58,18 +58,18 @@ if __name__ == '__main__':
         # 2. For each row of the matrix, find the frequency of the most
         #    common sample value. Let F_R be the maximum.
         if verbose:
-            print "\nRunning sanity check on row dataset:"
+            print ("\nRunning sanity check on row dataset:")
         f = [0 for i in range(1000)]
         for i in range(1000):
             f[i] = most_common_restart(dataset[i*1000:(i+1)*1000])
         F_R = max(f)
         if verbose:
-            print "- F_R:", F_R
+            print ("- F_R:", F_R)
             
         # 3. repeat the sample process for the column matrix. Let F_C be the
         #    maximum.
         if verbose:
-            print "Running sanity check on column dataset:"
+            print ("Running sanity check on column dataset:")
         f = [0 for i in range(1000)]
         for i in range(1000):
             column = []
@@ -78,7 +78,7 @@ if __name__ == '__main__':
             f[i] = most_common_restart(column)
         F_C = max(f)
         if verbose:
-            print "- F_C:", F_C
+            print ("- F_C:", F_C)
 
         # 4. Let F = max(F_R, F_C)
         F = max(F_R, F_C)
@@ -89,17 +89,17 @@ if __name__ == '__main__':
         Z = get_z(alpha)
         U = 1000*p + Z*math.sqrt(1000*p*(1-p))
         if verbose: 
-            print "alpha:", alpha          
-            print "z:",Z
-            print "U:",U
+            print ("alpha:", alpha )         
+            print ("z:",Z)
+            print ("U:",U)
 
         # 6. If F is greater than U, the test fails
         if F > U:
-            print "Failed the restart tests"
-            print "*** Validation failed. No entropy estimate awarded."
+            print ("Failed the restart tests")
+            print ("*** Validation failed. No entropy estimate awarded.")
         else:
-            print "Passed the restart tests"
-            print "*** Final entropy estimate:", H_I
+            print ("Passed the restart tests")
+            print ("*** Final entropy estimate:", H_I)
 
         
 
