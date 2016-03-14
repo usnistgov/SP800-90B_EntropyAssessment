@@ -54,7 +54,7 @@ def calc_stats(dataset):
 # conversion I
 # partitions the sequences into 8-bit non-overlapping blocks, and counts the number of ones in each block.
 def conversion1(s):
-    sp = [s[i:i+8].count(1) for i in range(0,len(s)/8,8)]
+    sp = [s[i:i+8].count(1) for i in range(0,int(len(s)/8),8)]
 
     # handle incomplete block
     if len(s)%8 > 0:
@@ -68,7 +68,7 @@ def conversion2(s):
     sp = str(s)[1:-1]
     sp = sp.replace(', ','')
     padded = sp + '0' * (8 - len(s) % 8)
-    sp_bytes = [int(padded[i:i+8], 2) for i in range(0,len(padded)/8,8)]
+    sp_bytes = [int(padded[i:i+8], 2) for i in range(0,int(len(padded))/8,8)]
     
     return sp_bytes
 
@@ -83,14 +83,14 @@ def excursion(s, mean):
     # 1. calculate the average of the sample values
     #    (passed as argument)
     # 2. For i=1 to L, calculate d_i
-##    d = []
-##    for i in range(L):
-##        d.append(abs(sum(s[0:i+1])-(i+1)*mean))
+    # 3. T = max(d_1, ..., d_L)
+
     di = 0
     maximum = 0
     runningsum = 0
     for i in range(L):
-        di = runningsum+s[i]-(i+1)*mean
+        runningsum += s[i]
+        di = runningsum-(i+1)*mean
 
         if di > maximum:
             maximum = di
@@ -111,7 +111,7 @@ def numDirectionalRuns(s):
 
     # 2. The test statistic T is the number of runs in s'
     numruns = 1
-    for i in range(1,len(s)):
+    for i in range(1,L):
         if s[i] != s[i-1]:
             numruns += 1
             
@@ -123,20 +123,25 @@ def lenDirectionalRuns(s):
 
     # 1. Construct the sequence s'
     # We've given s' as input. just double check
-    if set(s) != set([1, -1]):
+    if not set(s).issubset(set([1, -1])):#set(s) > set([1, -1]):
+        print set(s)
         print ("error - input string is not sequence of 1's and -1's")
         quit()
     
     # 2. The test statistic T is the length of the longest run in s'
     maxrun = 0
     run = 1
-    for i in range(1,len(s)):
+    for i in range(1,L):
         if s[i] == s[i-1]:
             run += 1
         else:
             if run > maxrun:
                 maxrun  = run
             run = 1
+
+    # handle the last observed run
+    if run > maxrun:
+        maxrun  = run
     
     return maxrun
 
@@ -184,6 +189,10 @@ def lenRunsMedian(sp):
             if run > maxrun:
                 maxrun  = run
             run = 1
+            
+    # handle the last observed run
+    if run > maxrun:
+        maxrun  = run
     
     return maxrun
 
@@ -232,7 +241,7 @@ def covariance(s,p):
     T = 0
 
     #2. For i=1 to L-p
-    #       If (s_i = s_(i+p)), increment T by one
+    #       T = T+s_i*s_(i+p)
     i = 0
     while i < (L-p):
         T = T+(s[i]*s[i+p])
@@ -244,9 +253,9 @@ def covariance(s,p):
 #Section 5.1.11 - Compression Test Statistics
 def compression(s):
     # 1. Samples in the data subset are encoded as a character string
-    #    containing a list of values separated by commas, e.g.,
-    #    "144,21,139,0,0,15"
-    encodeS = ",".join([str(i) for i in s])
+    #    containing a list of values separated by a single space, e.g.,
+    #    (144,21,139,0,0,15) becomes "144 21 139 0 0 15"
+    encodeS = " ".join([str(i) for i in s])
 
     # 2. The character string is processed with the BZ2 compression algorithm.
     compressed_string = bz2.compress(encodeS.encode())
@@ -308,11 +317,11 @@ def findCollisions(s):
     #       If no such j exists, break out of the while loop.
     #   3b. Add j to the list C
     #   3c. i = i+j +1
-    index = 0
-    for ell, i in enumerate(s):
-        if i in s[index:ell]:
-            C.append(ell - index + 1) # j = ell-index+1
-            index = ell + 1
+    i = 0
+    for ell, index in enumerate(s):
+        if index in s[i:ell]:
+            C.append(ell - i + 1) # j = ell-i+1
+            i = ell + 1 
     
     return C
 
