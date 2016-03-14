@@ -124,7 +124,6 @@ def lenDirectionalRuns(s):
     # 1. Construct the sequence s'
     # We've given s' as input. just double check
     if not set(s).issubset(set([1, -1])):#set(s) > set([1, -1]):
-        print set(s)
         print ("error - input string is not sequence of 1's and -1's")
         quit()
     
