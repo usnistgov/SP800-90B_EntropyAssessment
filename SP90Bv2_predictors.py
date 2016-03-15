@@ -23,15 +23,6 @@ getcontext().prec = 10
 def calcPavg(C,N):
     alpha=0.01
     p_global = float(C)/N
-##    pavg_dot = None
-
-##    if pavg_hat == 1:
-##        pavg_dot = 1
-##    elif pavg_hat == 0:
-##        pavg_dot = 1-(float(alpha)/2)**(float(1)/N)
-##    else:
-##        pavg_dot = pavg_hat + 2.576*math.sqrt(float(pavg_hat)*(1-pavg_hat)/(N-1))
-
     p_globalprime = p_global + 2.576*math.sqrt(float(p_global)*(1-p_global)/(N-1))
 
     return p_globalprime
@@ -197,8 +188,8 @@ def MultiMCW(S, verbose=False):
     minH = -math.log(max(Pavg, Prun),2)
     
     if verbose:
-        print ("\n\tPglobal:",Pavg)
-        print ("\tPlocal:", Prun)
+        print("\n\tPglobal: %f" % Pavg)
+        print("\tPlocal: %f"% Prun)
 
     return [max(Pavg, Prun), minH]
 
@@ -261,8 +252,8 @@ def Lag(S, verbose=False):
     
     
     if verbose:
-        print ("\n\tPglobal:",Pavg)
-        print ("\tPlocal:", Prun)
+        print("\n\tPglobal: %f" % Pavg)
+        print("\tPlocal: %f"% Prun)
 
     return [max(Pavg, Prun), minH]
 
@@ -299,7 +290,7 @@ def MultiMMC(S, verbose=False):
         #step 4a
         for d in depths:
             if d<i-1:
-                if M[d-1].get(tuple(S[i-d-2:i-2]),0) <= 0:
+                if M[d-1].get(tuple(S[i-d-2:i-2]),0) == 0:
                     M[d-1][tuple(S[i-d-2:i-2])] = Counter()
                 M[d-1][tuple(S[i-d-2:i-2])][S[i-2]] += 1
 
@@ -311,10 +302,15 @@ def MultiMMC(S, verbose=False):
                 for y in sorted(M[d-1][tuple(S[i-d-1:i-1])].keys()):
                     if M[d-1][tuple(S[i-d-1:i-1])][y] >= M[d-1][tuple(S[i-d-1:i-1])][ymax]:
                         ymax = y
+                
                 if M[d-1][tuple(S[i-d-1:i-1])][ymax] > 0:
+                    # let subpredict_d = ymax 
                     subpredict[d-1] = ymax
-                else:
-                    subpredict[d-1] = None
+                    
+            else:
+                # if all possible values of M_d[S[i-d-1:i-1]][y] are 0,
+                # the let subpredict_d = Null
+                subpredict[d-1] = None
 
         #step 4c
         predict = subpredict[winner]
@@ -343,8 +339,8 @@ def MultiMMC(S, verbose=False):
     minH = -math.log(max(Pavg, Prun),2)
     
     if verbose:
-        print ("\n\tPglobal:",Pavg)
-        print ("\tPlocal:", Prun)
+        print("\n\tPglobal: %f" % Pavg)
+        print("\tPlocal: %f"% Prun)
 
     return [max(Pavg, Prun), minH]
 
@@ -415,8 +411,8 @@ def LZ78Y(S, verbose=False):
     #step 6
     minH = -math.log(max(Pavg, Prun),2)
     if verbose:
-        print ("\n\tPglobal:",Pavg)
-        print ("\tPlocal:", Prun)
+        print("\n\tPglobal: %f" % Pavg)
+        print("\tPlocal: %f"% Prun)
 
     return [max(Pavg, Prun), minH]
 
