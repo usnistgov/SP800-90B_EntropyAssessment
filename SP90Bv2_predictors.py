@@ -387,13 +387,8 @@ def LZ78Y(S, verbose=False):
         predict = None
         for j in range(B,0,-1):
             prev = tuple(S[i-j-1:i-1])
-            highprev = 0
-            prevPredict = None
             if D.get(prev,0) > 0:
-                for y in D[prev].keys():
-                    if D[prev][y] >= highprev:
-                        prevPredict = y
-                        highprev = D[prev][y]
+                for y in sorted(D[prev].keys(),reverse=True):
                     if D[prev][y] > maxcount:
                         predict = y
                         maxcount = D[prev][y]
