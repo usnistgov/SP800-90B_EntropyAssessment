@@ -135,7 +135,6 @@ def MultiMCW(S, verbose=False):
     frequent = [None, None, None, None]
     winner = 0 #adjusted for index starting at 0
     counters = [None, None, None, None]
-    lastPred = [None, None, None, None]
     
     #step 3
     for i in range(w[0]+1,L+1):
@@ -151,14 +150,13 @@ def MultiMCW(S, verbose=False):
                 if counters[j][S[i-2]] == counters[j].most_common()[0][1]:
                     frequent[j] = S[i-2]
                 else:
-                    frequent[j] = lastPred[j]
+                    frequent[j] = mostCommon(S[i-w[j]-1:i-1],counters[j])
             elif i > w[j]:
                 #intialize counter
                 counters[j] = Counter(S[i-w[j]-1:i-1])
                 frequent[j] = mostCommon(S[i-w[j]-1:i-1],counters[j])
             else:
                 frequent[j] = None
-            lastPred[j] = frequent[j]
 
         #step 3b
         prediction = frequent[winner]
