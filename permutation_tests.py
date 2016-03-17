@@ -494,14 +494,18 @@ def permutation_test(s, verbose=False):
                 C[i][1] += 1
 
     if verbose:
-        print ("\nstatistic\t\t\tC[i][0]  C[i][1]")
+        print("\n                statistic  C[i][0]  C[i][1]")
+        print("-------------------------------------------")
         for i in get_test_names():
-            print ("%25s %8d %8d" % (i, C[i][0], C[i][1]))
+            if ((C[i][0]+C[i][1]) <= 5) or (C[i][0] >= 9995):
+                print ("%24s* %8d %8d" % (i, C[i][0], C[i][1]))
+            else:
+                print ("%25s %8d %8d" % (i, C[i][0], C[i][1]))
+        print("(* denotes failed test)")
 
     # 3. If (C[i][0]+C[i][1] <= 5) or (C[i][0] >= 9995) for any i, reject the IID assumption
     #    Else assume the noise source produces IID output.
     for i in get_test_names():
         if ((C[i][0]+C[i][1]) <= 5) or (C[i][0] >= 9995):
-            return (False, C[i][0], C[i][1])
-        else:
-            return (True, C[i][0], C[i][1])
+            return False
+    return True
