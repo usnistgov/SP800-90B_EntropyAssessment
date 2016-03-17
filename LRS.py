@@ -43,7 +43,7 @@ def lenLRS(s, verbose=False):
     #    probability that E is greater than or equal to 1.
     PrE = 1-math.pow(1-p_col,N)
     if verbose:
-        print ("\tW:",W,"Pr(E>=1):", PrE)
+        print ("\tW: %d, Pr(E>=1): %f" % (W,PrE))
 
     if PrE < 0.001:
         return False
