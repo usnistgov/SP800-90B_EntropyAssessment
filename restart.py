@@ -99,7 +99,7 @@ if __name__ == '__main__':
             print ("*** Validation failed. No entropy estimate awarded.")
         else:
             print ("Passed the restart tests")
-            print ("*** Final entropy estimate:", H_I)
+            print ("*** Final entropy estimate: %f" % H_I)
 
         
 
