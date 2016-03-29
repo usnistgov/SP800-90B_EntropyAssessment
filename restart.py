@@ -64,7 +64,7 @@ if __name__ == '__main__':
             f[i] = most_common_restart(dataset[i*1000:(i+1)*1000])
         F_R = max(f)
         if verbose:
-            print ("- F_R:", F_R)
+            print ("- F_R: %d" % F_R)
             
         # 3. repeat the sample process for the column matrix. Let F_C be the
         #    maximum.
@@ -78,7 +78,7 @@ if __name__ == '__main__':
             f[i] = most_common_restart(column)
         F_C = max(f)
         if verbose:
-            print ("- F_C:", F_C)
+            print ("- F_C: %d" % F_C)
 
         # 4. Let F = max(F_R, F_C)
         F = max(F_R, F_C)
@@ -89,9 +89,9 @@ if __name__ == '__main__':
         Z = get_z(alpha)
         U = 1000*p + Z*math.sqrt(1000*p*(1-p))
         if verbose: 
-            print ("alpha:", alpha )         
-            print ("z:",Z)
-            print ("U:",U)
+##            print ("alpha:", alpha )         
+##            print ("z:",Z)
+            print ("U: %f" % U)
 
         # 6. If F is greater than U, the test fails
         if F > U:
