@@ -31,7 +31,7 @@ def most_common(s):
     pu = min(1,ubound)
 
     # 3. The estimated min-entropy is -log_2(p_u)
-    return -math.log(pu,2.0)
+    return [pu,-math.log(pu,2.0)]
 
 
 

@@ -139,7 +139,7 @@ def MultiMCW(S, verbose=False):
     #step 3
     for i in range(w[0]+1,L+1):
         if verbose and i%10000 ==0:
-            sys.stdout.write("\rMultiMCW:\t%d percent" % (float(i)/L*100))
+            sys.stdout.write("\rComputing MultiMCW Prediction Estimate: %d percent complete" % (float(i)/L*100))
             sys.stdout.flush()
         
         #step 3a
@@ -211,7 +211,7 @@ def Lag(S, verbose=False):
     #step 3
     for i in range(2,L+1):
         if verbose and i%10000 ==0:
-            sys.stdout.write("\rLag:\t%d percent" % (float(i)/L*100))
+            sys.stdout.write("\rComputing Lag Prediction Estimate: %d percent complete" % (float(i)/L*100))
             sys.stdout.flush()
 
         #step 3a
@@ -282,7 +282,7 @@ def MultiMMC(S, verbose=False):
     #step 4
     for i in range(3, L+1):
         if verbose and i%10000 ==0:
-            sys.stdout.write("\rMultiMMC:\t%d percent" % (float(i)/L*100))
+            sys.stdout.write("\rComputing MultiMMC Prediction Estimate: %d percent complete" % (float(i)/L*100))
             sys.stdout.flush()
 
         #step 4a
@@ -366,7 +366,7 @@ def LZ78Y(S, verbose=False):
     for i in range(B+2, L+1):
 
         if verbose and i%10000==0:
-            sys.stdout.write("\rLZ78Y:\t%d percent" % (float(i)/L*100))
+            sys.stdout.write("\rComputing LZ78Y Prediction Estimate: %d percent complete" % (float(i)/L*100))
             sys.stdout.flush()
 
         #step 3a: add previous element to dictionary

@@ -72,9 +72,9 @@ if __name__ == '__main__':
             print ("\nRunning entropic statistic estimates:")
             
         # Section 6.3.1 The Most Common Value Estimate
-        minH = most_common(dataset)
+        pmax, minH = most_common(dataset)
         if verbose:
-            print("- Most Common Value Estimate: min-entropy = %g" % minH)
+            print("- Most Common Value Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.2 The Collision Estimate
@@ -121,28 +121,30 @@ if __name__ == '__main__':
         # Section 6.3.7 Multi Most Common in Window prediction estimate
         pmax, minH = MultiMCW(dataset, verbose)
         if verbose:
-            print("- MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.8 Lag prediction estimate
         pmax, minH = Lag(dataset, verbose)
         if verbose:
-            print("- Lag Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.9 MultiMMC prediction estimate
         pmax, minH = MultiMMC(dataset, verbose)
         if verbose:
-            print("- MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
         
 
         # Section 6.3.10 LZ78Y prediction estimate
         pmax, minH = LZ78Y(dataset, verbose)
         if verbose:
-            print("- LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
+
+        print("-----------------------")
         print("min-entropy = %g" % (minEntropy))
 
 
