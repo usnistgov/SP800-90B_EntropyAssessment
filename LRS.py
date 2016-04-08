@@ -41,7 +41,7 @@ def lenLRS(s, verbose=False):
     # 5. Let E be a binomially distributed random variable with parameters
     #    N = L-W+1 choose 2 and a probability of success p_col. Calculate the
     #    probability that E is greater than or equal to 1.
-    PrE = 1-math.pow(1-p_col,N)
+    PrE = 1-math.pow(1-math.pow(p_col,W),N)
     if verbose:
         print ("\tW: %d, Pr(E>=1): %f" % (W,PrE))
 
