@@ -85,7 +85,7 @@ if __name__ == '__main__':
         ############################################
         # STEP 2: Calculate min-entropy of dataset #
         ############################################
-        minH = most_common(dataset)
+        pmax, minH = most_common(dataset)
         print("min-entropy = %g" % (minH))
 
 
