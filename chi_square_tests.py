@@ -121,7 +121,7 @@ def chi_square_independence(s):
     
     for pair in e_sorted:
         bins[q][0] = bins[q][0] + str(pair)
-        bins[q][1] = bins[q][1] + pair_counts[pair]
+        bins[q][1] = bins[q][1] + pair_counts.get(pair,0)
         bins[q][2] = bins[q][2] + e[pair]
         
         if e[pair] >= 5:
