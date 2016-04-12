@@ -51,13 +51,11 @@ def EppM(p, n, v):
 # of the Maurer Universal Statistic equals mu_bar within tolerance
 def solve_for_p(mu_bar, n, v, tolerance=0.00001):
     minp = 1.0/float(n) 
-    p = (1-minp)/2.0
-    adj = p
+    p = (1-minp)/2.0+minp
+    adj = (1-minp)
 
     Ep_maxvalid = EppM(1.0/float(n), n, v)
     if mu_bar > Ep_maxvalid:
-##        print("\tcompression (Maurer Universal Statistic) test not run:")
-##        print("\tmu_bar = %g, max valid value for this test and model = %g" % (mu_bar, Ep_maxvalid))
         return False, 0.0
 
     Ep = EppM(p, n, v)
