@@ -28,31 +28,32 @@ def F(n, zInv):
 
 # Expected value of statistic based on one-parameter family of prob distributions
 # Used in step 9 of Section 6.3.2 (right side of equation)
-def calcEpS(p, n):
-    q = (1.0 - p)/float(n - 1)
-    i_n = 1.0 / n
+def calcEpS(p, k):
+    q = (1.0 - p)/float(k - 1)
+    i_k = 1.0 / k
     ip = 1.0/p
     iq = 1.0/q
     iq2 = iq * iq
-    Ep = p * iq2 * (1.0 + i_n * (ip - iq)) * F(n, q) - (p * iq * i_n * (ip - iq))
+    Ep = p * iq2 * (1.0 + i_k * (ip - iq)) * F(k, q) - (p * iq * i_k * (ip - iq))
     return Ep
 
 
 # Binary search for p that solves equation in step 9 of Section 6.3.2
 def solve_for_p(mu_bar, n):
     minp = 1.0/float(n) 
-    p_c = (1-minp)/2.0
-    adj = p_c
+    p_c = (1-minp)/2.0+minp
+    adj = (1-minp)
     Ep = calcEpS(p_c, n)
     Ep_maxvalid = calcEpS(1.0/float(n),n)
     if mu_bar > Ep_maxvalid:
-##        print("\tcollision test not run:")
-##        print("\tmu_bar = %g, max valid value for this test and model = %g" % (mu_bar, Ep_maxvalid))
         return False, 0.0
     while abs(mu_bar - Ep) > .0001:
         adj /= 2.0
         if mu_bar < Ep:
             p_c += adj
+            # caclEps will crash if p_c is exactly 1.
+            if p_c==1.0:
+                p_c -= 0.0001
         else:
             p_c -= adj
             #occasionally dips below lowest possible pmax. This is to fix that
@@ -103,11 +104,10 @@ def collision_test(s, n):
 
     # 10. The min-entropy is the negative logarithm of the parameter p:
     # min-entropy = -log2(p)
-    min_entropy = -math.log(p, 2.0)
-    
-    # If the search does not yield a solution, then estimate max min-entropy  
+     # If the search does not yield a solution, then estimate max min-entropy  
     if not valid:
         # No solution to equation. Assume max min-entropy.
         return 1.0/k, math.log(k,2)
-
-    return p, min_entropy
+    else:
+        min_entropy = -math.log(p, 2.0)
+        return p, min_entropy
