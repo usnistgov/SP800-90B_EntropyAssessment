@@ -55,10 +55,10 @@ if __name__ == '__main__':
 
         if passed_permutation_tests:
             if verbose:
-                print ("** Passed iid permutation tests")
+                print ("** Passed IID permutation tests")
         else:
             if verbose:
-                print ("** Failed iid permutation tests")
+                print ("** Failed IID permutation tests")
             print ("IID = False")
             sys.exit(0)
 
