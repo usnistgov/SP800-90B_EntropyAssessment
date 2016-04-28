@@ -24,7 +24,7 @@ def markov_test(s, k, alpha):
     # Pi = min(1, o_i/L + epsilon)
     count = [s.count(i) for i in range(k)]
     L = len(s)
-    epsilon_term = math.log(1.0/(1.0 - alpha))
+    epsilon_term = math.log(1.0/(1.0 - alpha),2)
     epsilon = math.sqrt(epsilon_term/(2 * L))
     P = [min(1.0, count[i]/float(L) + epsilon) for i in range(k)]
 
