@@ -1,33 +1,35 @@
-# DRAFT NIST SP 800-90B (August 2012) Section 9.3 tests
+# DRAFT NIST SP 800-90B (January 2016) Sections 6.2 and 6.3 
 #
 # Estimating the Min-Entropy of non-IID Sources
 #
-#
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness. See user guide for full disclaimer.
 #
-# T. A. Hall
+# Oriniginal code by T. A. Hall
 # tim.hall@nist.gov
 #
-# 8 September 2014
+# Updated by Kerry McKay
+# March 3, 2016
+
 
 import sys
 import time
+import math
 
-from util90b import get_parser, to_dataset
+from util90b import get_parser, to_dataset, mapData
+from mostCommonValue import most_common
 from noniid_collision import collision_test
-from partial_collection import partial_collection_test
 from markov import markov_test
 from maurer import maurer_universal_statistic
-from frequency import frequency_test
-from sanity_checks import compression_sanity_check, collision_sanity_check
+from SP90Bv2_predictors import MultiMCW, Lag, MultiMMC, LZ78Y
+from tuple import t_tuple
+from LRS import LRS_estimate
 
 
 ##################
 # main program
 ##################
 if __name__ == '__main__':
-    start_time = time.time()
 
     # get command line arguments
     args = get_parser('non-IID').parse_args()
@@ -43,88 +45,107 @@ if __name__ == '__main__':
         # Read in raw bytes and convert to list of output symbols
         bytes_in = bytearray(file.read())
         dataset = to_dataset(bytes_in, bits_per_symbol)
+        k = len(set(dataset))
         if verbose:
             # print file and dataset details
             print ("Read in file %s, %d bytes long." % (datafile, len(bytes_in)))
-            print ("Dataset: %d %d-bit symbols." % (len(dataset), bits_per_symbol))
+            print ("Dataset: %d %d-bit symbols, %d symbols in alphabet." % (len(dataset), bits_per_symbol, k))
             print ("Output symbol values: min = %d, max = %d" % (min(dataset), max(dataset)))
 
         # 
         if use_bits < bits_per_symbol:
             mask = (2**use_bits) - 1
             dataset = [s & mask for s in dataset]
+            k = len(set(dataset))
             if verbose:
-                print ("* Using only low %d bits out of %d." % (use_bits, bits_per_symbol))
+                print ("* Using only low %d bits out of %d. %d symbols in reduced alphabet." % (use_bits, bits_per_symbol, k))
                 print ("* Using output symbol values: min = %d, max = %d" % (min(dataset), max(dataset)))
 
-        n = 2 ** use_bits
-        minEntropy = float(use_bits)
+        # some estimates require mapping the dataset to sequential outputs starting at 0
+        mapped = mapData(dataset)
 
-        # Section 9.3.3 The Collision Test
-        valid, pmax, minH = collision_test(dataset, n)
-        if valid:
-            if verbose:
-                print("- Collision test          : p(max) = %g, min-entropy = %g" % (pmax, minH))
-            minEntropy = min(minH, minEntropy)
-        else:
-            print("- Collision test *not valid* for this data set.")
+        # max min-entropy is -log_2(1/k)
+        minEntropy = float(math.log(k,2))
 
-        # Section 9.3.4 The Partial Collection Test
-        # Check for 500 event criterion in Step 3 of Section 9.3.4.3:
-        if use_bits > 10:
-            # map to 10 bits per symbol (10 bits is largest that works for 1,000,000 samples)
-            valid, pmax, minH = partial_collection_test([s&1023 for s in dataset], 1024)
-        else:
-            valid, pmax, minH = partial_collection_test(dataset, n)
-        if valid:
-            if verbose:
-                print("- Partial collection test : p(max) = %g, min-entropy = %g" % (pmax, minH))
-            minEntropy = min(minH, minEntropy)
-        else:
-            print("- Partial collection test *not valid* for this data set.")
 
-        # Section 9.3.5 The Markov Test
+        if verbose:
+            print ("\nRunning entropic statistic estimates:")
+            
+        # Section 6.3.1 The Most Common Value Estimate
+        pmax, minH = most_common(dataset)
+        if verbose:
+            print("- Most Common Value Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+        # Section 6.3.2 The Collision Estimate
+        pmax, minH = collision_test(dataset, k)
+        if verbose:
+            print("- Collision Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+        # Section 6.3.3 The Markov Estimate
         # If more than 6 bits per symbol, map down to 6 bits per symbol and run Markov test
         if use_bits > 6:
-            pmax, minH = markov_test([s&63 for s in dataset], 64, 0.95)
+            pmax, minH = markov_test([s&63 for s in dataset], 64, 0.99)
             if verbose:
-                print("- Markov test (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
+                print("- Markov Estimate (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
         else:
-            pmax, minH = markov_test(dataset, n, 0.95)
+            pmax, minH = markov_test(mapped, k, 0.99)
             if verbose:
-                print("- Markov test             : p(max) = %g, min-entropy = %g" % (pmax, minH))
+                print("- Markov Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
-        # Section 9.3.6 The Compression Test
-        valid, pmax, minH = maurer_universal_statistic(dataset, n)
-        if valid:
-            if verbose:
-                print("- Compression test        : p(max) = %g, min-entropy = %g" % (pmax, minH))
-            minEntropy = min(minH, minEntropy)
-        else:
-            print("- Compression test *not valid* for this data set.")
-
-        # Section 9.3.7 The Frequency Test
-        pmax, minH = frequency_test(dataset, n, 0.95)
+        # Section 6.3.4 The Compression Estimate
+        pmax, minH = maurer_universal_statistic(mapped, k)
         if verbose:
-            print("- Frequency test          : p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
-        # frequency test can give a negative result in extreme cases, so do following:
-        minEntropy = max(0.0, minEntropy)
 
+        # Section 6.3.5 The t-Tuple Estimate
+        pmax, minH = t_tuple(dataset)
+        if verbose:
+            print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+        
+        # Section 6.3.6 The LRS Estimate
+        pmax, minH = LRS_estimate(dataset)
+        if verbose:
+            print("- LRS Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+
+        if verbose:
+            print ("\nRunning predictor estimates:")
+
+        # Section 6.3.7 Multi Most Common in Window prediction estimate
+        pmax, minH = MultiMCW(dataset, verbose)
+        if verbose:
+            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+        # Section 6.3.8 Lag prediction estimate
+        pmax, minH = Lag(dataset, verbose)
+        if verbose:
+            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+
+        # Section 6.3.9 MultiMMC prediction estimate
+        pmax, minH = MultiMMC(dataset, verbose)
+        if verbose:
+            print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+        
+
+        # Section 6.3.10 LZ78Y prediction estimate
+        pmax, minH = LZ78Y(dataset, verbose)
+        if verbose:
+            print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
+
+        print("-----------------------")
         print("min-entropy = %g" % (minEntropy))
 
-        # run_sanity_check:
-        if minEntropy > 0.0:
-            if compression_sanity_check(dataset, minEntropy, verbose)[0] == 'pass' and\
-                collision_sanity_check(dataset, minEntropy, verbose) == 'pass':
-                print("sanity check = PASS")
-            else:
-                print("sanity check = FAIL")
-        else:
-            # if min-entropy is 0.0 then no sanity check is needed
-            print("sanity check = N/A")
 
-    if verbose:
-        print("time: (%g sec)" % (time.time() - start_time))
+        print("\nDon't forget to run the sanity check on a restart dataset using H_I = %g" % minEntropy )

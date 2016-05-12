@@ -1,23 +1,29 @@
 
-# DRAFT NIST SP 800-90B (August 2012)
+# DRAFT NIST SP 800-90B (January 2016)
 #
-# Section 9.1.3 - Specific Statistical Tests
+# Section 5.2 - Additional Chi-square Statistical Tests
 #
 # NOTE: this software is made available with no guarantee - implied or otherwise -
-# of correctness or completeness.
+# of correctness or completeness. See user guide for full disclaimer.
 #
 # Tim Hall
 # tim.hall@nist.gov
-# 
 # 3 September 2014
+#
+# Updated by Kerry McKay
+# March 3, 2106
 
 import math
+from collections import OrderedDict, Counter
+from operator import itemgetter
+import itertools
 
 # does the dataset pass the chi-square tests?
-def pass_chi_square_tests(dataset, data_subsets, verbose):
+def pass_chi_square_tests(dataset, verbose=False):
 
     # chi-square independence test
     is_binary = (min(dataset) == 0 and max(dataset) == 1)
+
     if is_binary:
         score, df = binary_chi_square_independence(dataset)
     else:
@@ -34,21 +40,24 @@ def pass_chi_square_tests(dataset, data_subsets, verbose):
             print("** Failed chi-square independence tests")
             return False
 
-    # chi-square stability test
+    # chi-square goodness-of-fit test
+    # divide the dataset into 10 subsets of equal length
+    sublength = len(dataset) // 10
+    data_subsets = [dataset[i*sublength : (i+1)*sublength] for i in range(10)]
     if is_binary:
-        score, df = binary_chi_square_stability(data_subsets)
+        score, df = binary_goodness_of_fit(data_subsets)
     else:
         score, df = goodness_of_fit(data_subsets)
     cutoff = chi_square_cutoff(df)
     if verbose:
-        print("\nChi square stability\n\tscore = %g, degrees of freedom = %d cut-off = %g" % (score, df, cutoff))
+        print("\nChi square goodness-of-fit\n\tscore = %g, degrees of freedom = %d cut-off = %g" % (score, df, cutoff))
 
     if score < cutoff:
         if verbose:
-            print("** Passed chi-square stability test\n")
+            print("** Passed chi-square goodness-of-fit test\n")
     else:
         if verbose:
-            print("** Failed chi-square stability tests")
+            print("** Failed chi-square goodness-of-fit tests")
             return False
 
     return True
@@ -68,104 +77,77 @@ def _internal_get_symbol_counts(datasets):
     return values, count
 
 
-# Testing Independence for Non-Binary Data - Section 9.1.3.1.1
-def chi_square_independence(dataset):
-    # 1. Determine p(xi) for each possible output value in the dataset by
-    #    counting the number of occurrences of each xi and dividing by the
-    #    length of the dataset.
-    p, N = _internal_get_symbol_counts([dataset])
-    N = float(N)
-    for xi in p.keys():
-        p[xi] /= N
+# Testing Independence for Non-Binary Data - Section 5.2.1
+def chi_square_independence(s):
+    A = set(s)
+    L = len(s)
 
-    # 2. Determine pmax = max probability that occurs in the dataset
-    pmax = max(p.values())
+    p = {} #proportions
+    e = {} #expected values
+    pair_counts = {} #occurances of each pair
+    
+    # 1. Find the proportion p_i of each x_i in S. Calculate the expected
+    #    number of occurances of each possible pair as (p_i)(p_j)(L-1)
+    for a in A:
+        p[a]= float(s.count(a))/L
+    pair_iterator = itertools.product(A,A)
+    more = True
+    while more:
+        try:
+            pair = pair_iterator.next()
+            e[pair] = p[pair[0]]*p[pair[1]]*(L-1)
+        except:
+            more = False
 
-    # 3. Let N = the number of samples in the dataset (found in 1. already)
-    # 4. Count the number of parameters to be estimated.  Let q = 1; start
-    #    with 1 because the catch-all category probability will be estimated.
-    q = 1
-    #    a. For each p(xi):
-    #        if p(xi)pmax >= 5/N, let q = q + 1
-    for xi in p.keys():
-        if p[xi]*pmax >= 5.0/N:
+    for i in range(L-1):
+        pair = tuple(s[i:i+2])
+        pair_counts[pair] =  pair_counts.get(pair,0)+1
+
+    # 2. Allocate the possible pairs, starting from the smallest expected value, 
+    #    into bins s.t. the expected value of each bin is at least 5. The
+    #    expected value of a bin is equal to the sum of the expected values of
+    #    the pairs that are included in the bin. After allocating all pairs, if
+    #    the expected value of the last bin is less than 5, merge the last two
+    #    bins. Let q be the number of bins constructed after this procedure.
+    #
+    #    For each pair, count the number of observed values for each bin
+    
+    bins = []
+    e_sorted = OrderedDict(sorted(e.items(), key=itemgetter(1)))
+    q = 0
+    
+    # bins[q][0] is pairs, bins[q][1] is frequency, bins[q][2] is expected
+    bins.append(['',0,0])
+    
+    for pair in e_sorted:
+        bins[q][0] = bins[q][0] + str(pair)
+        bins[q][1] = bins[q][1] + pair_counts.get(pair,0)
+        bins[q][2] = bins[q][2] + e[pair]
+        
+        if e[pair] >= 5:
             q += 1
+            bins.append(['',0,0])
 
-    #    b. If q = 1, test halts with no result - not enough pairs with high
-    #       enough probability to run the test on.  Dataset is too small
-    assert q > 1
+    if bins[q][0] == '':            
+        bins.pop() #remove empty bin
+        q -= 1
 
-    # 5. The sets of pairs of values that are expected to occur at least five
-    #    times or less than five times are constructed as folows:
-    #    a. Set List1 and List2 to empty sets
-    List1 = []
-    List2 = []
-    E = {}
-    #    b. Eother = 0
-    Eother = 0.0
-    #    c. For each possible pair of values (xi,xj) including (xi,xi):
-    for xi in p.keys():
-        for xj in p.keys():
-            E_xixj = p[xi]*p[xj]*N
-            # if p(xi)p(xj)N >= 5:
-            if E_xixj >= 5.0:
-                # i. Add the (xi,xj) pair to List1
-                List1.append((xi,xj))
-                # ii. Let E(xi,xj) = p(xi)p(xj)N
-                E[(xi,xj)] = E_xixj
-            # else:
-            else:
-                # iii. Add the (xi,xj) pair to List2
-                List2.append((xi,xj))
-                # iv. Eother = Eother + p(xi)p(xj)N
-                Eother += E_xixj
+    #merge last two bins if expected value of last bin < 5
+    if bins[q][2] < 5:
+        bins[q-1][0] = bins[q-1][0] + bins[q][0]
+        bins[q-1][1] = bins[q-1][1] + bins[q][1]
+        bins[q-1][2] = bins[q-1][2] + bins[q][2]
+        bins.pop()
+        q -= 1
 
-    # 6. Verify that enough degrees of freedom are obtained to run the test.
-    #    If not, this test has no result; the test may be omitted or more
-    #    data may be requested.
-    #    a. Let w = the number of pairs that appear in List1
-    w = len(List1)
-    #    b. If w+1-q < 1: halt the test with no result - there is not enough
-    #       data to run the test properly
-    df = w+1-q
-    if df < 1:
-        print("w=%d, q=%d, w+1-q=%d - not enough data" % (w,q,df))
-        assert False
 
-    # 7. Compute the chi-square score:
-    # 7.a. X1 = 0
-    X1 = 0.0
-    # 7.b. For each pair (xi,xj) in List1:
-    # 7.b.i. Obs(xi,xj) = the number of occurrences of this pair of values
-    #        in the dataset.
-    # First count the number of times each pair in the dataset occurs
-    xi = dataset[0]
-    Obs = {}
-    for xj in dataset[1:]:
-        Obs[(xi,xj)] = Obs.get((xi,xj),0) + 1
-        xi = xj
+    # caclulate the test statistic, T
+    T = 0
+    for i in range(q):
+        T += float((bins[q][1] - bins[q][2])**2)/bins[q][2]
 
-    for xixj in List1:
-        # ii. X1 = X1 + (E(xi,xj) - Obs(xi,xj))^2 / E(xi,xj)
-        X1 += pow(E[xixj] - Obs.get(xixj,0), 2)/E[xixj]
-
-    # 7.c. X2 = 0
-    X2 = 0
-    # 7.d. For each pair (xi,xj) in List2:
-    # 7.d.i. Obs(xi,xj) = the number of occurrences of this pair in the dataset
-    for xixj in List2:
-        # ii. X2 = X2 + Obs(xi,xj)
-        #X2 += Obs[xixj]
-        X2 += Obs.get(xixj,0)
-
-    # 7.e. X = X1 + (X2 - Eother)^2 / Eother
-    if Eother > 0.0:
-        X = X1 + pow(X2 - Eother, 2)/Eother
-    else:
-        assert X2 == 0
-        X = X1
-
-    return X, df
+    # return statistic with q-1 df (since our indices start at 0, df is q)
+    return T, q
 
 
 
@@ -179,164 +161,141 @@ def kbit_element(bits):
     return sum([bits[i] << (k-i-1) for i in range(k)])
 
 
-# Testing independence for Binary Data - Section 9.1.3.1
-def binary_chi_square_independence(dataset):
-    # 1. Let C0 be the count of zeros in dataset and C1 be count of ones
-    C0 = dataset.count(0)
-    C1 = dataset.count(1)
+# Testing independence for Binary Data - Section 5.2.3
+def binary_chi_square_independence(s):
+    L = len(s)
 
-    # 2. Let Cx be whichever of those two is smaller, i.e., Cx = min(C0,C1)
-    Cx = min(C0, C1)
+    # 1. Let p0 and p1 be the proportion of zeroes and ones in S
+    p0 = s.count(0)/float(L)
+    p1 = s.count(1)/float(L)
 
-    # 3. Let N be the total number of bits in the dataset.
-    N = len(dataset)
-    assert N == (C0 + C1)
-
-    # 4. Let k = 2
-    k = 2
-
-    # 5. While k < 12 and (Cx/N)^k > 5/N:
-    #        k = k + 1
-    while k < 12 and pow(Cx/float(N), k) > 5.0/N:
-        k = k + 1
-
-    # 6. k = k - 1
-    k = k - 1
-
-    # At the end of this process k <= 2 < 12.  Construct modified dataset
-    # as follows:
-    #     new_dataset[i] = dataset[ki ... (k+1)i - 1]
-    # That is, each successive k bits of the dataset becomes a new element in
-    # new_dataset.
-    new_dataset = [kbit_element(dataset[i:i+k]) for i in range(0,N,k)]
-
-    # count the number of times each element occurs in new dataset
-    # (will be used below in 3.d and 3.e)
-    C = [0 for i in range(pow(2, k))]
-    for value in new_dataset:
-        C[value] += 1
-
-    # The expected probabilities of each value in the dataset and a chi square
-    # score are computed as folows:
-    
-    # 1. p = C1/N (the probability of getting a '1' bit in the dataset
-    N = float(N) # to ensure float division in Python 2.6/2.7
-    p = C1/N
-
-    # 2. S = 0.0
-    S = 0.0
-
-    # 3. For value = 0 to 2^k - 1:
-    for value in range(pow(2,k)):
-        # a. W = hamming_weight(value) (i.e., number of '1's in value)
-        W = hamming_weight(value)
-
-        # b. prob(value) = p^W(1 - p)^(k-W)
-        prob = pow(p, W) * pow(1.0 - p, k-W)
-
-        # c. E(value) = prob(value)N/k
-        Evalue = prob * N / float(k)
-        # d. Let C_value = # times value appears in new_dataset
-        # e. S = S + (C_value - E(value))^2 / E(value)
-        S += pow(C[value] - Evalue, 2.0) / Evalue
-
-    # Final total value S is a chi-square variable with 2^k -1 degrees of
-    # freedom
-    return S, pow(2,k)-1
-
-
-# Testing for Stability of Distribution in Binary Data - Section 9.1.3.1.4 
-def binary_chi_square_stability(datasets):
-    assert len(datasets)==10
-
-    # 1. Let p be the probability that a bit in the original dataset
-    # is a '1'.  This is computed as:
-    # p = (number of '1' bits in the dataset / N)
-    #
-    # 2. Let Nd be the length of each of the ten individual datasets
-    C = [sum(D) for D in datasets] # C[d] used in step 5
-    N = [len(D) for D in datasets] # N[d] used in step 3
-    p = sum(C) / float(sum(N))
-
-    # 3. Let Ed = pNd
-    E = [p*Nd for Nd in N]
-
-    # 4. S = 0.0
-    S = 0.0
-
-    # 5. For d = 1 to 10:
-    #    a. Cd = number of '1's in data subset d (already found above)
-    #    b. S = S + (Cd - Ed)^2 / Ed
-    for d in range(10):
-        S += pow(C[d] - E[d], 2) / float(E[d])
-
-    # S is a chi-square variable with 9 degrees of freedom.  The test
-    # fails if S is larger than the critical value at 0.001, which is
-    # 27.9
-    return S, 9
-
-
-
-# Test for Goodness of Fit for non-binary data - Section 9.1.3.1.2
-def goodness_of_fit(datasets):
-    assert len(datasets) == 10
-
-    # 1. Determine E(xi) for each xi.  This is the total number of occurrences
-    #    of xi in the entire dataset, divided by 10.
-    E, N = _internal_get_symbol_counts(datasets)
-    for xi in E.keys():
-        E[xi] /= 10.0
-
-    # 2. Let List3 be the list of values of xi s.t. E(xi) >= 5
-    # 3. Let List4 be the list of values of xi s.t. E(xi) < 5
-    List3 = []
-    List4 = []
-    for xi in E.keys():
-        if E[xi] >= 5.0:
-            List3.append(xi)
+    # 2. Find the maximum integer m such that p0**m > 5/L and p1**m < 5/L.
+    #    If m is greater than 11, assign m to 11. If m is 1, the test fails.
+    m = 11
+    while m > 1:
+        if math.pow(p0,m)>(5.0/L) and math.pow(p1,m)>(5.0/L):
+            break
         else:
-            List4.append(xi)
+            m -= 1
 
-    # 4. E_other = 0
-    E_other = 0.0
+    # Apply the test if m >= 2
+    if m > 1:
+        # Initialize T to 0.
+        T = 0
 
-    # 5. For each xi in List4:
-    #        E_other = E_other + E(xi)
-    for xi in List4:
-        E_other += E[xi]
+        # 2. for each possible m-bit tuple
+        # 2a. Let o be the number of times that the pattern occurs in the
+        #     input sequence S. Note that the tuples are allowed to overlap.
+        m_tuples = itertools.product([0,1], repeat=m)
+        o = {}
+        for i in range(L-m+1):
+            t = tuple(s[i:i+m])
+            o[t] = o.get(t, 0) + 1
 
-    # 6. Let X1 = 0
-    X1 = 0.0
+        for t in m_tuples:
+            # 2b. Let w be the number of ones in the tuple
+            w = sum(t)
+            
+            # 2c. Let e = p_1**w * p_0**(m-w) * (L-m+1)
+            e = math.pow(p1,w)*math.pow(p0,m-w)*(L-m+1)
 
-    # 7. For each of the ten data subsets:
-    for subset in datasets:
-        # a. Let Obs(xi) be the observed number of occurrences of xi in the data
-        #    subset
-        Obs, subset_length = _internal_get_symbol_counts([subset])
-        assert subset_length == len(subset)
+            #update T
+            T += math.pow(o.get(tuple(t),0)-e,2)/float(e)
+                
+        return T, math.pow(2,m)-1
+    
+    else:
+        return None, None
 
-        # b. For each xi in List3 (i.e., each xi that is expected to occur at
-        #    least 5 times):
-        #        X1 = X1 + (Obs(xi) - E(xi))^2 / E(xi)
-        for xi in List3:
-            X1 += pow(Obs.get(xi, 0) - E[xi], 2) / E[xi]
-  
-        # c. Obs_other = number of occurrences of values in List4 in the data
-        #    subset.
-        Obs_other = sum([Obs.get(value, 0) for value in List4])
 
-        # d. X = X1 + (Obs_other - E_other)^2 / E_other
-        if E_other > 0.0:
-            X1 += pow(Obs_other - E_other, 2) / float(E_other)
-        X = X1
 
-    # The final total X is a chi-square variable with 9|L| degrees of freedom
-    # where L is the length of List3 plus 1 (i.e., the number of values with
-    # expected value >= 5, plus 1)
+# Testing Goodness-of-fit for Binary Data - Section 5.2.4
+# This test checks the distribution of the number of ones in non-overlapping
+# intervals of the input data to determine whether the distribution of the
+# ones remains the same throughout the sequence.
+def binary_goodness_of_fit(subsets):
+    assert len(subsets) == 10
 
-    L = len(List3) + 1
+    # 1. Let p be the proportion of ones in S, i.e., p = (the number of ones in S)/ L.
+    c = [sum(s) for s in subsets] # number of ones in all 10 subsets
+    L = sum([len(s) for s in subsets]) # number of elements in all 10 subsets
+    p = sum(c)/float(L) #proportion
 
-    return X,  9*L
+    
+    # 2. Partition S into ten non-overlapping sub-sequences of length floor(L/10).
+    #   (Data already split before callint this function)
+
+    # 3.Initialize T to 0.
+    T = 0
+
+    # 4. Let the expected number of ones in each sub-sequence S_d be e=p*floor(L/10)
+    e = p*math.floor(L/10)
+
+    # 5. for d = 0 to 9
+    for d in range(10):
+        # 5a. Let o_i be the number of ones in S_d
+        o = sum(subsets[d])
+
+        # 5b. update the test statistic, T
+        T += float(o - e)**2/e
+
+    # T is a chi-square random variable with 9 degrees of freedom.
+    return T, 9
+    
+
+# Test for Goodness of Fit for non-binary data - Section 5.2.2
+def goodness_of_fit(subsets):
+    assert len(subsets) == 10
+
+    # 1. Let c_i be the number of occurrances of x_i in s, and let e_i = c_i/10.
+    e, N = _internal_get_symbol_counts(subsets)
+    for xi in e.keys():
+        e[xi] /= 10.0
+
+    # 2. Let List[i] be the sample value with the ith smallest e_i
+    List = sorted(e.items())
+
+
+    # 3. Starting from List[1], allocate the sample values into bins. Assign
+    #    consecutive List[i] values to a bin until the sum of the e_i for those
+    #    binned items is at least five, then begin assigning the following
+    #    List[i] values to the next bin. If the expected value of the last bin
+    #    is less than five, merge the last two bins. Let q be the number of bins
+    #    constructed after this procedure.
+    #
+    # 4. Let E_i be the expected number of sample values in Bin i 
+    E = [0]
+    bins = [[]]
+    q = 0
+    
+    for i in range(len(List)):
+        bins[q].append(List[i][0])
+        E[q] += List[i][1]
+        
+        if E[q] >= 5:
+            q += 1
+            E.append(0)
+            bins.append([])
+
+    if E[q] == 0:           
+        #remove empty bin
+        E.pop()
+        q -= 1
+
+    # The chi-square goodness-of-fit test is executed as follows:
+    T = 0
+    for d in range(10):
+        o = [0 for i in range(q+1)]
+        for i in range(q+1):
+            # Let o_i be the number of sample values from bin i in the data subset s_d
+            for x in bins[i]:
+                o[i] += subsets[d].count(x)
+            T += float(o[i]-E[i])**2/E[i]
+            
+    # return statistic and 9*(q-1) df
+    # (since our bin indices start at 0 instead of 1, df=9q)
+    return T, 9*q
+    
    
 
 
@@ -414,3 +373,5 @@ def calc_chi_square_cutoff(df):
     chisqr = df * pow(1.0 - term + (x_p - h_v)*math.sqrt(term), 3)
 
     return chisqr
+
+
