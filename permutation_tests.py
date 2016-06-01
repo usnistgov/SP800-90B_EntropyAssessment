@@ -54,7 +54,8 @@ def calc_stats(dataset):
 # conversion I
 # partitions the sequences into 8-bit non-overlapping blocks, and counts the number of ones in each block.
 def conversion1(s):
-    sp = [s[i:i+8].count(1) for i in range(0,int(len(s)/8),8)]
+    # handle complete blocks
+    sp = [s[i:i+8].count(1) for i in range(0,len(s)-len(s)%8,8)]
 
     # handle incomplete block
     if len(s)%8 > 0:
@@ -68,7 +69,7 @@ def conversion2(s):
     sp = str(s)[1:-1]
     sp = sp.replace(', ','')
     padded = sp + '0' * (8 - len(s) % 8)
-    sp_bytes = [int(padded[i:i+8], 2) for i in range(0,int(len(padded))/8,8)]
+    sp_bytes = [int(padded[i:i+8], 2) for i in range(0,len(padded),8)]
     
     return sp_bytes
 
