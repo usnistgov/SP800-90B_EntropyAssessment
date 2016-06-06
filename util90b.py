@@ -9,7 +9,7 @@
 # tim.hall@nist.gov
 #
 # Updated for January 2016 draft by Kerry McKay
-# March 3, 2016
+# June 6, 2016
 
 import argparse
 import bisect
@@ -41,7 +41,7 @@ def get_parser(test):
 # Note that 1 bit per symbol assumes that 1 bit per byte is used, the data is
 # not packed (i.e., 8 1-bit output samples are not packed into 1 byte)
 #
-# Does not handle > 32 bits per symbol.
+# Does not handle > 8 bits per symbol.
 def to_dataset(bytes, bits_per_symbol):
     assert bits_per_symbol > 0
     assert bits_per_symbol <= 8
@@ -49,19 +49,11 @@ def to_dataset(bytes, bits_per_symbol):
     # mask for relevant bits
     mask = 2**bits_per_symbol - 1
 
-    # Ignore incomplete symbols. E.g., if there are 17 bytes of 16-bit symbols,
-    # only read first 16 bytes and disgard remaining 4 bits.
     N = len(bytes)
     print ("reading %d bytes of data" % N)
 
     if bits_per_symbol <= 8: # includes 1-bit per symbol
         return [b & mask for b in bytes]
-##    elif bits_per_symbol <= 16:
-##        return [(bytes[i]*256 + bytes[i+1]) & mask for i in range(0,N,2)]
-##    elif bits_per_symbol <= 24:
-##        return [(bytes[i]*(256*256) + bytes[i+1]*256 + bytes[i+2])  & mask for i in range(0,N,3)]
-##    elif bits_per_symbol <= 32:
-##        return [(bytes[i]*(256*256*256) + bytes[i+1]*(256*256) + bytes[i+2]*256 + bytes[i+3]) & mask for i in range(0,N,4)]
     else:
         return list()
 
