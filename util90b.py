@@ -26,7 +26,9 @@ def get_parser(test):
     parser.add_argument(dest='datafile', metavar='datafile', help='dataset on which to run tests')
     parser.add_argument(dest='bits_per_symbol',metavar='bits_per_symbol', help='number of bits used to represent sample output values')
 
-    if test == 'non-IID':
+    if test == 'IID':
+        parser.add_argument('-p', '--processes', dest='processes', default=1, help='max number of processes for tests')
+    elif test == 'non-IID':
         parser.add_argument('-u', '--usebits', dest='use_bits', metavar='use_bits', help='use only the N lowest order bits per sample')
     elif test == 'restart':
         parser.add_argument(dest='H_I', metavar='H_I', help='initial entropy estimate')

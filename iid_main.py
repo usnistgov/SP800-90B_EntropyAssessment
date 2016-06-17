@@ -35,6 +35,8 @@ if __name__ == '__main__':
     datafile = args.datafile
     bits_per_symbol = int(args.bits_per_symbol)
     verbose = bool(args.verbose)
+    max_processes = int(args.processes)
+
 
     with open(datafile, 'rb') as file:
         # Read in raw bytes and convert to list of output symbols
@@ -45,13 +47,14 @@ if __name__ == '__main__':
             # print file and dataset details
             print ("Read in file %s, %d bytes long." % (datafile, len(bytes_in)))
             print ("Dataset: %d %d-bit symbols, %d symbols in alphabet." % (len(dataset), bits_per_symbol, k))
-            print ("Output symbol values: min = %d, max = %d\n" % (min(dataset), max(dataset)))
+            print ("Output symbol values: min = %d, max = %d." % (min(dataset), max(dataset)))
+            print ("Max processes allowed: %d.\n" % max_processes)
 
         #######################################
         # STEP 1: Determine if Dataset is IID #
         #######################################
         # determine if dataset is IID using shuffle and Chi-square tests
-        passed_permutation_tests = permutation_test(dataset, verbose)
+        passed_permutation_tests = permutation_test(dataset, max_processes, verbose)
 
         if passed_permutation_tests:
             if verbose:
@@ -60,27 +63,28 @@ if __name__ == '__main__':
             if verbose:
                 print ("** Failed IID permutation tests")
             print ("IID = False")
+            print ("min-entropy = 0.0")
             sys.exit(0)
 
-        # run chi-square tests on dataset
-        if pass_chi_square_tests(dataset, verbose):
-            if verbose:
-                print ("** Passed chi square tests")
-        else:
-            if verbose:
-                print ("** Failed chi square tests")
-            print ("IID = False")
-            sys.exit(0)
+        # # run chi-square tests on dataset
+        # if pass_chi_square_tests(dataset, verbose):
+        #     if verbose:
+        #         print ("** Passed chi square tests")
+        # else:
+        #     if verbose:
+        #         print ("** Failed chi square tests")
+        #     print ("IID = False")
+        #     sys.exit(0)
 
-        # run LRS test
-        if lenLRS(dataset, verbose):
-            if verbose:
-                print ("** Passed LRS test")
-            print ("\nIID = True")
-        else:
-            print ("** Failed LRS test")
-            print ("IID = False")
-            sys.exit(0)
+        # # run LRS test
+        # if lenLRS(dataset, verbose):
+        #     if verbose:
+        #         print ("** Passed LRS test")
+        #     print ("\nIID = True")
+        # else:
+        #     print ("** Failed LRS test")
+        #     print ("IID = False")
+        #     sys.exit(0)
 
         ############################################
         # STEP 2: Calculate min-entropy of dataset #

@@ -13,6 +13,8 @@
 
 import bz2
 import sys
+import time
+from multiprocessing import Pool
 from collections import namedtuple
 from random import randrange
 
@@ -26,6 +28,12 @@ except:
     import random
     shuffle = random.shuffle
    
+# Global decl's
+ret_c = []
+C = {}
+t = {}
+jobs = 10000
+verbose = False
 
 # Calculate the mean and median and identify if binary or not
 def calc_stats(dataset):
@@ -326,21 +334,23 @@ def findCollisions(s):
     return C
 
 # Permutation testing 
-def permutation_test(s, verbose=False):
+def permutation_test(s, max_processes=1, vb=False):
+
+    verbose = vb
+    start_time = time.time()
 
     mean, median, is_binary = calc_stats(s)
 
     # 1. For each test i
     # 1.1 Assign the counters to zero
-    C = {}
     for i in get_test_names():
         C[i] = [0,0]
+        t[i] = [0,0]
 
     if verbose:
         print ("Calculating statistics on original sequence")
 
     # 1.2 Calculate the test statistic T_i on s; denote the result as t[i]
-    t = {}
 
     # conversions for binary data
     if is_binary:
@@ -407,106 +417,147 @@ def permutation_test(s, verbose=False):
         
     t['compression'] = compression(s)
 
-    # 2. For j=1 to 10000
-        # 2.1 Permute the input data using Fisher-Yates
     
+    prep_time = time.time() - start_time
+
     if verbose:
         print ("Calculating statistics on permuted sequences")
-    for j in range(10000):
-        if verbose:
-            sys.stdout.write("\rpermutation tests:\t%.2f percent complete" % (float(j)/100))
-            sys.stdout.flush()
-        shuffle(s)
 
-        # 2.2 for each test i
-        # 2.2.1 Calcualte the test statistic; denote the result as tp[i]
-        tp = {}
+    # Prepare process pool
+    pool = Pool(processes=max_processes)
 
-        # conversions for binary data
-        if is_binary:
-            cs1 = conversion1(s)
-            cs2 = conversion2(s)
-
-        tp['excursion'] = excursion(s, mean)
+    # Launch jobs
+    # 2. For j=1 to 10000
+    for i in range(jobs):
+        # 2.1 Permute the input data using Fisher-Yates
+        pool.apply_async(run_iterations, args=(s, mean, median, is_binary), callback=log_result)
         
-        if is_binary:
-            # conversion 1 required for binary data for directional run and
-            # increases/decreases statistics
-            sp1 = altSequence1(cs1)
-            tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
-            tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
-            tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
-        else:
-            sp1 = altSequence1(s)
-            tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
-            tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
-            tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
+        #if verbose:
+            #sys.stdout.write("Running permutation %d of %d\r" % (i, jobs))
+            #sys.stdout.flush()
 
-        if is_binary:
-            sp2= altSequence2(cs2, 0.5)
-        else:
-            sp2= altSequence2(s, median)
-        tp['numRunsMedian'] = numRunsMedian(sp2)
-        tp['lenRunsMedian'] = lenRunsMedian(sp2)
+    pool.close()
+    pool.join()
+ 
+    job_time = time.time() - start_time - prep_time
 
-        if is_binary:
-            # conversion 2 required for collision statistics on binary data
-            collision_list = findCollisions(cs2)
-        else:
-            collision_list = findCollisions(s)
-        tp['avgCollision'] = avgCollision(collision_list)
-        tp['maxCollision'] = maxCollision(collision_list)
-
-        if is_binary:
-            # conversion 1 required for periodicity statistics on binary data
-            tp['periodicity(1)'] = periodicity(cs1,1)
-            tp['periodicity(2)'] = periodicity(cs1,2)
-            tp['periodicity(8)'] = periodicity(cs1,8)
-            tp['periodicity(16)'] = periodicity(cs1,16)
-            tp['periodicity(32)'] = periodicity(cs1,32)
-        else:
-            tp['periodicity(1)'] = periodicity(s,1)
-            tp['periodicity(2)'] = periodicity(s,2)
-            tp['periodicity(8)'] = periodicity(s,8)
-            tp['periodicity(16)'] = periodicity(s,16)
-            tp['periodicity(32)'] = periodicity(s,32)
-            
-        if is_binary:
-            # conversion 1 required for covariance statistics on binary data
-            tp['covariance(1)'] = covariance(cs1,1)
-            tp['covariance(2)'] = covariance(cs1,2)
-            tp['covariance(8)'] = covariance(cs1,8)
-            tp['covariance(16)'] = covariance(cs1,16)
-            tp['covariance(32)'] = covariance(cs1,32)
-        else:
-            tp['covariance(1)'] = covariance(s,1)
-            tp['covariance(2)'] = covariance(s,2)
-            tp['covariance(8)'] = covariance(s,8)
-            tp['covariance(16)'] = covariance(s,16)
-            tp['covariance(32)'] = covariance(s,32)
-            
-        tp['compression'] = compression(s)
-        
-        # 2.2.2 If (tp[i] > t[i]), increment C[i,0]. If (tp[i] = t[i]), increment C[i,1].
-        for i in get_test_names():
-            if tp[i] > t[i]:
-                C[i][0] += 1
-            elif tp[i] == t[i]:
-                C[i][1] += 1
+    # Accumulate results
+    for i in range(jobs):
+        for j in get_test_names():
+            C[j][0] += ret_c[i][j][0]
+            C[j][1] += ret_c[i][j][1]
 
     if verbose:
         print("\n                statistic  C[i][0]  C[i][1]")
         print("-------------------------------------------")
         for i in get_test_names():
-            if ((C[i][0]+C[i][1]) <= 5) or (C[i][0] >= 9995):
+            if ((C[i][0]+C[i][1]) <= 5) or (C[i][0] >= jobs-5):
                 print ("%24s* %8d %8d" % (i, C[i][0], C[i][1]))
             else:
                 print ("%25s %8d %8d" % (i, C[i][0], C[i][1]))
         print("(* denotes failed test)")
 
-    # 3. If (C[i][0]+C[i][1] <= 5) or (C[i][0] >= 9995) for any i, reject the IID assumption
+    # 3. If (C[i][0]+C[i][1] <= 5) or (C[i][0] >= jobs-5) for any i, reject the IID assumption
     #    Else assume the noise source produces IID output.
     for i in get_test_names():
-        if ((C[i][0]+C[i][1]) <= 5) or (C[i][0] >= 9995):
+        if ((C[i][0]+C[i][1]) <= 5) or (C[i][0] >= jobs-5):
             return False
+
+    results_time = time.time() - start_time - prep_time - job_time
+    total_time = time.time() - start_time
+
+    print("Prep time: %d" % prep_time)
+    print("Job time: %d" % job_time)
+    print("Results time: %d" % results_time)
+    print("Total time: %d" % total_time)
+
     return True
+
+def run_iterations(s, mean, median, is_binary):
+
+    C = {}
+    for i in get_test_names():
+        C[i] = [0,0]
+
+    shuffle(s)
+
+    # 2.2 for each test i
+    # 2.2.1 Calcualte the test statistic; denote the result as tp[i]
+    tp = {}
+
+    # conversions for binary data
+    if is_binary:
+        cs1 = conversion1(s)
+        cs2 = conversion2(s)
+
+    tp['excursion'] = excursion(s, mean)
+    
+    if is_binary:
+        # conversion 1 required for binary data for directional run and
+        # increases/decreases statistics
+        sp1 = altSequence1(cs1)
+        tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
+        tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
+        tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
+    else:
+        sp1 = altSequence1(s)
+        tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
+        tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
+        tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
+
+    if is_binary:
+        sp2= altSequence2(cs2, 0.5)
+    else:
+        sp2= altSequence2(s, median)
+    tp['numRunsMedian'] = numRunsMedian(sp2)
+    tp['lenRunsMedian'] = lenRunsMedian(sp2)
+
+    if is_binary:
+        # conversion 2 required for collision statistics on binary data
+        collision_list = findCollisions(cs2)
+    else:
+        collision_list = findCollisions(s)
+    tp['avgCollision'] = avgCollision(collision_list)
+    tp['maxCollision'] = maxCollision(collision_list)
+
+    if is_binary:
+        # conversion 1 required for periodicity statistics on binary data
+        tp['periodicity(1)'] = periodicity(cs1,1)
+        tp['periodicity(2)'] = periodicity(cs1,2)
+        tp['periodicity(8)'] = periodicity(cs1,8)
+        tp['periodicity(16)'] = periodicity(cs1,16)
+        tp['periodicity(32)'] = periodicity(cs1,32)
+    else:
+        tp['periodicity(1)'] = periodicity(s,1)
+        tp['periodicity(2)'] = periodicity(s,2)
+        tp['periodicity(8)'] = periodicity(s,8)
+        tp['periodicity(16)'] = periodicity(s,16)
+        tp['periodicity(32)'] = periodicity(s,32)
+        
+    if is_binary:
+        # conversion 1 required for covariance statistics on binary data
+        tp['covariance(1)'] = covariance(cs1,1)
+        tp['covariance(2)'] = covariance(cs1,2)
+        tp['covariance(8)'] = covariance(cs1,8)
+        tp['covariance(16)'] = covariance(cs1,16)
+        tp['covariance(32)'] = covariance(cs1,32)
+    else:
+        tp['covariance(1)'] = covariance(s,1)
+        tp['covariance(2)'] = covariance(s,2)
+        tp['covariance(8)'] = covariance(s,8)
+        tp['covariance(16)'] = covariance(s,16)
+        tp['covariance(32)'] = covariance(s,32)
+        
+    tp['compression'] = compression(s)
+    
+    # 2.2.2 If (tp[i] > t[i]), increment C[i,0]. If (tp[i] = t[i]), increment C[i,1].
+    for i in get_test_names():
+        if tp[i] > t[i]:
+            C[i][0] += 1
+        elif tp[i] == t[i]:
+            C[i][1] += 1
+
+    return C
+
+def log_result(result):
+    ret_c.append(result)
