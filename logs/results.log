@@ -1,0 +1,8 @@
+reading 1000000 bytes of data
+Read in file urand.bin, 1000000 bytes long.
+Dataset: 1000000 8-bit symbols, 256 symbols in alphabet.
+Output symbol values: min = 0, max = 255.
+Max processes allowed: 4.
+
+Calculating statistics on original sequence
+Calculating statistics on permuted sequences

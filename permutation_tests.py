@@ -32,7 +32,7 @@ except:
 ret_c = []
 C = {}
 t = {}
-jobs = 10000
+jobs = 100
 verbose = False
 
 # Calculate the mean and median and identify if binary or not
@@ -326,10 +326,10 @@ def findCollisions(s):
     #   3b. Add j to the list C
     #   3c. i = i+j +1
     i = 0
-    for ell, index in enumerate(s):
-        if index in s[i:ell]:
-            C.append(ell - i + 1) # j = ell-i+1
-            i = ell + 1 
+    for index, ell in enumerate(s):
+        if ell in s[i:index]:
+            C.append(index - i + 1) # j = index-i+1
+            i = index + 1 
     
     return C
 
@@ -416,8 +416,9 @@ def permutation_test(s, max_processes=1, vb=False):
         t['covariance(32)'] = covariance(s,32)
         
     t['compression'] = compression(s)
-
     
+    print(t)
+
     prep_time = time.time() - start_time
 
     if verbose:
@@ -431,10 +432,6 @@ def permutation_test(s, max_processes=1, vb=False):
     for i in range(jobs):
         # 2.1 Permute the input data using Fisher-Yates
         pool.apply_async(run_iterations, args=(s, mean, median, is_binary), callback=log_result)
-        
-        #if verbose:
-            #sys.stdout.write("Running permutation %d of %d\r" % (i, jobs))
-            #sys.stdout.flush()
 
     pool.close()
     pool.join()
@@ -473,13 +470,13 @@ def permutation_test(s, max_processes=1, vb=False):
 
     return True
 
-def run_iterations(s, mean, median, is_binary):
+def run_iterations(data, mean, median, is_binary):
 
     C = {}
     for i in get_test_names():
         C[i] = [0,0]
 
-    shuffle(s)
+    shuffle(data)
 
     # 2.2 for each test i
     # 2.2.1 Calcualte the test statistic; denote the result as tp[i]
@@ -487,10 +484,10 @@ def run_iterations(s, mean, median, is_binary):
 
     # conversions for binary data
     if is_binary:
-        cs1 = conversion1(s)
-        cs2 = conversion2(s)
+        cs1 = conversion1(data)
+        cs2 = conversion2(data)
 
-    tp['excursion'] = excursion(s, mean)
+    tp['excursion'] = excursion(data, mean)
     
     if is_binary:
         # conversion 1 required for binary data for directional run and
@@ -500,7 +497,7 @@ def run_iterations(s, mean, median, is_binary):
         tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
         tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
     else:
-        sp1 = altSequence1(s)
+        sp1 = altSequence1(data)
         tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
         tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
         tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
@@ -508,7 +505,7 @@ def run_iterations(s, mean, median, is_binary):
     if is_binary:
         sp2= altSequence2(cs2, 0.5)
     else:
-        sp2= altSequence2(s, median)
+        sp2= altSequence2(data, median)
     tp['numRunsMedian'] = numRunsMedian(sp2)
     tp['lenRunsMedian'] = lenRunsMedian(sp2)
 
@@ -516,7 +513,7 @@ def run_iterations(s, mean, median, is_binary):
         # conversion 2 required for collision statistics on binary data
         collision_list = findCollisions(cs2)
     else:
-        collision_list = findCollisions(s)
+        collision_list = findCollisions(data)
     tp['avgCollision'] = avgCollision(collision_list)
     tp['maxCollision'] = maxCollision(collision_list)
 
@@ -528,11 +525,11 @@ def run_iterations(s, mean, median, is_binary):
         tp['periodicity(16)'] = periodicity(cs1,16)
         tp['periodicity(32)'] = periodicity(cs1,32)
     else:
-        tp['periodicity(1)'] = periodicity(s,1)
-        tp['periodicity(2)'] = periodicity(s,2)
-        tp['periodicity(8)'] = periodicity(s,8)
-        tp['periodicity(16)'] = periodicity(s,16)
-        tp['periodicity(32)'] = periodicity(s,32)
+        tp['periodicity(1)'] = periodicity(data,1)
+        tp['periodicity(2)'] = periodicity(data,2)
+        tp['periodicity(8)'] = periodicity(data,8)
+        tp['periodicity(16)'] = periodicity(data,16)
+        tp['periodicity(32)'] = periodicity(data,32)
         
     if is_binary:
         # conversion 1 required for covariance statistics on binary data
@@ -542,13 +539,13 @@ def run_iterations(s, mean, median, is_binary):
         tp['covariance(16)'] = covariance(cs1,16)
         tp['covariance(32)'] = covariance(cs1,32)
     else:
-        tp['covariance(1)'] = covariance(s,1)
-        tp['covariance(2)'] = covariance(s,2)
-        tp['covariance(8)'] = covariance(s,8)
-        tp['covariance(16)'] = covariance(s,16)
-        tp['covariance(32)'] = covariance(s,32)
+        tp['covariance(1)'] = covariance(data,1)
+        tp['covariance(2)'] = covariance(data,2)
+        tp['covariance(8)'] = covariance(data,8)
+        tp['covariance(16)'] = covariance(data,16)
+        tp['covariance(32)'] = covariance(data,32)
         
-    tp['compression'] = compression(s)
+    tp['compression'] = compression(data)
     
     # 2.2.2 If (tp[i] > t[i]), increment C[i,0]. If (tp[i] = t[i]), increment C[i,1].
     for i in get_test_names():
