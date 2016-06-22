@@ -13,7 +13,7 @@
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 
 #define SIZE 1000000
-#define PERMS 100
+#define PERMS 10
 
 using namespace std;
 
@@ -25,8 +25,8 @@ double mean = 0.0;
 double median = 0.0;
 bool is_binary = false;
 map<int, int*> C;
-map<string, long int> t;
-map<string, long int> tp;
+map<string, long double> t;
+map<string, long double> tp;
 const int num_tests = 19;
 const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRuns","numIncreasesDecreases","numRunsMedian","lenRunsMedian","avgCollision","maxCollision","periodicity(1)","periodicity(2)","periodicity(8)","periodicity(16)","periodicity(32)","covariance(1)","covariance(2)","covariance(8)","covariance(16)","covariance(32)","compression"};
 
@@ -325,12 +325,13 @@ int main(){
 	read_file(file_path);
 
 	// Calculate baseline statistics
+	cout << "Calculating baseline statistics..." << endl;
 	calc_stats();
 
 	#ifdef VERBOSE
 	cout << "Mean: " << mean << endl;
 	cout << "Median: " << median << endl;
-	cout << (is_binary ? "Is Binary." : "Is Not Binary.") << endl;
+	cout << "Binary: " << (is_binary ? "true" : "false") << endl;
 	#endif
 
 	// Build map of results
@@ -344,6 +345,7 @@ int main(){
 	}
 
 	// Begin initial tests
+	cout << "Beginning initial tests..." << endl;
 	t["excursion"] = excursion();
 
 	// Directional tests
@@ -379,7 +381,18 @@ int main(){
 	// Compression test
 	t["compression"] = compression();
 
+	#ifdef VERBOSE
+	cout << endl << "Initial test results" << endl;
+	for(int i = 0; i < num_tests; i++){
+		cout << setw(23) << test_names[i] << ": ";
+		cout << t[test_names[i]] << endl;
+	}
+
+	cout << endl;
+	#endif
+
 	// Permutation tests
+	cout << "Beginning permutation tests..." << endl;
 	for(int i = 0; i < PERMS; i++){
 
 		// Permute the data
@@ -452,11 +465,6 @@ int main(){
 	// 		exit(-1);
 	// 	}
 	// }
-
-	#ifdef VERBOSE
-	for(int i = 0; i < num_tests; i++)
-		cout << test_names[i] << ": " << t[test_names[i]] << endl;
-	#endif
 
 	cout << endl;
 
