@@ -8,11 +8,12 @@
 #include <vector>
 #include <set>
 #include <string.h>
+#include <iomanip>
 
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 
 #define SIZE 1000000
-#define PERMS 10000
+#define PERMS 100
 
 using namespace std;
 
@@ -23,7 +24,7 @@ byte data[SIZE];
 double mean = 0.0;
 double median = 0.0;
 bool is_binary = false;
-map<string, int*> C;
+map<int, int*> C;
 map<string, long int> t;
 map<string, long int> tp;
 const int num_tests = 19;
@@ -57,7 +58,7 @@ void shuffle(byte arr[]){
 	}
 }
 
-// Quick sum
+// Quick sum array
 long int sum(byte arr[]){
 	long int sum = 0;
 	for(long int i = 0; i < SIZE; i++){
@@ -67,8 +68,9 @@ long int sum(byte arr[]){
 	return sum;
 }
 
+// Quick sum vector
 long int sum(vector<int> v){
-	long int sum = 0; 
+	long int sum = 0;
 	for(long int i = 0; i < v.size(); i++){
 		sum += v[i];
 	}
@@ -78,7 +80,7 @@ long int sum(vector<int> v){
 
 // Calculate baseline statistics
 void calc_stats(){
-	
+
 	// Calculate mean
 	mean = sum(data) / (long double) SIZE;
 
@@ -273,7 +275,7 @@ long int max_collision(vector<int> col_seq){
 }
 
 long int periodicity(int p){
-	long int T = 0; 
+	long int T = 0;
 
 	for(int i = 0; i < SIZE-p; i++){
 		if(data[i] == data[i+p]){
@@ -333,9 +335,9 @@ int main(){
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
-		C[test_names[i]] = new int[2];
-		C[test_names[i]][0] = 0;
-		C[test_names[i]][1] = 0;
+		C[i] = new int[2];
+		C[i][0] = 0;
+		C[i][1] = 0;
 
 		t[test_names[i]] = -1;
 		tp[test_names[i]] = -1;
@@ -377,11 +379,13 @@ int main(){
 	// Compression test
 	t["compression"] = compression();
 
+	// Permutation tests
 	for(int i = 0; i < PERMS; i++){
 
+		// Permute the data
 		shuffle(data);
 
-		// Begin initial tests
+		// Excursion test
 		tp["excursion"] = excursion();
 
 		// Directional tests
@@ -416,7 +420,38 @@ int main(){
 
 		// Compression test
 		tp["compression"] = compression();
+
+		for(int j = 0; j < num_tests; j++){
+			if(tp[test_names[j]] > t[test_names[j]]){
+				C[j][0]++;
+			}else if(tp[test_names[j]] == tp[test_names[j]]){
+				C[j][1]++;
+			}
+		}
 	}
+
+	#ifdef VERBOSE
+	cout << endl;
+	cout << "                statistic  C[i][0]  C[i][1]" << endl;
+	cout << "-------------------------------------------" << endl;
+	for(int i = 0; i < num_tests; i++){
+		if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
+			cout << setw(24) << test_names[i] << "*";
+		}else{
+			cout << setw(25) << test_names[i];
+		}
+		cout << setw(8) << C[i][0];
+		cout << setw(8) << C[i][1] << endl;
+	}
+
+	cout << "(* denotes failed test)" << endl;
+	#endif
+
+	// for(int i = 0; i < num_tests; i++){
+	// 	if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
+	// 		exit(-1);
+	// 	}
+	// }
 
 	#ifdef VERBOSE
 	for(int i = 0; i < num_tests; i++)
