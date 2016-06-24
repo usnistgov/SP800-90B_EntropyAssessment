@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
-#include <string>
-#include <time.h>
-#include <algorithm>
-#include <map>
-#include <vector>
-#include <set>
-#include <string.h>
-#include <iomanip>
+#include <iostream>		// std::cout
+#include <string>		// std::string
+#include <time.h>		// time
+#include <algorithm>	// std::sort
+#include <map>			// std::map
+#include <vector>		// std::vector
+#include <set>			// std::set
+#include <string.h>		// strlen
+#include <iomanip>		// setw / setfill
+#include <math.h>		// pow
 
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 
@@ -20,13 +21,22 @@ using namespace std;
 typedef unsigned char byte;
 
 // Global variables
+
+// Actual data read from file
 byte data[SIZE];
+
+// Baseline statistics
 double mean = 0.0;
 double median = 0.0;
 bool is_binary = false;
+
+// Counters for the pass/fail of each statistic
 map<int, int*> C;
-map<string, long double> t;
-map<string, long double> tp;
+
+// Original test results (t) and permuted test results (t')
+map<string, long double> t, tp;
+
+// The tests used
 const int num_tests = 19;
 const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRuns","numIncreasesDecreases","numRunsMedian","lenRunsMedian","avgCollision","maxCollision","periodicity(1)","periodicity(2)","periodicity(8)","periodicity(16)","periodicity(32)","covariance(1)","covariance(2)","covariance(8)","covariance(16)","covariance(32)","compression"};
 
@@ -39,7 +49,7 @@ void read_file(const char* file_path){
 	#endif
 
 	file = fopen(file_path, "rb");
-	fread(data, SIZE, 1, file);
+	fread(data, 1, SIZE, file);
 	fclose(file);
 
 	#ifdef VERBOSE
@@ -79,6 +89,7 @@ long int sum(vector<int> v){
 }
 
 // Calculate baseline statistics
+// Finds mean, median, and whether or not the data is binary
 void calc_stats(){
 
 	// Calculate mean
@@ -100,6 +111,39 @@ void calc_stats(){
 	}
 }
 
+// 5.1 Conversion I
+// Takes a binary sequence and partitions it into 8-bit blocks
+// Blocks have the number of 1's counted and totaled	
+vector<int> conversion1(){
+	vector<int> ret(SIZE/8, 0);
+
+	for(long int i = 0; i < SIZE; i+=8){
+		for(int j = 0; j < 8; j++){
+			ret[i/8] += data[i+j];
+		}
+	}
+
+	return ret;
+}
+
+// 5.1 Conversion II
+// Takes a binary sequence and partitions it into 8-bit blocks
+// Blocks are then converted to decimal
+vector<int> conversion2(){
+	vector<int> ret(SIZE/8, 0);
+
+	for(int i = 0; i < SIZE; i+=8){
+		for(int j = 0; j < 8; j++){
+			ret[i/8] += data[i+j] * pow(2, (7-j));
+		}
+	}
+
+	return ret;
+}
+
+// 5.1.1 Excursion Test
+// Measures how far the running sum of values deviates from the 
+// average value at each point in the set
 double excursion(){
 	double d_i = 0;
 	double max = 0;
@@ -119,29 +163,41 @@ double excursion(){
 	return max;
 }
 
-vector<int> alt_sequence1(){
-	vector<int> ret(SIZE-1, 0);
+// Helper for 5.1.2, 5.1.3, and 5.1.4
+// Builds a vector of the runs of consecutive values
+// Pushes +1 to the vector if the value is greater than (or equal to) the previous
+// Pushes -1 to the vector if the value is less than the previous
+vector<byte> alt_sequence1(){
+	vector<byte> ret(SIZE-1, 0);
 
-	for(int i = 0; i < SIZE-1; i++){
+	for(long int i = 0; i < SIZE-1; i++){
 		ret[i] = ((data[i] > data[i+1]) ? -1 : 1);
 	}
 
 	return ret;
 }
 
-vector<int> alt_sequence2(){
-	vector<int> ret(SIZE, 0);
+// Helper for 5.1.5 and 5.1.6
+// Builds a vector of the runs of values compared to the median
+// Pushes +1 to the vector if the value is greater than (or equal to) the median
+// Pushes -1 to the vector if the value is less than the median
+vector<byte> alt_sequence2(){
+	vector<byte> ret(SIZE, 0);
 
-	for(int i = 0; i < SIZE; i++){
+	for(long int i = 0; i < SIZE; i++){
 		ret[i] = ((data[i] < median) ? -1 : 1);
 	}
 
 	return ret;
 }
 
-long int num_directional_runs(vector<int> alt_seq){
+// 5.1.2 Number of Directional Runs
+// Determines the number of runs in the sequence. 
+// A run is when multiple consecutive values are all >= the prior
+// or all < the prior
+long int num_directional_runs(vector<byte> alt_seq){
 	long int num_runs = 0;
-	for(int i = 1; i < SIZE; i++){
+	for(long int i = 1; i < SIZE-1; i++){
 		if(alt_seq[i] != alt_seq[i-1]){
 			num_runs++;
 		}
@@ -150,11 +206,13 @@ long int num_directional_runs(vector<int> alt_seq){
 	return num_runs;
 }
 
-long int len_directional_runs(vector<int> alt_seq){
+// 5.1.3 Length of Directional Runs
+// Determines the length of the longest run
+long int len_directional_runs(vector<byte> alt_seq){
 	long int max_run = 0;
 	long int run = 1;
 
-	for(int i = 1; i < SIZE; i++){
+	for(long int i = 1; i < SIZE-1; i++){
 		if(alt_seq[i] == alt_seq[i-1]){
 			run++;
 		}else{
@@ -173,19 +231,27 @@ long int len_directional_runs(vector<int> alt_seq){
 	return max_run;
 }
 
-long int num_increases_decreases(vector<int> alt_seq){
+// 5.1.4 Number of Increases and Decreases
+// Determines the maximum number of increases or decreases between
+// consecutive values
+long int num_increases_decreases(vector<byte> alt_seq){
 	long int pos = 0;
-	for(int i = 0; i < SIZE; i++){
+	for(long int i = 0; i < SIZE-1; i++){
 		if(alt_seq[i] == 1) pos++;
 	}
 
 	return max(pos, SIZE-pos);
 }
 
-long int num_runs_median(vector<int> alt_seq){
+// 5.1.5 Number of Runs Based on the Median
+// Determines the number of runs that are constructed with respect
+// to the median of the dataset
+// This is similar to a normal run, but instead of being compared
+// to the previous value, each value is compared to the median
+long int num_runs_median(vector<byte> alt_seq){
 	long int num_runs = 1;
 
-	for(int i = 1; i < SIZE; i++){
+	for(long int i = 1; i < SIZE; i++){
 		if(alt_seq[i] != alt_seq[i-1]){
 			num_runs++;
 		}
@@ -194,11 +260,14 @@ long int num_runs_median(vector<int> alt_seq){
 	return num_runs;
 }
 
-long int len_runs_median(vector<int> alt_seq){
+// 5.1.6 Length of Runs Based on the Median
+// Determines the length of the longest run that is constructed
+// with respect to the median
+long int len_runs_median(vector<byte> alt_seq){
 	long int max_run = 0;
 	long int run = 1;
 
-	for(int i = 1; i < SIZE; i++){
+	for(long int i = 1; i < SIZE; i++){
 		if(alt_seq[i] == alt_seq[i-1]){
 			run++;
 		}else{
@@ -217,6 +286,7 @@ long int len_runs_median(vector<int> alt_seq){
 	return max_run;
 }
 
+// Helper function to prepare for 5.1.7 and 5.1.8
 // Should take about 2-3 seconds for a 1mil size list
 // Maybe speed up by randomizing the check_size progression
 // based on the average amount until the next collision (about 16-19)
@@ -227,7 +297,7 @@ vector<int> find_collisions(){
 	set<int> dups;
 
 	long int i = 0;
-	int check_size;
+	long int check_size;
 
 	// Begin from each element
 	while(i < SIZE){
@@ -260,24 +330,31 @@ vector<int> find_collisions(){
 	return ret;
 }
 
+// 5.1.7 Average Collision Test
+// Counts the number of successive samples until a duplicate is found
 double avg_collision(vector<int> col_seq){
 
 	return sum(col_seq)/float(col_seq.size());
 }
 
+// 5.1.8 Maximum Collision Test
+// Determines the maximum number of samples without a duplicate
 long int max_collision(vector<int> col_seq){
 	long int max = -1;
-	for(int i = 0; i < col_seq.size(); i++){
+	for(long int i = 0; i < col_seq.size(); i++){
 		if(max < col_seq[i]) max = col_seq[i];
 	}
 
 	return max;
 }
 
+// 5.1.9 Periodicity Test
+// Determines the number of periodic structures
+// Based on lag parameter p
 long int periodicity(int p){
 	long int T = 0;
 
-	for(int i = 0; i < SIZE-p; i++){
+	for(long int i = 0; i < SIZE-p; i++){
 		if(data[i] == data[i+p]){
 			T++;
 		}
@@ -286,21 +363,27 @@ long int periodicity(int p){
 	return T;
 }
 
+// 5.1.10 Covariance Test
+// Measures the strength of lagged correlation
+// Based on lag parameter p
 long int covariance(int p){
 	long int T = 0;
 
-	for(int i = 0; i < SIZE-p; i++){
+	for(long int i = 0; i < SIZE-p; i++){
 		T += data[i] * data[i+p];
 	}
 
 	return T;
 }
 
+// 5.1.11 Compression Test
+// Compresses the data using bzip2 and determines the length
+// of the resulting compressed data
 unsigned int compression(){
 
 	// Build string of bytes
 	string msg = "";
-	for(int i = 0; i < SIZE; i++){
+	for(long int i = 0; i < SIZE; i++){
 		msg += to_string((int)data[i]);		// Dependent on C++11
 		msg += " ";
 	}
@@ -311,6 +394,8 @@ unsigned int compression(){
 
 	int rc = BZ2_bzBuffToBuffCompress(dest, &dest_len, source, strlen(source), 5, 0, 0);
 
+	delete[](dest);
+
 	if(rc == BZ_OK){
 		return dest_len;
 	}else{
@@ -318,21 +403,109 @@ unsigned int compression(){
 	}
 }
 
+// Helper that runs all the mentioned tests
+void run_tests(map<string, long double> &stats){
+	
+	// Conversions for binary data
+	vector<int> cs1, cs2;
+	if(is_binary){
+		cs1 = conversion1();
+		cs2 = conversion2();
+	}
+
+	// Excursion test
+	stats["excursion"] = excursion();
+
+	// Directional tests
+	// Prepare alternating sequence vector
+	vector<byte> alt_seq;
+	if(is_binary){
+		alt_seq = alt_sequence1();
+	}else{
+		alt_seq = alt_sequence1();
+	}
+
+	// Run directional tests
+	stats["numDirectionalRuns"] = num_directional_runs(alt_seq);
+	stats["lenDirectionalRuns"] = len_directional_runs(alt_seq);
+	stats["numIncreasesDecreases"] = num_increases_decreases(alt_seq);
+
+	// Consecutive runs tests
+	// Prepare alternating sequence vector
+	if(is_binary){
+		alt_seq = alt_sequence2();
+	}else{
+		alt_seq = alt_sequence2();
+	}
+
+	// Run consecutive runs tests
+	stats["numRunsMedian"] = num_runs_median(alt_seq);
+	stats["lenRunsMedian"] = len_runs_median(alt_seq);
+
+	// Collision tests
+	// Prepare collision sequence vector
+	vector<int> col_seq;
+	if(is_binary){
+		col_seq = find_collisions();
+	}else{
+		col_seq = find_collisions();
+	}
+
+	// Run collision tests
+	stats["avgCollision"] = avg_collision(col_seq);
+	stats["maxCollision"] = max_collision(col_seq);
+
+	// Periodicity tests
+	if(is_binary){
+		stats["periodicity(1)"] = periodicity(1);
+		stats["periodicity(2)"] = periodicity(2);
+		stats["periodicity(8)"] = periodicity(8);
+		stats["periodicity(16)"] = periodicity(16);
+		stats["periodicity(32)"] = periodicity(32);		
+	}else{
+		stats["periodicity(1)"] = periodicity(1);
+		stats["periodicity(2)"] = periodicity(2);
+		stats["periodicity(8)"] = periodicity(8);
+		stats["periodicity(16)"] = periodicity(16);
+		stats["periodicity(32)"] = periodicity(32);
+	}
+
+	// Covariance tests
+	if(is_binary){
+		stats["covariance(1)"] = covariance(1);
+		stats["covariance(2)"] = covariance(2);
+		stats["covariance(8)"] = covariance(8);
+		stats["covariance(16)"] = covariance(16);
+		stats["covariance(32)"] = covariance(32);
+	}else{
+		stats["covariance(1)"] = covariance(1);
+		stats["covariance(2)"] = covariance(2);
+		stats["covariance(8)"] = covariance(8);
+		stats["covariance(16)"] = covariance(16);
+		stats["covariance(32)"] = covariance(32);
+	}
+
+	// Compression test
+	stats["compression"] = compression();
+}
+
 int main(){
 
 	// Read in file
-	const char* file_path = "../bin/urand.bin";
+	const char* file_path = "../bin/beacon_rand.bin";
 	read_file(file_path);
+
+	cout << sizeof(data) << endl;
 
 	// Calculate baseline statistics
 	cout << "Calculating baseline statistics..." << endl;
 	calc_stats();
 
-	#ifdef VERBOSE
+#ifdef VERBOSE
 	cout << "Mean: " << mean << endl;
 	cout << "Median: " << median << endl;
 	cout << "Binary: " << (is_binary ? "true" : "false") << endl;
-	#endif
+#endif
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
@@ -344,44 +517,11 @@ int main(){
 		tp[test_names[i]] = -1;
 	}
 
-	// Begin initial tests
+	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
-	t["excursion"] = excursion();
+	run_tests(t);
 
-	// Directional tests
-	vector<int> alt_seq = alt_sequence1();
-	t["numDirectionalRuns"] = num_directional_runs(alt_seq);
-	t["lenDirectionalRuns"] = len_directional_runs(alt_seq);
-	t["numIncreasesDecreases"] = num_increases_decreases(alt_seq);
-
-	// Runs tests
-	alt_seq = alt_sequence2();
-	t["numRunsMedian"] = num_runs_median(alt_seq);
-	t["lenRunsMedian"] = len_runs_median(alt_seq);
-
-	// Collision tests
-	vector<int> col_seq = find_collisions();
-	t["avgCollision"] = avg_collision(col_seq);
-	t["maxCollision"] = max_collision(col_seq);
-
-	// Periodicity tests
-	t["periodicity(1)"] = periodicity(1);
-	t["periodicity(2)"] = periodicity(2);
-	t["periodicity(8)"] = periodicity(8);
-	t["periodicity(16)"] = periodicity(16);
-	t["periodicity(32)"] = periodicity(32);
-
-	// Covariance tests
-	t["covariance(1)"] = covariance(1);
-	t["covariance(2)"] = covariance(2);
-	t["covariance(8)"] = covariance(8);
-	t["covariance(16)"] = covariance(16);
-	t["covariance(32)"] = covariance(32);
-
-	// Compression test
-	t["compression"] = compression();
-
-	#ifdef VERBOSE
+#ifdef VERBOSE
 	cout << endl << "Initial test results" << endl;
 	for(int i = 0; i < num_tests; i++){
 		cout << setw(23) << test_names[i] << ": ";
@@ -389,7 +529,7 @@ int main(){
 	}
 
 	cout << endl;
-	#endif
+#endif
 
 	// Permutation tests
 	cout << "Beginning permutation tests..." << endl;
@@ -398,42 +538,10 @@ int main(){
 		// Permute the data
 		shuffle(data);
 
-		// Excursion test
-		tp["excursion"] = excursion();
+		// Run the tests
+		run_tests(tp);
 
-		// Directional tests
-		vector<int> alt_seq = alt_sequence1();
-		tp["numDirectionalRuns"] = num_directional_runs(alt_seq);
-		tp["lenDirectionalRuns"] = len_directional_runs(alt_seq);
-		tp["numIncreasesDecreases"] = num_increases_decreases(alt_seq);
-
-		// Runs tests
-		alt_seq = alt_sequence2();
-		tp["numRunsMedian"] = num_runs_median(alt_seq);
-		tp["lenRunsMedian"] = len_runs_median(alt_seq);
-
-		// Collision tests
-		vector<int> col_seq = find_collisions();
-		tp["avgCollision"] = avg_collision(col_seq);
-		tp["maxCollision"] = max_collision(col_seq);
-
-		// Periodicity tests
-		tp["periodicity(1)"] = periodicity(1);
-		tp["periodicity(2)"] = periodicity(2);
-		tp["periodicity(8)"] = periodicity(8);
-		tp["periodicity(16)"] = periodicity(16);
-		tp["periodicity(32)"] = periodicity(32);
-
-		// Covariance tests
-		tp["covariance(1)"] = covariance(1);
-		tp["covariance(2)"] = covariance(2);
-		tp["covariance(8)"] = covariance(8);
-		tp["covariance(16)"] = covariance(16);
-		tp["covariance(32)"] = covariance(32);
-
-		// Compression test
-		tp["compression"] = compression();
-
+		// Aggregate results into the counters
 		for(int j = 0; j < num_tests; j++){
 			if(tp[test_names[j]] > t[test_names[j]]){
 				C[j][0]++;
@@ -443,7 +551,7 @@ int main(){
 		}
 	}
 
-	#ifdef VERBOSE
+#ifdef VERBOSE
 	cout << endl;
 	cout << "                statistic  C[i][0]  C[i][1]" << endl;
 	cout << "-------------------------------------------" << endl;
@@ -458,7 +566,7 @@ int main(){
 	}
 
 	cout << "(* denotes failed test)" << endl;
-	#endif
+#endif
 
 	// for(int i = 0; i < num_tests; i++){
 	// 	if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
@@ -467,6 +575,11 @@ int main(){
 	// }
 
 	cout << endl;
+
+	// Free memory
+	for(int i = 0; i < num_tests; i++){
+		delete[](C[i]);
+	}
 
 	return 0;
 }

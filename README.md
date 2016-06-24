@@ -71,3 +71,8 @@ For more information on the estimation methods, see [SP 800-90B second draft](ht
 
 ###Contact Information
 This code is currently maintained by Kerry McKay and John Kelsey.
+
+###Known Issues
+
+* Takes a really long time to run
+* In `permutation_tests.py` in the `conversion2` method, the padding adds an entire extra empty block if the original data is a multiple of 8. This has been fixed in this version of the code. 
