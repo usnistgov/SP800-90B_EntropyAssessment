@@ -1,7 +1,21 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
+#include <time.h>
+#include <algorithm>
+
+
+#define SIZE 1000000
+#define PERMS 10
+
+typedef unsigned char byte;
+
+using namespace std;
+
 // Read in binary file to test
-void read_file(const char* file_path){
+void read_file(const char* file_path, byte data[]){
 	FILE* file = NULL;
 
 	#ifdef VERBOSE
@@ -50,7 +64,7 @@ long int sum(vector<int> v){
 
 // Calculate baseline statistics
 // Finds mean, median, and whether or not the data is binary
-void calc_stats(){
+void calc_stats(byte data[], double &mean, double &median, bool &is_binary){
 
 	// Calculate mean
 	mean = sum(data) / (long double) SIZE;

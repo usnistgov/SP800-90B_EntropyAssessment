@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <iostream>		// std::cout
 #include <string>		// std::string
-#include <time.h>		// time
-#include <algorithm>	// std::sort
 #include <map>			// std::map
 #include <vector>		// std::vector
 #include <set>			// std::set
@@ -15,6 +13,9 @@
 
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 
+#include "utils.h"
+
+
 // The tests used
 const int num_tests = 19;
 const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRuns","numIncreasesDecreases","numRunsMedian","lenRunsMedian","avgCollision","maxCollision","periodicity(1)","periodicity(2)","periodicity(8)","periodicity(16)","periodicity(32)","covariance(1)","covariance(2)","covariance(8)","covariance(16)","covariance(32)","compression"};
@@ -22,7 +23,7 @@ const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRun
 // 5.1 Conversion I
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks have the number of 1's counted and totaled	
-vector<int> conversion1(){
+vector<int> conversion1(byte data[]){
 	vector<int> ret(SIZE/8, 0);
 
 	for(long int i = 0; i < SIZE; i+=8){
@@ -37,7 +38,7 @@ vector<int> conversion1(){
 // 5.1 Conversion II
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks are then converted to decimal
-vector<int> conversion2(){
+vector<int> conversion2(byte data[]){
 	vector<int> ret(SIZE/8, 0);
 
 	for(int i = 0; i < SIZE; i+=8){
@@ -52,7 +53,7 @@ vector<int> conversion2(){
 // 5.1.1 Excursion Test
 // Measures how far the running sum of values deviates from the 
 // average value at each point in the set
-double excursion(){
+double excursion(byte data[], double mean){
 	double d_i = 0;
 	double max = 0;
 	double running_sum = 0;
@@ -73,9 +74,9 @@ double excursion(){
 
 // Helper for 5.1.2, 5.1.3, and 5.1.4
 // Builds a vector of the runs of consecutive values
-// Pushes +1 to the vector if the value is greater than (or equal to) the previous
-// Pushes -1 to the vector if the value is less than the previous
-vector<byte> alt_sequence1(){
+// Pushes +1 to the vector if the value is >= the previous
+// Pushes -1 to the vector if the value is < than the previous
+vector<byte> alt_sequence1(byte data[]){
 	vector<byte> ret(SIZE-1, 0);
 
 	for(long int i = 0; i < SIZE-1; i++){
@@ -87,9 +88,9 @@ vector<byte> alt_sequence1(){
 
 // Helper for 5.1.5 and 5.1.6
 // Builds a vector of the runs of values compared to the median
-// Pushes +1 to the vector if the value is greater than (or equal to) the median
-// Pushes -1 to the vector if the value is less than the median
-vector<byte> alt_sequence2(){
+// Pushes +1 to the vector if the value is >= the median
+// Pushes -1 to the vector if the value is < than the median
+vector<byte> alt_sequence2(byte data[], double median){
 	vector<byte> ret(SIZE, 0);
 
 	for(long int i = 0; i < SIZE; i++){
@@ -200,7 +201,7 @@ long int len_runs_median(vector<byte> &alt_seq){
 // based on the average amount until the next collision (about 16-19)
 // Just advance maybe 4-5 per iteration and back up if collisions are found based on how many collision are found.
 // POC: https://repl.it/C4eI
-vector<int> find_collisions(){
+vector<int> find_collisions(byte data[]){
 	vector<int> ret;
 	set<int> dups;
 
@@ -259,7 +260,7 @@ long int max_collision(vector<int> &col_seq){
 // 5.1.9 Periodicity Test
 // Determines the number of periodic structures
 // Based on lag parameter p
-long int periodicity(int p){
+long int periodicity(byte data[], int p){
 	long int T = 0;
 
 	for(long int i = 0; i < SIZE-p; i++){
@@ -274,7 +275,7 @@ long int periodicity(int p){
 // 5.1.10 Covariance Test
 // Measures the strength of lagged correlation
 // Based on lag parameter p
-long int covariance(int p){
+long int covariance(byte data[], int p){
 	long int T = 0;
 
 	for(long int i = 0; i < SIZE-p; i++){
@@ -287,7 +288,7 @@ long int covariance(int p){
 // 5.1.11 Compression Test
 // Compresses the data using bzip2 and determines the length
 // of the resulting compressed data
-unsigned int compression(){
+unsigned int compression(byte data[]){
 
 	// Build string of bytes
 	string msg = "";
@@ -316,25 +317,25 @@ unsigned int compression(){
 }
 
 // Helper that runs all the mentioned tests
-void run_tests(map<string, long double> &stats){
+void run_tests(map<string, long double> &stats, byte data[], double mean, double median, bool is_binary){
 	
 	// Conversions for binary data
 	vector<int> cs1, cs2;
 	if(is_binary){
-		cs1 = conversion1();
-		cs2 = conversion2();
+		cs1 = conversion1(data);
+		cs2 = conversion2(data);
 	}
 
 	// Excursion test
-	stats["excursion"] = excursion();
+	stats["excursion"] = excursion(data, mean);
 
 	// Directional tests
 	// Prepare alternating sequence vector
 	vector<byte> alt_seq;
 	if(is_binary){
-		alt_seq = alt_sequence1();
+		alt_seq = alt_sequence1(data);
 	}else{
-		alt_seq = alt_sequence1();
+		alt_seq = alt_sequence1(data);
 	}
 
 	// Run directional tests
@@ -345,9 +346,9 @@ void run_tests(map<string, long double> &stats){
 	// Consecutive runs tests
 	// Prepare alternating sequence vector
 	if(is_binary){
-		alt_seq = alt_sequence2();
+		alt_seq = alt_sequence2(data, median);
 	}else{
-		alt_seq = alt_sequence2();
+		alt_seq = alt_sequence2(data, median);
 	}
 
 	// Run consecutive runs tests
@@ -358,9 +359,9 @@ void run_tests(map<string, long double> &stats){
 	// Prepare collision sequence vector
 	vector<int> col_seq;
 	if(is_binary){
-		col_seq = find_collisions();
+		col_seq = find_collisions(data);
 	}else{
-		col_seq = find_collisions();
+		col_seq = find_collisions(data);
 	}
 
 	// Run collision tests
@@ -369,39 +370,51 @@ void run_tests(map<string, long double> &stats){
 
 	// Periodicity tests
 	if(is_binary){
-		stats["periodicity(1)"] = periodicity(1);
-		stats["periodicity(2)"] = periodicity(2);
-		stats["periodicity(8)"] = periodicity(8);
-		stats["periodicity(16)"] = periodicity(16);
-		stats["periodicity(32)"] = periodicity(32);		
+		stats["periodicity(1)"] = periodicity(data, 1);
+		stats["periodicity(2)"] = periodicity(data, 2);
+		stats["periodicity(8)"] = periodicity(data, 8);
+		stats["periodicity(16)"] = periodicity(data, 16);
+		stats["periodicity(32)"] = periodicity(data, 32);		
 	}else{
-		stats["periodicity(1)"] = periodicity(1);
-		stats["periodicity(2)"] = periodicity(2);
-		stats["periodicity(8)"] = periodicity(8);
-		stats["periodicity(16)"] = periodicity(16);
-		stats["periodicity(32)"] = periodicity(32);
+		stats["periodicity(1)"] = periodicity(data, 1);
+		stats["periodicity(2)"] = periodicity(data, 2);
+		stats["periodicity(8)"] = periodicity(data, 8);
+		stats["periodicity(16)"] = periodicity(data, 16);
+		stats["periodicity(32)"] = periodicity(data, 32);
 	}
 
 	// Covariance tests
 	if(is_binary){
-		stats["covariance(1)"] = covariance(1);
-		stats["covariance(2)"] = covariance(2);
-		stats["covariance(8)"] = covariance(8);
-		stats["covariance(16)"] = covariance(16);
-		stats["covariance(32)"] = covariance(32);
+		stats["covariance(1)"] = covariance(data, 1);
+		stats["covariance(2)"] = covariance(data, 2);
+		stats["covariance(8)"] = covariance(data, 8);
+		stats["covariance(16)"] = covariance(data, 16);
+		stats["covariance(32)"] = covariance(data, 32);
 	}else{
-		stats["covariance(1)"] = covariance(1);
-		stats["covariance(2)"] = covariance(2);
-		stats["covariance(8)"] = covariance(8);
-		stats["covariance(16)"] = covariance(16);
-		stats["covariance(32)"] = covariance(32);
+		stats["covariance(1)"] = covariance(data, 1);
+		stats["covariance(2)"] = covariance(data, 2);
+		stats["covariance(8)"] = covariance(data, 8);
+		stats["covariance(16)"] = covariance(data, 16);
+		stats["covariance(32)"] = covariance(data, 32);
 	}
 
 	// Compression test
-	stats["compression"] = compression();
+	stats["compression"] = compression(data);
 }
 
-bool permutation_tests(byte[] s){
+bool permutation_tests(byte ds[], double m, double med, bool bin){
+
+	// Base statistics
+	double mean = m;
+	double median = med;
+	bool is_binary = bin;
+
+	// Dataset
+	byte data[SIZE];
+
+	for(int i = 0; i < SIZE; i++){
+		data[i] = ds[i];
+	}
 
 	// Counters for the pass/fail of each statistic
 	map<int, int*> C;
@@ -421,7 +434,7 @@ bool permutation_tests(byte[] s){
 
 	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
-	run_tests(t);
+	run_tests(t, data, mean, median, is_binary);
 
 	#ifdef VERBOSE
 	cout << endl << "Initial test results" << endl;
@@ -441,7 +454,7 @@ bool permutation_tests(byte[] s){
 		shuffle(data);
 
 		// Run the tests
-		run_tests(tp);
+		run_tests(tp, data, mean, median, is_binary);
 
 		// Aggregate results into the counters
 		for(int j = 0; j < num_tests; j++){
