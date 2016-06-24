@@ -8,7 +8,7 @@
 
 
 #define SIZE 1000000
-#define PERMS 10
+#define PERMS 10000
 
 typedef unsigned char byte;
 

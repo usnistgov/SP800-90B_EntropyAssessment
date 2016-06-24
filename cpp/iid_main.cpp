@@ -18,13 +18,24 @@ int main(){
 	cout << "Calculating baseline statistics..." << endl;
 	calc_stats(dataset, mean, median, is_binary);
 
-	#ifdef VERBOSE
+#ifdef VERBOSE
 	cout << "Mean: " << mean << endl;
 	cout << "Median: " << median << endl;
 	cout << "Binary: " << (is_binary ? "true" : "false") << endl;
-	#endif
+#endif
 
-	permutation_tests(dataset, mean, median, is_binary);
+	// Compute permutation stats
+	perm_test_pass = permutation_tests(dataset, mean, median, is_binary);
+
+	if(perm_test_pass){
+		cout << "** Passed IID permutation tests" << endl;
+	}else{
+		cout << "** Failed IID permutation tests" << endl;
+		return -1;
+	}
+
+	// Compute chi square stats
+	
 
 	return 0;
 }

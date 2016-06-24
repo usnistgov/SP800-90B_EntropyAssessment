@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>		// std::cout
 #include <string>		// std::string
 #include <map>			// std::map
