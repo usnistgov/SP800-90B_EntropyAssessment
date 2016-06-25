@@ -3,11 +3,9 @@
 #include <iostream>		// std::cout
 #include <string>		// std::string
 #include <map>			// std::map
-#include <vector>		// std::vector
 #include <set>			// std::set
 #include <string.h>		// strlen
 #include <iomanip>		// setw / setfill
-#include <math.h>		// pow
 
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 

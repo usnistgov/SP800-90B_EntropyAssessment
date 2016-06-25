@@ -1,5 +1,6 @@
 #include "utils.h"
 #include "permutation_tests.h"
+#include "chi_square_tests.h"
 
 
 byte dataset[SIZE];
@@ -25,7 +26,7 @@ int main(){
 #endif
 
 	// Compute permutation stats
-	perm_test_pass = permutation_tests(dataset, mean, median, is_binary);
+	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary);
 
 	if(perm_test_pass){
 		cout << "** Passed IID permutation tests" << endl;
@@ -35,7 +36,14 @@ int main(){
 	}
 
 	// Compute chi square stats
-	
+	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary);
+
+	if(chi_square_test_pass){
+		cout << "** Passed chi square tests" << endl;
+	}else{
+		cout << "** Failed chi square tests" << endl;
+		return -1;
+	}
 
 	return 0;
 }

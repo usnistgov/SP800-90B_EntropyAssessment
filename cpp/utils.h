@@ -5,6 +5,7 @@
 #include <vector>
 #include <time.h>
 #include <algorithm>
+#include <math.h>
 
 
 #define SIZE 1000000
