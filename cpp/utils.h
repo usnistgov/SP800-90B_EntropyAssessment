@@ -1,5 +1,11 @@
 #pragma once
 
+#include <iostream>		// std::cout
+#include <string>		// std::string
+#include <map>			// std::map
+#include <set>			// std::set
+#include <string.h>		// strlen
+#include <iomanip>		// setw / setfill
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>

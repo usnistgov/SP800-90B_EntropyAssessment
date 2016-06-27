@@ -1,12 +1,5 @@
 #pragma once
 
-#include <iostream>		// std::cout
-#include <string>		// std::string
-#include <map>			// std::map
-#include <set>			// std::set
-#include <string.h>		// strlen
-#include <iomanip>		// setw / setfill
-
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 
 #include "utils.h"
@@ -18,7 +11,7 @@ const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRun
 
 // 5.1 Conversion I
 // Takes a binary sequence and partitions it into 8-bit blocks
-// Blocks have the number of 1's counted and totaled	
+// Blocks have the number of 1's counted and totaled
 vector<int> conversion1(byte data[]){
 	vector<int> ret(SIZE/8, 0);
 
@@ -47,7 +40,7 @@ vector<int> conversion2(byte data[]){
 }
 
 // 5.1.1 Excursion Test
-// Measures how far the running sum of values deviates from the 
+// Measures how far the running sum of values deviates from the
 // average value at each point in the set
 double excursion(byte data[], double mean){
 	double d_i = 0;
@@ -97,7 +90,7 @@ vector<byte> alt_sequence2(byte data[], double median){
 }
 
 // 5.1.2 Number of Directional Runs
-// Determines the number of runs in the sequence. 
+// Determines the number of runs in the sequence.
 // A run is when multiple consecutive values are all >= the prior
 // or all < the prior
 long int num_directional_runs(vector<byte> alt_seq){
@@ -314,7 +307,7 @@ unsigned int compression(byte data[]){
 
 // Helper that runs all the mentioned tests
 void run_tests(map<string, long double> &stats, byte data[], double mean, double median, bool is_binary){
-	
+
 	// Conversions for binary data
 	vector<int> cs1, cs2;
 	if(is_binary){
@@ -370,7 +363,7 @@ void run_tests(map<string, long double> &stats, byte data[], double mean, double
 		stats["periodicity(2)"] = periodicity(data, 2);
 		stats["periodicity(8)"] = periodicity(data, 8);
 		stats["periodicity(16)"] = periodicity(data, 16);
-		stats["periodicity(32)"] = periodicity(data, 32);		
+		stats["periodicity(32)"] = periodicity(data, 32);
 	}else{
 		stats["periodicity(1)"] = periodicity(data, 1);
 		stats["periodicity(2)"] = periodicity(data, 2);

@@ -10,7 +10,7 @@ double calc_chi_square_cutoff(int df){
 	double h_v = (60.0/df) * h60;
 	double term = 2.0/(9.0 * df);
 
-	double chi_sqr = df * pow(1.0 - term + (x_p - h_v) * sqrt(term), 3);
+	return (df * pow(1.0 - term + (x_p - h_v) * sqrt(term), 3));
 }
 
 void binary_chi_square_independence(byte data[], double &score, int &df){
@@ -18,6 +18,62 @@ void binary_chi_square_independence(byte data[], double &score, int &df){
 }
 
 void chi_square_independence(byte data[], double &score, int &df){
+
+	// Proportion of each element to the entire set
+	map<byte, double> p;
+
+	// Expected values
+	// Key values are actually a byte[2] but to simplify the data structures
+	// we have an int which will be (pair[0]*2^(num_bits) + pair[1])
+	map<int, double> e;
+
+	// Occurances of each sorted pair of values
+	// Key values are again a byte[2] but simplified to an int
+	map<int, int> pair_counts;
+
+	/*
+	* 5.2.1
+	*	1. Find the proportion p_i of each x_i in S (data). Calculate
+	*	   the expected number of occurances of each possible pair
+	*/
+
+	// Calculate proportions of the number of each element over the whole
+	for(int i = 0; i < SIZE; i++){
+		p[data[i]] += (1.0 / SIZE);
+	}
+
+	// Calculate the expected number of occurances for each possible pair
+	for(int i = 0; i < 256; i++){
+		for(int j = 0; j < 256; j++){
+			e[i*256 + j] = p[i] * p[j] * (SIZE-1);
+
+			// We need this initialized later
+			pair_counts[i*256 + j] = 0;
+		}
+	}
+
+	// Increment whenever a specific pair appears in the sequence
+	for(int i = 0; i < SIZE; i++){
+		byte p0 = data[i];
+		byte p1 = data[i+1];
+
+		pair_counts[p0*256 + p1]++;
+	}
+
+	/*
+	* 5.2.1
+	*	2. Allocate the possible pairs, starting from the smallest pair
+	* 	   frequency, into bins such that the expected value of each bins
+	* 	   is at least 5. The expected value of a bin is equal to the sum
+	*      of the values of the pairs that are included in the bin.
+	*	   After allocating all pairs, if the expected value of the last
+	*	   bin is less than 5, merge the last two bins. Let q be the number
+	* 	   of bins constructed after this procedure.
+	*/
+	int q = 0;
+	vector<int> bin_freq;
+	vector<int> bin_expected;
+
 
 }
 
