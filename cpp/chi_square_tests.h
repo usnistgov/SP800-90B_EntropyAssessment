@@ -20,22 +20,27 @@ void binary_chi_square_independence(byte data[], double &score, int &df){
 void chi_square_independence(byte data[], double &score, int &df){
 
 	// Proportion of each element to the entire set
-	map<byte, double> p;
+	vector<double> p;
 
 	// Expected values
 	// Key values are actually a byte[2] but to simplify the data structures
 	// we have an int which will be (pair[0]*2^(num_bits) + pair[1])
-	map<int, double> e;
+	vector<double> e;
 
 	// Occurances of each sorted pair of values
 	// Key values are again a byte[2] but simplified to an int
-	map<int, int> pair_counts;
+	vector<int> pair_counts;
 
 	/*
 	* 5.2.1
 	*	1. Find the proportion p_i of each x_i in S (data). Calculate
 	*	   the expected number of occurances of each possible pair
 	*/
+
+	// Initialize proportions to zero
+	for(int i = 0; i < 256; i++){
+		p.push_back(0.0);
+	}
 
 	// Calculate proportions of the number of each element over the whole
 	for(int i = 0; i < SIZE; i++){
@@ -45,10 +50,10 @@ void chi_square_independence(byte data[], double &score, int &df){
 	// Calculate the expected number of occurances for each possible pair
 	for(int i = 0; i < 256; i++){
 		for(int j = 0; j < 256; j++){
-			e[i*256 + j] = p[i] * p[j] * (SIZE-1);
+			e.push_back(p[i] * p[j] * (SIZE-1));
 
 			// We need this initialized later
-			pair_counts[i*256 + j] = 0;
+			pair_counts.push_back(0);
 		}
 	}
 
@@ -90,6 +95,7 @@ bool chi_square_tests(byte data[], double mean, double median, bool is_binary){
 	double score = 0;
 	int df = 0;
 
+	// Chi Square independence test
 	if(is_binary){
 		binary_chi_square_independence(data, &score, &df);
 	}else{
@@ -97,6 +103,16 @@ bool chi_square_tests(byte data[], double mean, double median, bool is_binary){
 	}
 
 	double cutoff = chi_square_cutoff(df);
+
+	// Print results
+	#ifdef VERBOSE
+	cout << "Chi square independence" << endl;
+	cout << "    score = " << score << endl;
+	cout << "    degrees of freedom = " << df << endl;
+	cout << "    cutoff = " << cutoff << endl;
+	#endif
+
+	// Chi Square goodness of fit test
 
 
 	return true;
