@@ -21,7 +21,7 @@ cur_time =  1456252260
 start_time = cur_time - 1200
 
 # Open file for writing
-f = open('beacon_rand.bin', 'ab')
+f = open('beacon_rand2.bin', 'ab')
 
 # Loop backwards from the current time
 for t in range(cur_time, start_time, -60):
@@ -42,7 +42,8 @@ for t in range(cur_time, start_time, -60):
 			xml = xmltodict.parse(response.text)
 
 			# Decode ascii-hex characters to binary and write
-			f.write(binascii.unhexlify(xml['record']['outputValue']))
+			rand = xml['record']['outputValue']
+			f.write(binascii.unhexlify(rand))
 			
 			# If no error is raised in the previous line
 			# move on to the next time to read
