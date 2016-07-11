@@ -66,11 +66,18 @@ def conversion1(s):
 # conversion II
 # partitions the sequences into 8-bit non-overlapping blocks, and calculates the integer value of each block. 
 def conversion2(s):
+
     sp = str(s)[1:-1]
     sp = sp.replace(', ','')
-    padded = sp + '0' * (8 - len(s) % 8)
-    sp_bytes = [int(padded[i:i+8], 2) for i in range(0,len(padded),8)]
     
+    if len(s) % 8 == 0:
+        padding = 0
+    else:
+        padding = 8 - len(s) % 8
+
+    padded = sp + '0' * padding
+    sp_bytes = [int(padded[i:i+8], 2) for i in range(0,len(padded),8)]
+
     return sp_bytes
 
 
