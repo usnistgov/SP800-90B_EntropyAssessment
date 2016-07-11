@@ -26,14 +26,14 @@ int main(){
 #endif
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary);
+	//bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary);
 
-	if(perm_test_pass){
-		cout << "** Passed IID permutation tests" << endl;
-	}else{
-		cout << "** Failed IID permutation tests" << endl;
-		return -1;
-	}
+	//if(perm_test_pass){
+	//	cout << "** Passed IID permutation tests" << endl;
+	//}else{
+	//	cout << "** Failed IID permutation tests" << endl;
+	//	return -1;
+	//}
 
 	// Compute chi square stats
 	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary);

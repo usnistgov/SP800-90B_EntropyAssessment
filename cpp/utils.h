@@ -44,7 +44,7 @@ void shuffle(byte arr[]){
 	srand(time(NULL));
 	long int r;
 
-	for(long int i = SIZE-1; i > 0; i--){
+	for(long int i = SIZE-1; i > 0; --i){
 		r = (rand() / (float)RAND_MAX) * (i+1);
 		SWAP(arr[r], arr[i]);
 	}
@@ -53,7 +53,7 @@ void shuffle(byte arr[]){
 // Quick sum array
 long int sum(byte arr[]){
 	long int sum = 0;
-	for(long int i = 0; i < SIZE; i++){
+	for(long int i = 0; i < SIZE; ++i){
 		sum += arr[i];
 	}
 
@@ -63,7 +63,7 @@ long int sum(byte arr[]){
 // Quick sum vector
 long int sum(vector<int> v){
 	long int sum = 0;
-	for(long int i = 0; i < v.size(); i++){
+	for(long int i = 0; i < v.size(); ++i){
 		sum += v[i];
 	}
 

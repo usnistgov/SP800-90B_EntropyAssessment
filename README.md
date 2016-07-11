@@ -76,3 +76,5 @@ This code is currently maintained by Kerry McKay and John Kelsey.
 
 * Takes a really long time to run
 * In `permutation_tests.py` in the `conversion2` method, the padding adds an entire extra empty block if the original data is a multiple of 8. This has been fixed in this version of the code. 
+* Document has an error on page 32. In example 11, the expected values of each pair are calculated using (p_i)(p_j)(L) instead of what the document calls for, (p_i)(p_j)(L-1) -- This has been reported (7/8/16) and should be fixed soon.
+* In `chi_square_tests.py` when summing up the `T` values on `line 147`, the `q`s in the indexes should be `i`s. Otherwise only the last value is repeatedly summed. This has been fixed in this version of the code. 

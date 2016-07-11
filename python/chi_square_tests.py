@@ -119,11 +119,12 @@ def chi_square_independence(s):
     # bins[q][0] is pairs, bins[q][1] is frequency, bins[q][2] is expected
     bins.append(['',0,0])
     
+    count = 0
     for pair in e_sorted:
         bins[q][0] = bins[q][0] + str(pair)
         bins[q][1] = bins[q][1] + pair_counts.get(pair,0)
         bins[q][2] = bins[q][2] + e[pair]
-        
+
         if e[pair] >= 5:
             q += 1
             bins.append(['',0,0])
@@ -140,11 +141,10 @@ def chi_square_independence(s):
         bins.pop()
         q -= 1
 
-
     # caclulate the test statistic, T
     T = 0
     for i in range(q):
-        T += float((bins[q][1] - bins[q][2])**2)/bins[q][2]
+        T += float((bins[i][1] - bins[i][2])**2)/bins[i][2]
 
     # return statistic with q-1 df (since our indices start at 0, df is q)
     return T, q
