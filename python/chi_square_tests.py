@@ -119,7 +119,6 @@ def chi_square_independence(s):
     # bins[q][0] is pairs, bins[q][1] is frequency, bins[q][2] is expected
     bins.append(['',0,0])
     
-    count = 0
     for pair in e_sorted:
         bins[q][0] = bins[q][0] + str(pair)
         bins[q][1] = bins[q][1] + pair_counts.get(pair,0)
