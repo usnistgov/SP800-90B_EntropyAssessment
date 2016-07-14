@@ -198,7 +198,6 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
 
 	// Get the expected number of each symbol in each subset
 	map<byte, double> e;
-
 	for(int init = 0; init < 2; init++){
 		for(int i = 0; i < 10; i++){
 			for(int j = 0; j < sublength; j++){
@@ -215,9 +214,9 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
 
 	// Sort the expected values
 	vector<pair<double, byte>> e_sorted;
-
-	for(int i = 0; i < 256; i++){
-		e_sorted.push_back(pair<double, byte>(e[i], i));
+	map<byte, double>::iterator e_itr;
+	for(e_itr = e.begin(); e_itr != e.end(); ++e_itr){
+		e_sorted.push_back(pair<double, byte>(e_itr->second, e_itr->first));
 	}
 
 	sort(e_sorted.begin(), e_sorted.end());
@@ -317,37 +316,36 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
     // Determine observed values from each subset individually
     vector<map<byte, int>> observed;
 
-    // Initialization loop
-    for(int i = 0; i < 2; i++){
+    for(int i = 0; i < 10; i++){
 
-    	for(int j = 0; j < 10; j++){
+    	// Create map for this iteration
+    	map<byte, int> obs_i;
 
-    		map<byte, int> o_i;
-    		
-    		for(int k = 0; k < sublength; k++){
-    	
-    			if(i == 0){
+    	// Init loop for the map
+    	for(int init = 0; init < 2; init++){
+			for(int j = 0; j < sublength; j++){
 
-    				// Initialize value
-    				o_i[data[j][k]] = 0;
-    			
-    			}else{
+				// If int hasn't been initialized, do so
+				if(init == 0){
+					obs_i[data[i][j]] = 0;
+				}else{
 
-    				// Increment value
-    				o_i[data[j][k]]++;
-    			}
-    		}
-
-    		observed.push_back(o_i);
+					// Increment value
+					obs_i[data[i][j]]++;
+				}
+			}
     	}
-    }
+
+		// Store in the list
+		observed.push_back(obs_i);
+	}
 
     double T = 0.0;
     for(int i = 0; i < 10; i++){
 
-    	int o = 0;
-
     	for(int j = 0; j < bins.size(); j++){
+    		
+    		int o = 0;
 
     		for(int k = 0; k < bins[j].size(); k++){
 
@@ -358,6 +356,7 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
     	}
     }
 
+    // Return values
     score = T;
     df = 9*(bins.size()-1);
 }
