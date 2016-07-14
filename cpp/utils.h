@@ -45,13 +45,13 @@ void shuffle(byte arr[]){
 	long int r;
 
 	for(long int i = SIZE-1; i > 0; --i){
-		r = (rand() / (float)RAND_MAX) * (i+1);
+		r = (rand() / (float)RAND_MAX) * (i+1); 	// Proven faster than using % to cast random values
 		SWAP(arr[r], arr[i]);
 	}
 }
 
 // Quick sum array
-long int sum(byte arr[]){
+long int sum(const byte arr[]){
 	long int sum = 0;
 	for(long int i = 0; i < SIZE; ++i){
 		sum += arr[i];
@@ -61,7 +61,7 @@ long int sum(byte arr[]){
 }
 
 // Quick sum vector
-long int sum(vector<int> v){
+long int sum(const vector<int> &v){
 	long int sum = 0;
 	for(long int i = 0; i < v.size(); ++i){
 		sum += v[i];
@@ -72,7 +72,7 @@ long int sum(vector<int> v){
 
 // Calculate baseline statistics
 // Finds mean, median, and whether or not the data is binary
-void calc_stats(byte data[], double &mean, double &median, bool &is_binary){
+void calc_stats(const byte data[], double &mean, double &median, bool &is_binary){
 
 	// Calculate mean
 	mean = sum(data) / (long double) SIZE;
