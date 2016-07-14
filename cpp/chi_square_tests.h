@@ -4,9 +4,15 @@
 
 #include "utils.h"
 
+/*
+* ---------------------------------------------
+* 		  HELPER FUNCTIONS / VARIABLES
+* ---------------------------------------------
+*/
+
 double critical_value[] = {10.828,13.816,16.266,18.467,20.515,22.458,24.322,26.125,27.877,29.588,31.264,32.91,34.528,36.123,37.697,39.252,40.79,42.312,43.82,45.315,46.797,48.268,49.728,51.179,52.62,54.052,55.476,56.892,58.301,59.703,61.098,62.487,63.87,65.247,66.619,67.985,69.347,70.703,72.055,73.402,74.745,76.084,77.419,78.75,80.077,81.4,82.72,84.037,85.351,86.661,87.968,89.272,90.573,91.872,93.168,94.461,95.751,97.039,98.324,99.607,100.888,102.166,103.442,104.716,105.988,107.258,108.526,109.791,111.055,112.317,113.577,114.835,116.092,117.346,118.599,119.85,121.1,122.348,123.594,124.839,126.083,127.324,128.565,129.804,131.041,132.277,133.512,134.746,135.978,137.208,138.438,139.666,140.893,142.119,143.344,144.567,145.789,147.01,148.23,149.449};
 
-double calc_chi_square_cutoff(int df){
+double calc_chi_square_cutoff(const int df){
 	double x_p = 3.090;
 	double h60 = 0.0048;
 	double h_v = (60.0/df) * h60;
@@ -15,55 +21,32 @@ double calc_chi_square_cutoff(int df){
 	return (df * pow(1.0 - term + (x_p - h_v) * sqrt(term), 3));
 }
 
-void binary_chi_square_independence(byte data[], double &score, int &df){
-
+double chi_square_cutoff(int df){
+	if(df < 101){
+		return critical_value[df];
+	}else{
+		return calc_chi_square_cutoff(df);
+	}
 }
 
-void chi_square_independence(byte data[], double &score, int &df){
-
-	/*
-	* 5.2.1
-	*	1. Find the proportion p_i of each x_i in S (data). Calculate
-	*	   the expected number of occurances of each possible pair
-	*/
-
-	// Proportion of each element to the entire set
-	vector<double> p(256, 0.0);
-
-	// Calculate proportions of the number of each element over the whole
+void calc_proportions(const byte data[], vector<double> &p){
+	
 	for(int i = 0; i < SIZE; i++){
-		p[data[i]] += (1.0 / SIZE);
+		p[data[i]] += (1.0 /SIZE);
 	}
+}
 
-	// Expected values of each possible pair of values
-	vector<pair<double, pair<byte, byte>>> e;
-
-	// Calculate the expected number of occurances for each possible pair
+void calc_expectations(const vector<double> &p, vector<pair<double, pair<byte, byte>>> &e){
+	
 	for(int i = 0; i < 256; i++){
 		for(int j = 0; j < 256; j++){
-			pair<byte, byte> key(i, j);
-			pair<double, pair<byte, byte>> e_pair(p[i]*p[j]*(SIZE-1), key);
-			e.push_back(e_pair);
+			e.push_back(pair<double, pair<byte, byte>>(p[i]*p[j]*(SIZE-1), pair<byte, byte>(i, j)));
 		}
 	}
+}
 
-	sort(e.begin(), e.end());
-
-	/*
-	* 5.2.1
-	*	2. Allocate the possible pairs, starting from the smallest pair
-	* 	   frequency, into bins such that the expected value of each bins
-	* 	   is at least 5. The expected value of a bin is equal to the sum
-	*      of the values of the pairs that are included in the bin.
-	*	   After allocating all pairs, if the expected value of the last
-	*	   bin is less than 5, merge the last two bins. Let q be the number
-	* 	   of bins constructed after this procedure.
-	*/
-
-	// Allocate bins
-	vector<vector<pair<byte, byte>>> bins;
-	vector<double> bin_value(1, 0.0);
-
+void allocate_bins(const vector<pair<double, pair<byte, byte>>> &e, vector<vector<pair<byte, byte>>> &bins, vector<double> &bin_value){
+	
 	bool first = true;
 	for(int i = 0; i < e.size(); i++){
 
@@ -106,15 +89,16 @@ void chi_square_independence(byte data[], double &score, int &df){
 			bins.push_back(bin);
 		}
 	}
+}
 
-	// If the last bin is under 5, combine it with the previous
+void check_last_bin(vector<vector<pair<byte, byte>>> &bins, vector<double> &bin_value){
+	
 	if(bin_value.back() < 5){
 
-		// Pop back the last value
+		// Pop back the last two values
 		double last_val = bin_value.back();
 		bin_value.pop_back();
 
-		// Get the second to last value
 		double second_last_val = bin_value.back();
 		bin_value.pop_back();
 
@@ -122,70 +106,85 @@ void chi_square_independence(byte data[], double &score, int &df){
 		second_last_val += last_val;
 		bin_value.push_back(second_last_val);
 
-		// Pop back the last vector of pairs that form the last bin
+		// Pop back the last two vector of pairs that form the last bin
 		vector<pair<byte, byte>> last_bin = bins.back();
 		bins.pop_back();
 
-		// Get the second to last value as well
 		vector<pair<byte, byte>> second_last_bin = bins.back();
 		bins.pop_back();
 
-		// Increment last bin
+		// Increment last bin and add back to the stack
 		for(int i = 0; i < last_bin.size(); i++){
 			second_last_bin.push_back(last_bin[i]);
 		}
 
-		// Add bin back to the stack
 		bins.push_back(second_last_bin);
 	}
+}
 
-	// Calculate observed frequency of each pair
-	map<pair<byte, byte>, int> observed;
-
-	for(int j = 0; j < 2; j++){
-		for(int i = 0; i < SIZE-1; i++){
-
-			pair<byte, byte> key(data[i], data[i+1]);
-			if(j == 0){
-				observed[key] = 0;
-			}else{
-				observed[key]++;
-			}
-		}
+void calc_observed(const byte data[], map<pair<byte, byte>, int> &o){
+	
+	map_init(o);
+	for(int i = 0; i < SIZE-1; i++){
+		o[pair<byte, byte>(data[i], data[i+1])]++;
 	}
+}
 
-	// Accumulate T
-	double T = 0.0;
+void calc_T(const vector<vector<pair<byte, byte>>> &bins, const vector<double> &bin_value, const map<pair<byte, byte>, int> &o, double &T){
+
 	for(int i = 0; i < bins.size(); i++){
-
-		// Get current bin
-		vector<pair<byte, byte>> bin = bins[i];
-		
-		// Get expected value for bin
-		double expected_value = bin_value[i];
 
 		// Calculate observed value for the bin (sum the observed values for each element in the bin)
 		double observed_value = 0.0;
-
-		for(int j = 0; j < bin.size(); j++){
-			observed_value += observed[bin[j]];
+		for(int j = 0; j < bins[i].size(); j++){
+			observed_value += o.at(bins[i][j]);
 		}
 
 		// Increment T
-		T += pow((observed_value - expected_value), 2) / expected_value;
+		T += pow((observed_value - bin_value[i]), 2) / bin_value[i];
 	}
+}
+
+/*
+* ---------------------------------------------
+* 		  			 TESTS
+* ---------------------------------------------
+*/
+
+void binary_chi_square_independence(byte data[], double &score, int &df){
+
+}
+
+void chi_square_independence(byte data[], double &score, int &df){
+
+	// Proportion of each element to the entire set
+	vector<double> p(256, 0.0);
+	calc_proportions(data, p);
+
+	// Calculate the expected number of occurances for each possible pair of values
+	vector<pair<double, pair<byte, byte>>> e;
+	calc_expectations(p, e);
+	sort(e.begin(), e.end());
+
+	// Allocate sorted expected values into bins and accumulate corresponding expected values of entire bins
+	vector<vector<pair<byte, byte>>> bins;
+	vector<double> bin_value(1, 0.0);
+	allocate_bins(e, bins, bin_value);
+	
+	// Check the last bin to see if it needs to be combined with the previous
+	check_last_bin(bins, bin_value);
+
+	// Calculate observed frequency of each pair
+	map<pair<byte, byte>, int> o;
+	calc_observed(data, o);
+
+	// Calcualte T 
+	double T = 0.0;
+	calc_T(bins, bin_value, o, T);
 
 	// Return score and degrees of freedom
 	score = T;
 	df = bins.size()-1;
-}
-
-double chi_square_cutoff(int df){
-	if(df < 101){
-		return critical_value[df];
-	}else{
-		return calc_chi_square_cutoff(df);
-	}
 }
 
 void binary_goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
@@ -198,20 +197,14 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
 
 	// Get the expected number of each symbol in each subset
 	map<byte, double> e;
-	for(int init = 0; init < 2; init++){
-		for(int i = 0; i < 10; i++){
-			for(int j = 0; j < sublength; j++){
+	map_init(e);
 
-				// Init loop because otherwise += is undefined				
-				if(init == 0){
-					e[data[i][j]] = 0;
-				}else{
-					e[data[i][j]] += .1; // would be 1 but we divide by 10 later anyways
-				}
-			}
+	for(int i = 0; i < 10; i++){
+		for(int j = 0; j < sublength; j++){
+			e[data[i][j]] += .1; // would be 1 but we divide by 10 later anyways
 		}
 	}
-
+	
 	// Sort the expected values
 	vector<pair<double, byte>> e_sorted;
 	map<byte, double>::iterator e_itr;
@@ -232,7 +225,6 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
 
     vector<vector<byte>> bins;
     vector<double> E(1, 0.0);
-
     bool first = true;
     for(int i = 0; i < e_sorted.size(); i++){
 
@@ -315,43 +307,36 @@ void goodness_of_fit(byte data[10][SIZE/10], double &score, int &df){
 
     // Determine observed values from each subset individually
     vector<map<byte, int>> observed;
-
+    map<byte, int> obs_i;
     for(int i = 0; i < 10; i++){
 
-    	// Create map for this iteration
-    	map<byte, int> obs_i;
+    	// Reset map for this iteration
+    	map_init(obs_i);
 
-    	// Init loop for the map
-    	for(int init = 0; init < 2; init++){
-			for(int j = 0; j < sublength; j++){
+		for(int j = 0; j < sublength; j++){
 
-				// If int hasn't been initialized, do so
-				if(init == 0){
-					obs_i[data[i][j]] = 0;
-				}else{
-
-					// Increment value
-					obs_i[data[i][j]]++;
-				}
-			}
-    	}
+			// Increment value
+			obs_i[data[i][j]]++;
+		}
 
 		// Store in the list
 		observed.push_back(obs_i);
 	}
 
+	// Begin summing up T
     double T = 0.0;
     for(int i = 0; i < 10; i++){
 
     	for(int j = 0; j < bins.size(); j++){
     		
+    		// Record times a value was observed in a subset 
     		int o = 0;
-
     		for(int k = 0; k < bins[j].size(); k++){
 
     			o += observed[i][bins[j][k]];
     		}
 
+    		// Increment T
     		T += pow(o - E[j], 2) / E[j];
     	}
     }

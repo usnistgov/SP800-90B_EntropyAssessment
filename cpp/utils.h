@@ -8,10 +8,10 @@
 #include <iomanip>		// setw / setfill
 #include <stdio.h>
 #include <stdlib.h>
-#include <vector>
-#include <time.h>
-#include <algorithm>
-#include <math.h>
+#include <vector>		// std::vector
+#include <time.h>		// time
+#include <algorithm>	// std::sort
+#include <math.h>		// pow
 
 #define SWAP(x, y) do { int s = x; x = y; y = s; } while(0)
 
@@ -90,5 +90,28 @@ void calc_stats(byte data[], double &mean, double &median, bool &is_binary){
 	}else{
 		long int half = SIZE / 2;
 		median = (v[half] + v[half-1]) / 2.0;
+	}
+}
+
+// Map initialization for integers
+void map_init(map<byte, int> &m){
+	for(int i = 0; i < 256; i++){
+		m[i] = 0;
+	}
+}
+
+// Map initialization for doubles
+void map_init(map<byte, double> &m){
+	for(int i = 0; i < 256; i++){
+		m[i] = 0.0;
+	}
+}
+
+// Map initialization for pair<byte, byte> to int
+void map_init(map<pair<byte, byte>, int> &m){
+	for(int i = 0; i < 256; i++){
+		for(int j = 0; j < 256; j++){
+			m[pair<byte, byte>(i,j)] = 0;
+		}
 	}
 }
