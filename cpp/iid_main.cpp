@@ -19,11 +19,11 @@ int main(){
 	cout << "Calculating baseline statistics..." << endl;
 	calc_stats(dataset, mean, median, is_binary);
 
-#ifdef VERBOSE
+	#ifdef VERBOSE
 	cout << "Mean: " << mean << endl;
 	cout << "Median: " << median << endl;
 	cout << "Binary: " << (is_binary ? "true" : "false") << endl;
-#endif
+	#endif
 
 	// Compute permutation stats
 	//bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary);

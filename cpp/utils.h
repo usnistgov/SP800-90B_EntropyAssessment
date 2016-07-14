@@ -27,7 +27,7 @@ void read_file(const char* file_path, byte data[]){
 	FILE* file = NULL;
 
 	#ifdef VERBOSE
-	printf("Opening file %s\n", file_path);
+	cout << "Opening file: " << file_path << endl;
 	#endif
 
 	file = fopen(file_path, "rb");
@@ -35,7 +35,7 @@ void read_file(const char* file_path, byte data[]){
 	fclose(file);
 
 	#ifdef VERBOSE
-	printf("Data read\n");
+	cout << "Data read complete" << endl;
 	#endif
 }
 
