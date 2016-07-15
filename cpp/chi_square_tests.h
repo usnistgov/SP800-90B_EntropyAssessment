@@ -56,7 +56,7 @@ void calc_expectations(const vector<double> &p, vector<pair<double, pair<byte, b
 void allocate_bins(const vector<pair<double, pair<byte, byte>>> &e, vector<vector<pair<byte, byte>>> &bins, vector<double> &bin_value){
 	
 	bool first = true;
-	for(int i = 0; i < e.size(); i++){
+	for(unsigned int i = 0; i < e.size(); i++){
 
 		pair<double, pair<byte, byte>> current_e = e[i];
 
@@ -122,7 +122,7 @@ void check_last_bin(vector<vector<pair<byte, byte>>> &bins, vector<double> &bin_
 		bins.pop_back();
 
 		// Increment last bin and add back to the stack
-		for(int i = 0; i < last_bin.size(); i++){
+		for(unsigned int i = 0; i < last_bin.size(); i++){
 			second_last_bin.push_back(last_bin[i]);
 		}
 
@@ -140,11 +140,11 @@ void calc_observed(const byte data[], map<pair<byte, byte>, int> &o){
 
 void calc_T(const vector<vector<pair<byte, byte>>> &bins, const vector<double> &bin_value, const map<pair<byte, byte>, int> &o, double &T){
 
-	for(int i = 0; i < bins.size(); i++){
+	for(unsigned int i = 0; i < bins.size(); i++){
 
 		// Calculate observed value for the bin (sum the observed values for each element in the bin)
 		double observed_value = 0.0;
-		for(int j = 0; j < bins[i].size(); j++){
+		for(unsigned int j = 0; j < bins[i].size(); j++){
 			observed_value += o.at(bins[i][j]);
 		}
 
@@ -184,7 +184,7 @@ void calc_expectations(const byte data[10][SUBLENGTH], vector<pair<double, byte>
 void allocate_bins(const vector<pair<double, byte>> &e, vector<vector<byte>> &bins, vector<double> &bin_value){
 	
 	bool first = true;
-	for(int i = 0; i < e.size(); i++){
+	for(unsigned int i = 0; i < e.size(); i++){
 
 		vector<byte> bin;
 		pair<double, byte> e_pair = e[i];
@@ -245,7 +245,7 @@ void check_last_bin(vector<vector<byte>> &bins, vector<double> &bin_value){
 		bins.pop_back();
 
 		// Increment last bin and add it back to the stack
-		for(int i = 0; i < last_bin.size(); i++){
+		for(unsigned int i = 0; i < last_bin.size(); i++){
 			second_last_bin.push_back(last_bin[i]);
 		}
 
@@ -272,11 +272,11 @@ void calc_observed(const byte data[10][SUBLENGTH], vector<map<byte, int>> &o){
 void calc_T(const vector<vector<byte>> &bins, const vector<double> &bin_value, const vector<map<byte, int>> &o, double &T){
 	
 	for(int i = 0; i < 10; i++){
-		for(int j = 0; j < bins.size(); j++){
+		for(unsigned int j = 0; j < bins.size(); j++){
 			
 			// Record times a value was observed in a subset 
 			int o_i = 0;
-			for(int k = 0; k < bins[j].size(); k++){
+			for(unsigned int k = 0; k < bins[j].size(); k++){
 				o_i += o[i].at(bins[j][k]);
 			}
 

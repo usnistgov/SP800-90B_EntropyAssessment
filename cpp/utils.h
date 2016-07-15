@@ -63,7 +63,7 @@ long int sum(const byte arr[]){
 // Quick sum vector
 long int sum(const vector<int> &v){
 	long int sum = 0;
-	for(long int i = 0; i < v.size(); ++i){
+	for(unsigned long int i = 0; i < v.size(); ++i){
 		sum += v[i];
 	}
 

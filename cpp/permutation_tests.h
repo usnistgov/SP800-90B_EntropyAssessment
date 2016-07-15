@@ -200,8 +200,8 @@ vector<int> find_collisions(const byte data[]){
 	vector<int> ret;
 	set<int> dups;
 
-	long int i = 0;
-	long int check_size;
+	unsigned long int i = 0;
+	unsigned long int check_size;
 
 	// Begin from each element
 	while(i < SIZE){
@@ -245,7 +245,7 @@ double avg_collision(const vector<int> &col_seq){
 // Determines the maximum number of samples without a duplicate
 long int max_collision(const vector<int> &col_seq){
 	long int max = -1;
-	for(long int i = 0; i < col_seq.size(); i++){
+	for(unsigned long int i = 0; i < col_seq.size(); i++){
 		if(max < col_seq[i]) max = col_seq[i];
 	}
 
