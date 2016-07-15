@@ -420,7 +420,7 @@ void run_tests(const byte data[], const double mean, const double median, const 
 	// Perform tests
 	excursion_test(data, mean, stats);
 	directional_tests(data, is_binary, stats);
-	consecutive_runs_tests(data, is_binary, stats);	
+	consecutive_runs_tests(data, median, is_binary, stats);	
 	collision_tests(data, is_binary, stats);
 	periodicity_tests(data, is_binary, stats);
 	covariance_tests(data, is_binary, stats);
@@ -459,7 +459,7 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 
 	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
-	run_tests(t, data, mean, median, is_binary);
+	run_tests(data, mean, median, is_binary, t);
 
 	#ifdef VERBOSE
 	cout << endl << "Initial test results" << endl;
