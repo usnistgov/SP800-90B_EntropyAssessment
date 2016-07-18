@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "permutation_tests.h"
 #include "chi_square_tests.h"
+#include "lrs_test.h"
 
 
 byte dataset[SIZE];
@@ -36,12 +37,22 @@ int main(){
 	//}
 
 	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary);
+	// bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary);
 
-	if(chi_square_test_pass){
-		cout << "** Passed chi square tests" << endl;
+	// if(chi_square_test_pass){
+	// 	cout << "** Passed chi square tests" << endl;
+	// }else{
+	// 	cout << "** Failed chi square tests" << endl;
+	// 	return -1;
+	// }
+
+	// Compute length of the longest repeated substring stats
+	bool len_LRS_test_pass = len_LRS_test(dataset);
+
+	if(len_LRS_test_pass){
+		cout << "** Passed length of longest repeated substring test" << endl;
 	}else{
-		cout << "** Failed chi square tests" << endl;
+		cout << "** Failed length of longest repeated substring test" << endl;
 		return -1;
 	}
 

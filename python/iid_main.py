@@ -67,24 +67,24 @@ if __name__ == '__main__':
         #     sys.exit(0)
 
         # run chi-square tests on dataset
-        if pass_chi_square_tests(dataset, verbose):
-            if verbose:
-                print ("** Passed chi square tests")
-        else:
-            if verbose:
-                print ("** Failed chi square tests")
-            print ("IID = False")
-            sys.exit(0)
-
-        # # run LRS test
-        # if lenLRS(dataset, verbose):
+        # if pass_chi_square_tests(dataset, verbose):
         #     if verbose:
-        #         print ("** Passed LRS test")
-        #     print ("\nIID = True")
+        #         print ("** Passed chi square tests")
         # else:
-        #     print ("** Failed LRS test")
+        #     if verbose:
+        #         print ("** Failed chi square tests")
         #     print ("IID = False")
         #     sys.exit(0)
+
+        # # run LRS test
+        if lenLRS(dataset, verbose):
+            if verbose:
+                print ("** Passed LRS test")
+            print ("\nIID = True")
+        else:
+            print ("** Failed LRS test")
+            print ("IID = False")
+            sys.exit(0)
 
         ############################################
         # STEP 2: Calculate min-entropy of dataset #

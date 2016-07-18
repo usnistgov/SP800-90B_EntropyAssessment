@@ -31,6 +31,8 @@ def lenLRS(s, verbose=False):
     # 2. calculate the collision probability
     p_col = sum(map(lambda x: x ** 2, p))
 
+    print(p_col)
+
     # 3. find the length of the longest repeated substring W
     W = find_v(s,1,2)
 
