@@ -1,71 +1,74 @@
-#include <iostream>
+#include <stdio.h>
 #include <vector>
+#include <list>
 #include <unordered_map>
 #include <string>
+#include <time.h>
+#include <stdlib.h>
 using namespace std;
 
 typedef unsigned char byte;
 
-class Node
-{
+#define SIZE 1000
+
+class Node{
 public:
-    byte ch;
-    unordered_map<byte, Node*> children;
-    vector<int> indexes; //store the indexes of the substring from where it starts
-    Node(byte c):ch(c){}
+    int by;
+    unordered_map<int, Node*> children;
+    int indexes;
+    Node(int b):by(b){indexes = 0;}
+    ~Node(){
+        unordered_map<int, Node*>::iterator itr;
+        for(itr = children.begin(); itr != children.end(); ++itr)
+            delete(itr->second);
+    }
 };
 
-int maxLen = 0;
-string maxStr = "";
+int max_len = 0;
 
-void insertInSuffixTree(Node* root, vector<byte> str, int index, vector<byte> originalSuffix, int level=0)
-{
-    root->indexes.push_back(index);
+void insert_in_suffix_tree(Node* root, list<byte> str, int level=0){
+    
+    root->indexes++;
 
-    // it is repeated and length is greater than maxLen
-    // then store the substring
-    if(root->indexes.size() > 1 && maxLen < level)
+    if(root->indexes > 1 && max_len < level)
     {
-        maxLen = level;
-        //maxStr = originalSuffix.substr(0, level);
+        max_len = level;
     }
 
     if(str.empty()) return;
 
     Node* child;
-    if(root->children.count(str[0]) == 0) {
-        child = new Node(str[0]);
-        root->children[str[0]] = child;
+    if(root->children.count(str.front()) == 0) {
+        child = new Node(str.front());
+        root->children[str.front()] = child;
     } else {
-        child = root->children[str[0]];
+        child = root->children[str.front()];
     }
 
-    vector<byte>::iterator itr = str.begin();
-    str.erase(itr);
-    insertInSuffixTree(child, str, index, originalSuffix, level+1);
+    str.pop_front();
+    insert_in_suffix_tree(child, str, level+1);
 }
 
-int main()
-{
-    byte str[] = {0, 1, 2, 3, 4, 2, 3, 4, 2, 1};
+int main(){
+
     Node* root = new Node(0);
+    list<byte> byte_str;
 
-    vector<byte> vb;
-    for(int i = 0; i < 10; i++){
-        vb.push_back(str[i]);
+    srand(time(NULL));
+    for(int i = 0; i < SIZE; i++){
+        byte_str.push_back(rand() % 256);
     }
 
-    //insert all substring in suffix tree
-    for(int i=0; i<10; i++){
-        vector<byte> vb2 = vb;
-        for(int j = 0; j < i; j++){
-            vector<byte>::iterator itr = vb2.begin();
-            vb2.erase(itr);
-        }
-        insertInSuffixTree(root, vb2, i, vb2);
-    }
+    byte_str.push_back(-1);
 
-    cout << maxLen << endl;
+    for(int i = 0; i < SIZE; i++){
+        byte_str.pop_front();
+        insert_in_suffix_tree(root, byte_str);
+    }
+    
+    delete(root);
+
+    printf("LRS: %d\n", max_len);
 
     return 1;
 }
