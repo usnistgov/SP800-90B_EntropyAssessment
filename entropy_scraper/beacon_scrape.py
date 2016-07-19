@@ -11,14 +11,13 @@ import binascii
 # Work slightly in the past in case clocks aren't sync'ed
 cur_time = int(time.time()) - 120
 
-# Round down to a multiple of 60
-#cur_time = cur_time - (cur_time % 60)
-cur_time =  1456252260
+# Round down to a multiple of 60 and make sure it has been published
+cur_time = cur_time - (cur_time % 60) - 60
 
 # 64 bytes are produced per minute
 # We need 10 days, 20 hours, 25 minutes for exactly 1mil bytes.
 # This is 937500 seconds (or 15625 API hits)
-start_time = cur_time - 1200
+start_time = cur_time - 937500
 
 # Open file for writing
 f = open('beacon_rand2.bin', 'ab')
@@ -53,7 +52,7 @@ for t in range(cur_time, start_time, -60):
 		except KeyError:
 			
 			# Lets not DDOS them...
-			time.sleep(30)
+			time.sleep(60)
 
 # Done
 f.close()
