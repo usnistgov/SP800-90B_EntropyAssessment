@@ -39,6 +39,7 @@ def lenLRS(s, verbose=False):
     # 4. Calculate the number of overlapping subsequences of length W in S and
     #    the number of pairs as (L-W+1) choose 2
     N = (L-W+1)*(L-W) / 2 
+    print("N: %d" % N)
 
     # 5. Let E be a binomially distributed random variable with parameters
     #    N = L-W+1 choose 2 and a probability of success p_col. Calculate the

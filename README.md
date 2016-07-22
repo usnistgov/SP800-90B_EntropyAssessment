@@ -71,3 +71,7 @@ For more information on the estimation methods, see [SP 800-90B second draft](ht
 
 ###Contact Information
 This code is currently maintained by Kerry McKay and John Kelsey.
+
+##Known Issues
+
+Does not work with `python3`
