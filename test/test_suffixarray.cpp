@@ -1,9 +1,11 @@
 #include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <time.h>
 #include <string>
 #include <cstring>
 #include <iomanip>
+#include <algorithm>
 
 using namespace std;
 
@@ -39,9 +41,10 @@ class SuffixArray{
 
 		void createSuffixArray(){
 
+			string text;
 			for(int i = 0; i < length; i++){
 
-				string text = "";
+				text = "";
 
 				for(int j = i; j < length; j++){
 					text += this->text[j];
@@ -51,9 +54,12 @@ class SuffixArray{
 			}
 
 			int back;
+			string key;
+			int key_index;
 			for(int i = 1; i < length; i++){
-				string key = suffix[i];
-				int key_index = index[i];
+
+				key = suffix[i];
+				key_index = index[i];
 
 				for(back = i-1; back >= 0; back--){
 
@@ -117,11 +123,47 @@ class SuffixArray{
 
 int main(){
 
-	string text = "mississippi";
-	SuffixArray sa(text);
-	sa.createSuffixArray();
-	sa.print();
-	sa.longestCommonPrefix();
+	ifstream file;
+	string text;
+	string line;
+
+	file.open("moby_dick.txt");
+	while(getline(file, line)) text += line;
+	file.close();
+
+	text.erase(remove(text.begin(), text.end(), '.'), text.end());
+	text.erase(remove(text.begin(), text.end(), '\n'), text.end());
+	text.erase(remove(text.begin(), text.end(), ','), text.end());
+	text.erase(remove(text.begin(), text.end(), '-'), text.end());
+	text.erase(remove(text.begin(), text.end(), ';'), text.end());
+	text.erase(remove(text.begin(), text.end(), '?'), text.end());
+	text.erase(remove(text.begin(), text.end(), '\''), text.end());
+	text.erase(remove(text.begin(), text.end(), '\"'), text.end());
+	text.erase(remove(text.begin(), text.end(), '('), text.end());
+	text.erase(remove(text.begin(), text.end(), ')'), text.end());
+	text.erase(remove(text.begin(), text.end(), ':'), text.end());
+	text.erase(remove(text.begin(), text.end(), '!'), text.end());
+	text.erase(remove(text.begin(), text.end(), ' '), text.end());
+	transform(text.begin(), text.end(), text.begin(), ::tolower);
+
+	ofstream out_file;
+	out_file.open("short_moby_dick.txt");
+	out_file << text;
+	out_file.close();
+
+	// string text, line;
+	// ifstream file;
+	// file.open("short_moby_dick.txt");
+	// while(getline(file, line)) text += line;
+	// file.close();
+
+	// cout << "Text read" << endl;
+	// SuffixArray sa(text);
+	// cout << "Allocated" << endl;
+	// sa.createSuffixArray();
+	// cout << "Array created" << endl;
+	// //sa.print();
+	// sa.longestCommonPrefix();
 
 	return 0;
 }
