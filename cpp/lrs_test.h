@@ -10,70 +10,85 @@
 * ---------------------------------------------
 */
 
-int max_len = 0;
+vector<byte> substr(const byte text[], int pos, int len){
 
-class Node{
-	public:
-		byte b;
-		unordered_map<byte, Node*> children;
-		vector<int> indexes;
-		Node(byte b_in):b(b_in){}
-		~Node(){
-			unordered_map<byte, Node*>::iterator itr;
-			for(itr = children.begin(); itr != children.end(); ++itr)
-				delete(itr->second);
-		}
-};
-
-void insert_in_suffix_tree(Node* root, vector<byte> byte_str, int index, int level = 0){
-
-	root->indexes.push_back(index);
-
-	if(root->indexes.size() > 1 && max_len < level){
-		max_len = level;
+	if(pos+len > SIZE){
+		len = SIZE - pos;
 	}
 
-	if(byte_str.empty()) return;
+	vector<byte> substring;
 
-	Node *child;
-	if(root->children.count(byte_str[0]) == 0){
-		child = new Node(byte_str[0]);
-		root->children[byte_str[0]] = child;
-	}else{
-		child = root->children[byte_str[0]];
+	for(int i = 0; i < len; i++){
+		substring.push_back(text[pos+i]);
 	}
 
-	vector<byte>::iterator front_itr = byte_str.begin()+1, back_itr = byte_str.end();
-	byte_str = vector<byte>(front_itr, back_itr);
-	insert_in_suffix_tree(child, byte_str, index, level+1);
+	return substring;
 }
 
-int len_LRS(const byte data[]){
+void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector<int>> &indexes){
 
-	Node* root = new Node(0);
-	vector<byte> byte_str;
+	// First iteration
+	if(substr_len == 2){
+
+		// Store all 2-tuples that appear in the text
+		for(int i = 0; i < SIZE-1; i++){
+			indexes[substr(text, i, substr_len)].push_back(i);
+		}
+
+	// All other iterations, don't just find all n-tuples naively like 2-tuples
+	// Any (n+1)-tuple must build upon an n-tuple, so just take the existing indexes and build on them
+	}else{
+
+		vector<int> good_indexes;
+		map<vector<byte>, vector<int>>::iterator itr;
+
+		// Store all the indexes of n-tuple substrings that occur more than once
+		for(itr = indexes.begin(); itr != indexes.end(); ++itr){
+			for(int i = 0; i < itr->second.size(); i++){
+				good_indexes.push_back(itr->second[i]);
+			}
+
+		}
+
+		indexes.clear();
+
+		// Extend the n-tuples to (n+1)-tuples and store like before
+		for(int i = 0; i < good_indexes.size(); i++){
+			indexes[substr(text, good_indexes[i], substr_len)].push_back(good_indexes[i]);
+		}
+	}
+}
+
+void erase_substrings(map<vector<byte>, vector<int>> &indexes){
+
+	// Prune the map of any substrings that occur only once
+	map<vector<byte>, vector<int>>::iterator itr = indexes.begin();
+	while(itr != indexes.end()){
+		if(itr->second.size() < 2){
+			indexes.erase(itr++);
+		}else{
+			++itr;
+		}
+	}
+}
+
+int len_LRS(const byte text[]){
+
+	// String is the substring we are looking at, vector stores the indexes those substrings begin at
+	map<vector<byte>, vector<int>> indexes;
+	int substr_len = 2;
 	
-	int factor = 250;
+	// Progressively grow the length of the n-tuples to look for
+	while(true){
+		find_substrings(text, substr_len, indexes);
+		erase_substrings(indexes);
 
-	for(long int i = 0; i < SIZE/factor; i++){
-		byte_str.push_back(data[i]);
+		if(indexes.empty()) break;
+		substr_len++;
 	}
 
-	cout << "Vector built" << endl;
-
-	vector<byte>::iterator front_itr, back_itr = byte_str.end();
-	vector<byte> next_byte_str;
-	for(int i = 0; i < SIZE/factor; i++){
-
-	 	front_itr = byte_str.begin() + i;
-
-	 	next_byte_str = vector<byte>(front_itr, back_itr);
-	 	insert_in_suffix_tree(root, next_byte_str, i);
-	}
-	
-	delete(root);
-
-	return max_len;
+	// We always advance one further than we need to
+	return substr_len-1;
 }
 
 /*
@@ -103,7 +118,16 @@ bool len_LRS_test(const byte data[]){
 	double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
 
-	cout << len_LRS(data) << endl;
+	// Calculate the number of overlapping substrings of the same length as the longest repeated substring
+	int lrs = len_LRS(data);
+	int n = SIZE - lrs;
+	long int overlap = (pow(n, 2) + n) / 2;
 
-	return true;
+	double pr_e = 1 - pow(1 - pow(p_col, lrs), overlap);
+
+	#ifdef VERBOSE
+	cout << "P_col: " << p_col << " LRS: " << lrs << " Pr(E >= 1): " << pr_e << endl;
+	#endif
+
+	return (pr_e >= 0.001);
 }

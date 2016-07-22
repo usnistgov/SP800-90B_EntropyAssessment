@@ -33,7 +33,7 @@ int main(){
 	//	cout << "** Passed IID permutation tests" << endl;
 	//}else{
 	//	cout << "** Failed IID permutation tests" << endl;
-	//	return -1;
+	//	return 0;
 	//}
 
 	// Compute chi square stats
@@ -43,7 +43,7 @@ int main(){
 	// 	cout << "** Passed chi square tests" << endl;
 	// }else{
 	// 	cout << "** Failed chi square tests" << endl;
-	// 	return -1;
+	// 	return 0;
 	// }
 
 	// Compute length of the longest repeated substring stats
@@ -53,7 +53,7 @@ int main(){
 		cout << "** Passed length of longest repeated substring test" << endl;
 	}else{
 		cout << "** Failed length of longest repeated substring test" << endl;
-		return -1;
+		return 0;
 	}
 
 	return 0;
