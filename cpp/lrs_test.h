@@ -2,11 +2,9 @@
 
 #include "utils.h"
 
-#include <unordered_map>
-
 /*
 * ---------------------------------------------
-*			 SUFFIX TREE DEFINITION
+*		LONGEST REPEATED SUBSTRING HELPERS
 * ---------------------------------------------
 */
 

@@ -115,3 +115,11 @@ void map_init(map<pair<byte, byte>, int> &m){
 		}
 	}
 }
+
+// Calcualtes proportions of each value as an index
+void calc_proportions(const byte data[], vector<double> &p){
+	
+	for(int i = 0; i < SIZE; i++){
+		p[data[i]] += (1.0 / SIZE);
+	}
+}

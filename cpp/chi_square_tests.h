@@ -37,13 +37,6 @@ double chi_square_cutoff(const int df){
 * ---------------------------------------------
 */
 
-void calc_proportions(const byte data[], vector<double> &p){
-	
-	for(int i = 0; i < SIZE; i++){
-		p[data[i]] += (1.0 /SIZE);
-	}
-}
-
 void calc_expectations(const vector<double> &p, vector<pair<double, pair<byte, byte>>> &e){
 	
 	for(int i = 0; i < 256; i++){
