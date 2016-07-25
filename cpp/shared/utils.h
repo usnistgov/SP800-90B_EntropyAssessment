@@ -11,7 +11,7 @@
 #include <vector>		// std::vector
 #include <time.h>		// time
 #include <algorithm>	// std::sort
-#include <math.h>		// pow
+#include <math.h>		// pow, log2
 
 #define SWAP(x, y) do { int s = x; x = y; y = s; } while(0)
 
