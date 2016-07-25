@@ -419,7 +419,7 @@ def permutation_test(s, max_processes, verbose=False):
 
     if verbose:
         print ("Calculating statistics on permuted sequences")
-    for j in range(100):
+    for j in range(10000):
         if verbose:
             sys.stdout.write("\rpermutation tests:\t%.2f percent complete" % (float(j)/100))
             sys.stdout.flush()
