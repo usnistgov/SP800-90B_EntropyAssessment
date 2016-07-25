@@ -2,7 +2,7 @@
 
 #include "bzlib.h" // sudo apt-get install libbz2-dev
 
-#include "utils.h"
+#include "../utils.h"
 
 
 // The tests used
