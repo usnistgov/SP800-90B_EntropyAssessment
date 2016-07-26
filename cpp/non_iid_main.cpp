@@ -13,7 +13,7 @@ int main(){
 	// The maximum min-entropy is -log2(1/SIZE)
 	double min_entropy = log2(SIZE);
 
-	// Estimate entropy with Most Common Value
+	// Section 6.3.1 - Estimate entropy with Most Common Value
 	double H_min = most_common(dataset);
 	
 	#ifdef VERBOSE
@@ -22,21 +22,29 @@ int main(){
 
 	min_entropy = min(min_entropy, H_min);
 
-	// Estimate entropy with Collision Test
+	// Section 6.3.2 - Estimate entropy with Collision Test
+	// involves remapping to smaller word size
+	H_min = collision_test(dataset);
 
-	// Estimate entropy with Markov Test
+	#ifdef VERBOSE
+	cout << "Collision Test Estimate = " << H_min << endl;
+	#endif
 
-	// Estimate entropy with Compression Test
+	min_entropy = min(min_entropy, H_min);
 
-	// Estimate entropy with t-Tuple Test
+	// Section 6.3.3 - Estimate entropy with Markov Test
 
-	// Estimate entropy with Longest Repeated Substring Test (LRS)
+	// Section 6.3.4 - Estimate entropy with Compression Test
 
-	// Estimate entropy with Multi Most Common in Window Test
+	// Section 6.3.5 - Estimate entropy with t-Tuple Test
 
-	// Estimate entropy with Lag Prediction Test
+	// Section 6.3.6 - Estimate entropy with Longest Repeated Substring Test (LRS)
 
-	// Estimate entropy with Multi MMC Test
+	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
 
-	// Estimate entropy with LZ78Y Test
+	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
+
+	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
+
+	// Section 6.3.10 - Estimate entropy with LZ78Y Test
 }

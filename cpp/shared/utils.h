@@ -116,10 +116,22 @@ void map_init(map<pair<byte, byte>, int> &m){
 	}
 }
 
-// Calcualtes proportions of each value as an index
+// Calculates proportions of each value as an index
 void calc_proportions(const byte data[], vector<double> &p){
 	
 	for(int i = 0; i < SIZE; i++){
 		p[data[i]] += (1.0 / SIZE);
 	}
+}
+
+// Determines the standard deviation of a dataset
+double std_dev(vector<int> x, double x_mean){
+
+	double sum = 0.0;
+
+	for(int i = 0; i < x.size(); i++){
+		sum += pow(x[i] - x_mean, 2);
+	}
+
+	return sqrt(sum / x.size());
 }
