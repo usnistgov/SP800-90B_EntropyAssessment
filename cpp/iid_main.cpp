@@ -1,8 +1,8 @@
 #include "shared/utils.h"
 #include "shared/most_common.h"
+#include "shared/lrs_test.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
-#include "iid/lrs_test.h"
 
 
 byte dataset[SIZE];
