@@ -46,7 +46,7 @@ double avg_collision(const vector<int> &col_seq){
 }
 
 // Derived from http://dlmf.nist.gov/8.9
-double F(double z_inv, int k){
+double F(const double z_inv, const int k){
 	double z = 1.0 / z_inv;
 	double denom = 1.0 + (k / z);
 
@@ -61,7 +61,7 @@ double F(double z_inv, int k){
 
 // Expected value of statistic based on one-parameter family of probability distributions
 // Right hand side of equation in step 9 of Section 6.3.2
-double calc_EpS(double p, int k){
+double calc_EpS(const double p, const int k){
 	double q = (1.0 - p)/ (double)(k - 1.0);
 	double p_inv = 1.0 / p;
 	double q_inv = 1.0 / q;
@@ -117,8 +117,17 @@ bool binary_search(const double lbound, const int n, double &p){
 	return true;
 }
 
-double collision_test(const byte data[]){
+// Section 6.3.2 - Collision Estimate
+// 1-5. Find distance between collisions in dataset
+// 6. If there are less than 1000 collisions, map data down to lower wordsize
+// 7. Calculate mean, and standard deviation
+// 8. Calcualte lower-bound of the confidence interval for the mean
+// 9. Use binary search to solve for p
+// 10. Min-entropy = -log2(p) unless p is undefined
+double collision_test(const byte data[], const int word_size){
 	
+	int alphabet_size = pow(2, word_size);
+
 	vector<int> t = find_collisions(data);
 	int v = t.size();
 
@@ -135,10 +144,10 @@ double collision_test(const byte data[]){
 	cout << "Lower bound: " << lower_bound << endl;
 
 	double p = 0.0;
-	if(binary_search(lower_bound, 256, p)){
+	if(binary_search(lower_bound, alphabet_size, p)){
 		return -log2(p);
 	}else{
 		cout << "Error in binary search" << endl;
-		return log2(256);
+		return log2(alphabet_size);
 	}
 }

@@ -24,8 +24,7 @@ int main(){
 	min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.2 - Estimate entropy with Collision Test
-	// involves remapping to smaller word size
-	H_min = collision_test(dataset);
+	H_min = collision_test(dataset, 8);
 
 	#ifdef VERBOSE
 	cout << "Collision Test Estimate = " << H_min << endl;
