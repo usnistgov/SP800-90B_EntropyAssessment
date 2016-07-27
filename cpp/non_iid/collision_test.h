@@ -80,14 +80,11 @@ bool binary_search(const double lbound, const int n, double &p){
 	double E_p = calc_EpS(p_c, n);
 	double E_p_maxvalid = calc_EpS(min_p, n);
 
-	cout << "E_p: " << E_p << endl;
-	cout << "Max E_p: " << E_p_maxvalid << endl;
 	if(lbound > E_p_maxvalid){
 		p = 0.0;
 		cout << "Bad bound" << endl;
 		return false;
 	}
-
 
 	// Search until error is minimal
 	while(abs(lbound - E_p) > .0001){
@@ -140,8 +137,6 @@ double collision_test(const byte data[], const int word_size){
 	double t_stddev = std_dev(t, t_mean);
 
 	double lower_bound = t_mean - 2.576 * (t_stddev / sqrt(v));
-
-	cout << "Lower bound: " << lower_bound << endl;
 
 	double p = 0.0;
 	if(binary_search(lower_bound, alphabet_size, p)){
