@@ -125,7 +125,7 @@ void calc_proportions(const byte data[], vector<double> &p){
 }
 
 // Determines the standard deviation of a dataset
-double std_dev(vector<int> x, double x_mean){
+double std_dev(const vector<int> x, const double x_mean){
 
 	double sum = 0.0;
 
@@ -134,4 +134,8 @@ double std_dev(vector<int> x, double x_mean){
 	}
 
 	return sqrt(sum / x.size());
+}
+
+int n_choose_2(const int n){
+	return (pow(n, 2) + n) / 2;
 }

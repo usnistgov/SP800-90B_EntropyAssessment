@@ -70,7 +70,7 @@ void erase_substrings(map<vector<byte>, vector<int>> &indexes){
 	}
 }
 
-int len_LRS(const byte text[]){
+int len_LRS(const byte text[], const int remaining = 1){
 
 	// String is the substring we are looking at, vector stores the indexes those substrings begin at
 	map<vector<byte>, vector<int>> indexes;
@@ -81,12 +81,24 @@ int len_LRS(const byte text[]){
 		find_substrings(text, substr_len, indexes);
 		erase_substrings(indexes);
 
-		if(indexes.empty()) break;
+		if(indexes.size() < remaining) break;
 		substr_len++;
 	}
 
-	// We always advance one further than we need to
+	if(remaining != 1) return substr_len;
+
+	// We advance one further than we need to
 	return substr_len-1;
+}
+
+int count_tuples(const byte data[], const int length){
+
+	set<vector<byte>> tuples;
+	for(int i = 0; i < SIZE-length; i++){
+		tuples.insert(substr(data, i, length));
+	}
+
+	return ((SIZE-length) - tuples.size());
 }
 
 /*
@@ -111,7 +123,7 @@ void calc_collision_proportion(const vector<double> &p, double &p_col){
 bool len_LRS_test(const byte data[]){
 
 	vector<double> p(256, 0.0);
-	calc_proportions(data, p); // borrowed from chi_square_tests.h
+	calc_proportions(data, p);
 
 	double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
@@ -119,7 +131,7 @@ bool len_LRS_test(const byte data[]){
 	// Calculate the number of overlapping substrings of the same length as the longest repeated substring
 	int lrs = len_LRS(data);
 	int n = SIZE - lrs;
-	long int overlap = (pow(n, 2) + n) / 2;
+	long int overlap = n_choose_2(n);
 
 	double pr_e = 1 - pow(1 - pow(p_col, lrs), overlap);
 
@@ -128,4 +140,38 @@ bool len_LRS_test(const byte data[]){
 	#endif
 
 	return (pr_e >= 0.001);
+}
+
+double LRS_test_noniid(const byte data[]){
+
+	int u = len_LRS(data, 20);
+	int v = len_LRS(data, 2);
+
+	cout << "u = " << u << endl;
+	cout << "v = " << v << endl;
+
+	if(v < u){
+		cout << "Error in LRS" << endl;
+		return 0.0;
+	}
+
+	vector<double> p;
+	for(int i = u; i <= v; i++){
+		int count = count_tuples(data, i);
+		long double numer = n_choose_2(count);
+		double denom = n_choose_2(SIZE-i+1);
+
+		p.push_back(pow(numer/denom, 1.0/i));
+	}
+
+	double p_max = 0.0;
+	for(int i = 0; i < p.size(); i++){
+		if(p[i] > p_max){
+			p_max = p[i];
+		}
+	}
+
+	cout << "P_max = " << p_max << endl;
+
+	return -log2(p_max);
 }

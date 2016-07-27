@@ -40,6 +40,13 @@ int main(){
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
 
 	// Section 6.3.6 - Estimate entropy with Longest Repeated Substring Test (LRS)
+	H_min = LRS_test_noniid(dataset);
+
+	#ifdef VERBOSE
+	cout << "Longest Reapeated Substring Test Estimate = " << H_min << endl;
+	#endif
+
+	min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
 
