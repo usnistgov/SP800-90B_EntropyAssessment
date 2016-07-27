@@ -1,5 +1,6 @@
 #include "shared/utils.h"
 #include "shared/most_common.h"
+#include "non_iid/collision_test.h"
 
 
 byte dataset[SIZE];
