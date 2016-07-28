@@ -19,6 +19,7 @@ int main(){
 	double H_min = most_common(dataset);
 	
 	#ifdef VERBOSE
+	cout << endl;
 	cout << "Most Common Value Estimate = " << H_min << endl;
 	#endif
 

@@ -136,6 +136,6 @@ double std_dev(const vector<int> x, const double x_mean){
 	return sqrt(sum / x.size());
 }
 
-int n_choose_2(const int n){
-	return (pow(n, 2) + n) / 2;
+long int n_choose_2(const long int n){
+	return (pow(n, 2) - n) / 2;
 }

@@ -70,35 +70,37 @@ void erase_substrings(map<vector<byte>, vector<int>> &indexes){
 	}
 }
 
-int len_LRS(const byte text[], const int remaining = 1){
+int len_LRS(const byte text[], const int remaining = 1, const int substr_len = 1){
 
 	// String is the substring we are looking at, vector stores the indexes those substrings begin at
 	map<vector<byte>, vector<int>> indexes;
-	int substr_len = 2;
-	
-	// Progressively grow the length of the n-tuples to look for
-	while(true){
-		find_substrings(text, substr_len, indexes);
-		erase_substrings(indexes);
+	int len = substr_len;
+	int index_size = remaining + 1;
 
-		if(indexes.size() < remaining) break;
-		substr_len++;
+	// Progressively grow the length of the n-tuples to look for
+	while(index_size >= remaining){
+		len++;
+		find_substrings(text, len, indexes);
+		erase_substrings(indexes);
+		index_size = indexes.size();
 	}
 
-	if(remaining != 1) return substr_len;
+	if(remaining != 1){ return len-2; }
 
-	// We advance one further than we need to
-	return substr_len-1;
+	// We advance a bit further than we need to
+	return len;
 }
 
-int count_tuples(const byte data[], const int length){
+void count_tuples(const byte data[], const int length, map<vector<byte>, int> &tuples){
 
-	set<vector<byte>> tuples;
 	for(int i = 0; i < SIZE-length; i++){
-		tuples.insert(substr(data, i, length));
+		vector<byte> substring = substr(data, i, length);
+		if(tuples.find(substring) == tuples.end()){
+			tuples[substring] = 1;
+		}else{
+			tuples[substring]++;
+		}
 	}
-
-	return ((SIZE-length) - tuples.size());
 }
 
 /*
@@ -145,10 +147,7 @@ bool len_LRS_test(const byte data[]){
 double LRS_test_noniid(const byte data[]){
 
 	int u = len_LRS(data, 20);
-	int v = len_LRS(data, 2);
-
-	cout << "u = " << u << endl;
-	cout << "v = " << v << endl;
+	int v = len_LRS(data, 1, u);
 
 	if(v < u){
 		cout << "Error in LRS" << endl;
@@ -157,11 +156,19 @@ double LRS_test_noniid(const byte data[]){
 
 	vector<double> p;
 	for(int i = u; i <= v; i++){
-		int count = count_tuples(data, i);
-		long double numer = n_choose_2(count);
-		double denom = n_choose_2(SIZE-i+1);
+		map<vector<byte>, int> tuples;
+		count_tuples(data, i, tuples);
 
-		p.push_back(pow(numer/denom, 1.0/i));
+		map<vector<byte>, int>::iterator itr;
+		int numer = 0;
+		for(itr = tuples.begin(); itr != tuples.end(); ++itr){
+			if(itr->second != 1){
+				numer += n_choose_2(itr->second);
+			}
+		}
+
+		long int denom = n_choose_2(SIZE-i+1);
+		p.push_back(pow(numer/(double)denom, 1.0/i));
 	}
 
 	double p_max = 0.0;
@@ -170,8 +177,6 @@ double LRS_test_noniid(const byte data[]){
 			p_max = p[i];
 		}
 	}
-
-	cout << "P_max = " << p_max << endl;
 
 	return -log2(p_max);
 }
