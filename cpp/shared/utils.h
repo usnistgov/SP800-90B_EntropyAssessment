@@ -197,3 +197,76 @@ byte max_map(const map<byte, int> m){
 
 	return val;
 }
+
+double calc_p_avg(const int C, const int N){
+	double p_global = ((double)C / (double)N);
+	return p_global + 2.576*sqrt((p_global - p_global*p_global)/(double)N);
+}
+
+double find_root(const double p, const int r){
+	double q = 1-p;
+	double s = 1;
+
+	for(int i = 0; i < 10; i++){
+		s = 1+q*(pow(p, r)*pow(s, r+1));
+	}
+
+	return s;
+}
+
+double calc_qn(const double p, const int r, const int N){
+	double q = 1-p;
+	double x = find_root(p, r);
+
+	double qn = (1-p*x) / ((r+1-r*x)*q);
+	qn /= pow(x, N+1);
+
+	return qn;
+}
+
+int find_max_run(const vector<int> &correct){
+
+	int run = 0; 
+	int max_run = 0;
+	int prev = -1;
+
+	for(int i = 0; i < correct.size(); i++){
+		run = (correct[i] ? run+1 : 0);
+		
+		if(run > max_run){
+			max_run = run;
+		}
+
+		prev = correct[i];
+	}
+
+	return max_run;
+}
+
+double calc_run(const vector<int> &correct){
+	int N = correct.size();
+	double alpha = .99;
+
+	// Find the longest run
+	int r = find_max_run(correct);
+
+	// Do a binary search for p
+	double p = .5;
+	double adj = .5;
+	double qn = calc_qn(p, r+1, N);
+
+	for(int i = 0; i < 20; i++){
+		adj /= 2;
+		if(qn > alpha){
+			p += adj;
+		}else{
+			p -= adj;
+		}
+
+		// Find probability there is no run of length r+1
+		qn = calc_qn(p, r+1, N);
+		if(abs(qn-alpha) <= .0001) break;
+	}
+
+	return p;
+}

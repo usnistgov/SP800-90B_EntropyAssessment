@@ -5,7 +5,7 @@ double LZ78Y_test(const byte data[]){
 	// Step 1
 	int B = 16;
 	int N = SIZE - B - 1;
-	array<int, SIZE-16-1> correct = {};	
+	vector<int> correct(SIZE-B-1, false);	
 	int max_dict_size = 65536;
 
 	// Step 2
@@ -64,8 +64,15 @@ double LZ78Y_test(const byte data[]){
 
 	// Step 4
 	int C = sum(correct);
+	double p_avg = calc_p_avg(C, N);
+	
+	// Step 5
+	double p_run = calc_run(correct);
 
 	cout << "Correct: " << C << endl;
+	cout << "P_avg (global): " << p_avg << endl;
+	cout << "P_run (local): " << p_run << endl;
 
-	return 0.0;
+	// Step 6
+	return -log2(max(p_avg, p_run));
 }
