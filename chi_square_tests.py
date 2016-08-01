@@ -306,7 +306,7 @@ def goodness_of_fit(subsets):
 # Return the chi-square cutoff (or critical value) for the given degrees
 # of freedom for p = 0.001.
 def chi_square_cutoff(df):
-    assert df > 0
+    if df <= 0: return 0
 
     if df < 101:
         return critical_value[df]
