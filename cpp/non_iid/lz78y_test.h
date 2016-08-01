@@ -19,8 +19,8 @@ double LZ78Y_test(const byte data[]){
 		array<byte, 16> substring, subregion = fast_substr(data, i-B-1, B);
 
 		#ifdef VERBOSE
-			if(i % 100000 == 0){
-				cout << "Status: " << i << endl;
+			if(i % 10000 == 0){
+				cout << "\rLZ78Y Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
 			}
 		#endif
 
@@ -61,6 +61,10 @@ double LZ78Y_test(const byte data[]){
 			correct[i-B-1] = true;
 		}
 	}
+
+	#ifdef VERBOSE
+		cout << endl;
+	#endif
 
 	// Step 4
 	int C = sum(correct);
