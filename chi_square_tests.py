@@ -20,6 +20,8 @@ import itertools
 
 # does the dataset pass the chi-square tests?
 def pass_chi_square_tests(dataset, verbose=False):
+    if verbose:
+        print("Chi square independence test:")
 
     # chi-square independence test
     is_binary = (min(dataset) == 0 and max(dataset) == 1)
@@ -30,7 +32,7 @@ def pass_chi_square_tests(dataset, verbose=False):
         score, df = chi_square_independence(dataset)
     cutoff = chi_square_cutoff(df)
     if verbose:
-        print("\nChi square independence\n\tscore = %g, degrees of freedom = %d, cut-off = %g" % (score, df, cutoff))
+        print("\tscore = %g, degrees of freedom = %d, cut-off = %g" % (score, df, cutoff))
         if df == 0:
             print("\tnot enough data;  try using >= 300000 samples")
 
@@ -42,6 +44,8 @@ def pass_chi_square_tests(dataset, verbose=False):
             print("** Failed chi-square independence tests")
         return False
 
+    if verbose:
+        print("Chi square goodness-of-fit test:")
     # chi-square goodness-of-fit test
     # divide the dataset into 10 subsets of equal length
     sublength = len(dataset) // 10
@@ -52,7 +56,7 @@ def pass_chi_square_tests(dataset, verbose=False):
         score, df = goodness_of_fit(data_subsets)
     cutoff = chi_square_cutoff(df)
     if verbose:
-        print("\nChi square goodness-of-fit\n\tscore = %g, degrees of freedom = %d cut-off = %g" % (score, df, cutoff))
+        print("\tscore = %g, degrees of freedom = %d cut-off = %g" % (score, df, cutoff))
 
     if score < cutoff:
         if verbose:
