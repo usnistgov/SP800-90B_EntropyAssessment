@@ -2,6 +2,7 @@
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
 #include "non_iid/collision_test.h"
+#include "non_iid/lz78y_test.h"
 
 
 byte dataset[SIZE];
@@ -41,13 +42,14 @@ int main(){
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
 
 	// Section 6.3.6 - Estimate entropy with Longest Repeated Substring Test (LRS)
-	H_min = LRS_test_noniid(dataset);
+	// Slow, needs speedup
+	// H_min = LRS_test_noniid(dataset);
 
-	#ifdef VERBOSE
-	cout << "Longest Reapeated Substring Test Estimate = " << H_min << endl;
-	#endif
+	// #ifdef VERBOSE
+	// cout << "Longest Reapeated Substring Test Estimate = " << H_min << endl;
+	// #endif
 
-	min_entropy = min(min_entropy, H_min);
+	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
 
@@ -56,4 +58,12 @@ int main(){
 	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
 
 	// Section 6.3.10 - Estimate entropy with LZ78Y Test
+	// Not super fast, just a touch longer than the python
+	H_min = LZ78Y_test(dataset);
+
+	#ifdef VERBOSE
+	cout << "LZ78Y Prediction Test = " << H_min << endl;
+	#endif
+
+	min_entropy = min(min_entropy, H_min);
 }

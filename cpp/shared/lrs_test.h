@@ -8,21 +8,6 @@
 * ---------------------------------------------
 */
 
-vector<byte> substr(const byte text[], int pos, int len){
-
-	if(pos+len > SIZE){
-		len = SIZE - pos;
-	}
-
-	vector<byte> substring;
-
-	for(int i = 0; i < len; i++){
-		substring.push_back(text[pos+i]);
-	}
-
-	return substring;
-}
-
 void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector<int>> &indexes){
 
 	// First iteration

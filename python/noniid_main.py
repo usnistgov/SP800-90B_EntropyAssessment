@@ -109,10 +109,10 @@ if __name__ == '__main__':
         # minEntropy = min(minH, minEntropy)
         
         # Section 6.3.6 The LRS Estimate
-        pmax, minH = LRS_estimate(dataset)
-        if verbose:
-            print("- LRS Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        minEntropy = min(minH, minEntropy)
+        # pmax, minH = LRS_estimate(dataset)
+        # if verbose:
+        #     print("- LRS Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        # minEntropy = min(minH, minEntropy)
 
 
         # if verbose:
@@ -138,11 +138,11 @@ if __name__ == '__main__':
         # minEntropy = min(minH, minEntropy)
         
 
-        # # Section 6.3.10 LZ78Y prediction estimate
-        # pmax, minH = LZ78Y(dataset, verbose)
-        # if verbose:
-        #     print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.10 LZ78Y prediction estimate
+        pmax, minH = LZ78Y(dataset, verbose)
+        if verbose:
+            print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         print("-----------------------")
         print("min-entropy = %g" % (minEntropy))

@@ -396,6 +396,7 @@ def LZ78Y(S, verbose=False):
         
     #step 4
     C = sum(correct)
+    print("\n Correct: %d\n" % C)
     Pavg = calcPavg(C, N)
 
     #step 5

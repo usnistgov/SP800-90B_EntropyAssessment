@@ -12,6 +12,7 @@
 #include <time.h>		// time
 #include <algorithm>	// std::sort
 #include <math.h>		// pow, log2
+#include <array>		// std::array
 
 #define SWAP(x, y) do { int s = x; x = y; y = s; } while(0)
 
@@ -54,6 +55,17 @@ void shuffle(byte arr[]){
 long int sum(const byte arr[]){
 	long int sum = 0;
 	for(long int i = 0; i < SIZE; ++i){
+		sum += arr[i];
+	}
+
+	return sum;
+}
+
+// Quick sum std::array
+template<size_t LENGTH>
+int sum(const array<int, LENGTH> arr){
+	int sum = 0;
+	for(int i = 0; i < LENGTH; ++i){
 		sum += arr[i];
 	}
 
@@ -136,6 +148,52 @@ double std_dev(const vector<int> x, const double x_mean){
 	return sqrt(sum / x.size());
 }
 
+// Quick formula for n choose 2 (which can be simplified to [n^2 - n] / 2)
 long int n_choose_2(const long int n){
-	return (pow(n, 2) - n) / 2;
+	return ((n*n) - n) / 2;
+}
+
+vector<byte> substr(const byte text[], const int pos, const int len){
+
+	int substr_len = len;
+
+	if(pos+len > SIZE){
+		substr_len = SIZE - pos;
+	}
+
+	vector<byte> substring;
+
+	for(int i = 0; i < substr_len; i++){
+		substring.push_back(text[pos+i]);
+	}
+
+	return substring;
+}
+
+// Fast substring with no bounds checking
+array<byte, 16> fast_substr(const byte text[], const int pos, const int len){
+
+	array<byte, 16> substring;
+
+	for(int i = 0; i < len; i++){
+		substring[i] = text[pos+i];
+	}
+
+	return substring;
+}
+
+byte max_map(const map<byte, int> m){
+
+	int max = -1;
+	byte val;
+
+	map<byte, int>::const_iterator itr;
+	for(itr = m.begin(); itr != m.end(); ++itr){
+		if(itr->second > max){
+			val = itr->first;
+			max = itr->second;
+		}
+	}
+
+	return val;
 }
