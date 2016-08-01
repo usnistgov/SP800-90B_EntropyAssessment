@@ -47,22 +47,18 @@ if __name__ == '__main__':
             print ("Dataset: %d %d-bit symbols, %d symbols in alphabet." % (len(dataset), bits_per_symbol, k))
             print ("Output symbol values: min = %d, max = %d\n" % (min(dataset), max(dataset)))
 
-        #######################################
-        # STEP 1: Determine if Dataset is IID #
-        #######################################
-        # determine if dataset is IID using shuffle and Chi-square tests
-        passed_permutation_tests = permutation_test(dataset, verbose)
+        # Run cheap and easy tests first.
 
-        if passed_permutation_tests:
+        # run LRS test
+        if lenLRS(dataset, verbose):
             if verbose:
-                print ("** Passed IID permutation tests")
+                print ("** Passed LRS test")
         else:
-            if verbose:
-                print ("** Failed IID permutation tests")
+            print ("** Failed LRS test")
             print ("IID = False")
             sys.exit(0)
 
-        # run chi-square tests on dataset
+        # run chi-square tests
         if pass_chi_square_tests(dataset, verbose):
             if verbose:
                 print ("** Passed chi square tests")
@@ -72,21 +68,23 @@ if __name__ == '__main__':
             print ("IID = False")
             sys.exit(0)
 
-        # run LRS test
-        if lenLRS(dataset, verbose):
-            if verbose:
-                print ("** Passed LRS test")
-            print ("\nIID = True")
-        else:
-            print ("** Failed LRS test")
-            print ("IID = False")
-            sys.exit(0)
-
-        ############################################
-        # STEP 2: Calculate min-entropy of dataset #
-        ############################################
+        # Calculate min-entropy
         pmax, minH = most_common(dataset)
         print("min-entropy = %g" % (minH))
 
+        # Run permutation test.
+        # Run this last, because it is memory-intensive and time-consuming.
+        if permutation_test(dataset, verbose):
+            if verbose:
+                print ("** Passed IID permutation tests")
+        else:
+            if verbose:
+                print ("** Failed IID permutation tests")
+            print ("IID = False")
+            sys.exit(0)
+
+        # If we made it this far, all tests have been passed.
+        if verbose:
+            print ("\nIID = True")
 
         print("\nDon't forget to run the sanity check on a restart dataset using H_I = %g" % minH )
