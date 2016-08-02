@@ -32,7 +32,7 @@ void read_file(const char* file_path, byte data[]){
 	#endif
 
 	file = fopen(file_path, "rb");
-	fread(data, 1, SIZE, file);
+	auto rc = fread(data, 1, SIZE, file);
 	fclose(file);
 
 	#ifdef VERBOSE
@@ -63,7 +63,7 @@ long int sum(const byte arr[]){
 
 // Quick sum std::array
 template<size_t LENGTH>
-int sum(const array<int, LENGTH> arr){
+int sum(const array<int, LENGTH> &arr){
 	int sum = 0;
 	for(int i = 0; i < LENGTH; ++i){
 		sum += arr[i];
@@ -130,7 +130,6 @@ void map_init(map<pair<byte, byte>, int> &m){
 
 // Calculates proportions of each value as an index
 void calc_proportions(const byte data[], vector<double> &p){
-	
 	for(int i = 0; i < SIZE; i++){
 		p[data[i]] += (1.0 / SIZE);
 	}
@@ -138,7 +137,6 @@ void calc_proportions(const byte data[], vector<double> &p){
 
 // Determines the standard deviation of a dataset
 double std_dev(const vector<int> x, const double x_mean){
-
 	double sum = 0.0;
 
 	for(int i = 0; i < x.size(); i++){
@@ -154,7 +152,6 @@ long int n_choose_2(const long int n){
 }
 
 vector<byte> substr(const byte text[], const int pos, const int len){
-
 	int substr_len = len;
 
 	if(pos+len > SIZE){
@@ -172,7 +169,6 @@ vector<byte> substr(const byte text[], const int pos, const int len){
 
 // Fast substring with no bounds checking
 array<byte, 16> fast_substr(const byte text[], const int pos, const int len){
-
 	array<byte, 16> substring;
 
 	for(int i = 0; i < len; i++){
@@ -182,20 +178,20 @@ array<byte, 16> fast_substr(const byte text[], const int pos, const int len){
 	return substring;
 }
 
+// Return the key that leads to the maximum value
 byte max_map(const map<byte, int> m){
-
 	int max = -1;
-	byte val;
+	byte key;
 
 	map<byte, int>::const_iterator itr;
 	for(itr = m.begin(); itr != m.end(); ++itr){
 		if(itr->second > max){
-			val = itr->first;
+			key = itr->first;
 			max = itr->second;
 		}
 	}
 
-	return val;
+	return key;
 }
 
 double calc_p_avg(const int C, const int N){
@@ -225,7 +221,6 @@ double calc_qn(const double p, const int r, const int N){
 }
 
 int find_max_run(const vector<int> &correct){
-
 	int run = 0; 
 	int max_run = 0;
 	int prev = -1;
@@ -246,8 +241,6 @@ int find_max_run(const vector<int> &correct){
 double calc_run(const vector<int> &correct){
 	int N = correct.size();
 	double alpha = .99;
-
-	// Find the longest run
 	int r = find_max_run(correct);
 
 	// Do a binary search for p
