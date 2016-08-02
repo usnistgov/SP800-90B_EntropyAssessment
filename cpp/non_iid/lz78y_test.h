@@ -33,7 +33,7 @@ double LZ78Y_test(const byte data[]){
 				if(D.find(substring) == D.end()){
 					D[substring][data[i-1]]++;
 				}else{
-					D[substring][data[i-1]] = 0;
+					D[substring][data[i-1]] = 1;
 					D_size++;
 				}
 			}
