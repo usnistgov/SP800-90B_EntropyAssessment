@@ -8,6 +8,10 @@ verbose-iid: compile-verbose-iid run
 compile-verbose-iid:
 	g++ -std=c++11 iid_main.cpp -lbz2 -DVERBOSE
 
+fast:
+	g++ -std=c++11 -O2 iid_main.cpp -lbz2 -DVERBOSE
+	./a.out
+
 run:
 	./a.out
 
