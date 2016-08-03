@@ -63,7 +63,7 @@ double LZ78Y_test(const byte data[]){
 	}
 
 	#ifdef VERBOSE
-		cout << endl;
+	cout << endl;
 	#endif
 
 	// Step 4
@@ -73,9 +73,11 @@ double LZ78Y_test(const byte data[]){
 	// Step 5
 	double p_run = calc_run(correct);
 
+	#ifdef VERBOSE
 	cout << "Correct: " << C << endl;
 	cout << "P_avg (global): " << p_avg << endl;
 	cout << "P_run (local): " << p_run << endl;
+	#endif
 
 	// Step 6
 	return -log2(max(p_avg, p_run));
