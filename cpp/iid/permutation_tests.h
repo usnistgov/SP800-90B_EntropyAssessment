@@ -474,6 +474,12 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	cout << "Beginning permutation tests..." << endl;
 	for(int i = 0; i < PERMS; i++){
 
+		#ifdef VERBOSE
+		if(i % 100 == 0){
+			cout << "\rPermutation Test: " << (i/(double)PERMS)*100 << "% complete" << flush;
+		}
+		#endif
+
 		shuffle(data);
 		run_tests(data, mean, median, is_binary, tp);
 
@@ -488,7 +494,7 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	}
 
 	#ifdef VERBOSE
-	cout << endl;
+	cout << endl << endl;
 	cout << "                statistic  C[i][0]  C[i][1]" << endl;
 	cout << "-------------------------------------------" << endl;
 	for(int i = 0; i < num_tests; i++){
