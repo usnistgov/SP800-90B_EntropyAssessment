@@ -5,6 +5,7 @@
 #include "non_iid/lz78y_test.h"
 #include "non_iid/multi_mmc_test.h"
 #include "non_iid/lag_test.h"
+#include "non_iid/multi_mcw_test"
 
 
 byte dataset[SIZE];
@@ -49,13 +50,18 @@ int main(){
 	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
-
-	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
-	H_min = lag_test(dataset);
+	H_min = multi_mcw_test(dataset);
 	#ifdef VERBOSE
-	cout << "Lag Prediction Test = " << H_min << endl;
+	cout << "Multi Most Common in Window (Multi MCW) Test = " << H_min << endl;
 	#endif
 	min_entropy = min(min_entropy, H_min);
+
+	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
+	// H_min = lag_test(dataset);
+	// #ifdef VERBOSE
+	// cout << "Lag Prediction Test = " << H_min << endl;
+	// #endif
+	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
 	// H_min = multi_mmc_test(dataset);
