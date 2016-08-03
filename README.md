@@ -68,4 +68,5 @@ This code is currently maintained by Kerry McKay and John Kelsey.
 
 ##Known Issues
 
-Does not work with `python3`
+* Does not work with `python3`
+* Slight mismatches in results for predictor methods
