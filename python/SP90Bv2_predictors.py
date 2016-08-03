@@ -326,6 +326,7 @@ def MultiMMC(S, verbose=False):
 
     #step 5
     C = sum(correct)
+    print("Correct: %d" % C)
 
     #step 6
     Pavg = calcPavg(C, N)

@@ -9,6 +9,7 @@ double multi_mmc_test(const byte data[]){
 	array<int, N> correct = {false};
 
 	// Step 2
+	//  d        x                    y     M_d[x, y]
 	map<int, map<array<byte, 16>, map<byte, int>>> M;
 
 	// Step 3
@@ -46,8 +47,8 @@ double multi_mmc_test(const byte data[]){
 
 			if(M[d].find(substring) != M[d].end()){
 
-				// Find max XXXXXXXXXXXXXXXXXXXXXXXX
-
+				byte key = max_map(M[d][substring]);
+				ymax = M[d][substring][key];
 
 				if(M[d][substring][ymax] > 0){
 					subpredict[d] = ymax;
@@ -58,7 +59,7 @@ double multi_mmc_test(const byte data[]){
 		}
 
 		// Step 4c
-		predict = subpredict[winner];
+		byte predict = subpredict[winner];
 
 		// Step 4d
 		if(predict == data[i-1]){
@@ -76,6 +77,14 @@ double multi_mmc_test(const byte data[]){
 			}
 		}
 	}
+
+	#ifdef VERBOSE
+	cout << endl;
+	#endif
+
+	// Step 5
+	int C = sum(correct);
+	cout << "Correct: " << C << endl;
 
 	return 0.0;
 }

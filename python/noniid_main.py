@@ -131,11 +131,11 @@ if __name__ == '__main__':
         # minEntropy = min(minH, minEntropy)
 
 
-        # # Section 6.3.9 MultiMMC prediction estimate
-        # pmax, minH = MultiMMC(dataset, verbose)
-        # if verbose:
-        #     print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.9 MultiMMC prediction estimate
+        pmax, minH = MultiMMC(dataset, verbose)
+        if verbose:
+            print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
         
 
         # Section 6.3.10 LZ78Y prediction estimate
