@@ -243,7 +243,7 @@ def Lag(S, verbose=False):
     Pavg = calcPavg(C, N)
 
     #step 6
-    Prun = calcRun(correct)\
+    Prun = calcRun(correct)
 
     #step 7
     minH = -math.log(max(Pavg, Prun),2)
