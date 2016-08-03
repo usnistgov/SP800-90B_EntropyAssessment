@@ -4,6 +4,7 @@
 #include "non_iid/collision_test.h"
 #include "non_iid/lz78y_test.h"
 #include "non_iid/multi_mmc_test.h"
+#include "non_iid/lag_test.h"
 
 
 byte dataset[SIZE];
@@ -50,13 +51,18 @@ int main(){
 	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
 
 	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
-
-	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
-	H_min = multi_mmc_test(dataset);
+	H_min = lag_test(dataset);
 	#ifdef VERBOSE
-	cout << "Multi Markov Model with Counting (MultiMMC) Prediction Test = " << H_min << endl;
+	cout << "Lag Prediction Test = " << H_min << endl;
 	#endif
 	min_entropy = min(min_entropy, H_min);
+
+	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
+	// H_min = multi_mmc_test(dataset);
+	// #ifdef VERBOSE
+	// cout << "Multi Markov Model with Counting (MultiMMC) Prediction Test = " << H_min << endl;
+	// #endif
+	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.10 - Estimate entropy with LZ78Y Test
 	// Not super fast, just a touch longer than the python but with -O3 is super fast

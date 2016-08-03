@@ -124,18 +124,18 @@ if __name__ == '__main__':
         #     print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
         # minEntropy = min(minH, minEntropy)
 
-        # # Section 6.3.8 Lag prediction estimate
-        # pmax, minH = Lag(dataset, verbose)
-        # if verbose:
-        #     print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.8 Lag prediction estimate
+        pmax, minH = Lag(dataset, verbose)
+        if verbose:
+            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.9 MultiMMC prediction estimate
-        pmax, minH = MultiMMC(dataset, verbose)
-        if verbose:
-            print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        minEntropy = min(minH, minEntropy)
+        # pmax, minH = MultiMMC(dataset, verbose)
+        # if verbose:
+        #     print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        # minEntropy = min(minH, minEntropy)
         
 
         # Section 6.3.10 LZ78Y prediction estimate
