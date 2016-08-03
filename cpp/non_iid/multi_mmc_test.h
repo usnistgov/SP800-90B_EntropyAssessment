@@ -6,7 +6,7 @@ double multi_mmc_test(const byte data[]){
 	int D = 16;
 	const int N = SIZE - 2;
 	array<int, 16> subpredict;
-	array<int, N> correct = {false};
+	vector<int> correct(N, false);
 
 	// Step 2
 	//  d        x                    y     M_d[x, y]
@@ -54,7 +54,7 @@ double multi_mmc_test(const byte data[]){
 					subpredict[d] = ymax;
 				}
 			}else{
-				subpredict[d] = NULL;
+				subpredict[d] = -1;
 			}
 		}
 
@@ -78,13 +78,26 @@ double multi_mmc_test(const byte data[]){
 		}
 	}
 
+	// Offsets from flush printing to place carrige on next line
 	#ifdef VERBOSE
 	cout << endl;
 	#endif
 
 	// Step 5
 	int C = sum(correct);
-	cout << "Correct: " << C << endl;
 
-	return 0.0;
+	// Step 6
+	double p_avg = calc_p_avg(C, N);
+
+	// Step 7
+	double p_run = calc_run(correct);
+
+	#ifdef VERBOSE
+	cout << "Correct: " << C << endl;
+	cout << "P_avg (global): " << p_avg << endl;
+	cout << "P_run (local): " << p_run << endl;
+	#endif
+
+	// Step 8
+	return -log2(max(p_avg, p_run));
 }
