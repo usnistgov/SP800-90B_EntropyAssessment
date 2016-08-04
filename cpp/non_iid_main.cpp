@@ -5,7 +5,7 @@
 #include "non_iid/lz78y_test.h"
 #include "non_iid/multi_mmc_test.h"
 #include "non_iid/lag_test.h"
-#include "non_iid/multi_mcw_test"
+#include "non_iid/multi_mcw_test.h"
 
 
 byte dataset[SIZE];

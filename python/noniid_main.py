@@ -119,16 +119,16 @@ if __name__ == '__main__':
         #     print ("\nRunning predictor estimates:")
 
         # # Section 6.3.7 Multi Most Common in Window prediction estimate
-        # pmax, minH = MultiMCW(dataset, verbose)
-        # if verbose:
-        #     print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = MultiMCW(dataset, verbose)
+        if verbose:
+            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         # Section 6.3.8 Lag prediction estimate
-        pmax, minH = Lag(dataset, verbose)
-        if verbose:
-            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        minEntropy = min(minH, minEntropy)
+        # pmax, minH = Lag(dataset, verbose)
+        # if verbose:
+        #     print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        # minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.9 MultiMMC prediction estimate
