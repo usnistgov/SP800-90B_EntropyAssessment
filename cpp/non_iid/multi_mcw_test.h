@@ -1,40 +1,22 @@
 #include "../shared/utils.h"
 
-byte most_common_recent(const vector<byte> &data){
+byte most_common_recent(const byte data[], const int pos, const int length){
 
-	map<byte, int> proportions;
-	map_init(proportions);
+	byte current_mode;
+	int mode_frequency = -1;
+	array<int, 256> freq;
 
-	for(int i = 0; i < data.size(); i++){
-		proportions[data[i]]++;
-	}
+	for(int i = 0; i < length; i++){
+		byte cur_val = data[pos+i];
+		freq[cur_val]++;
 
-	// Detemine mode(s) of dataset
-	set<byte> modes;
-	int max = 0;
-	map<byte, int>::iterator itr;
-	for(itr = proportions.begin(); itr != proportions.end(); ++itr){
-		if(itr->second >= max){
-			if(itr->second > max){
-				modes.clear();
-				max = itr->second;
-			}
-
-			modes.insert(itr->first);
+		if(freq[cur_val] >= mode_frequency){
+			current_mode = cur_val;
+			mode_frequency = freq[cur_val];
 		}
 	}
 
-	// Return the most recent occurance of the mode
-	if(modes.size() >= 2){
-		for(int i = data.size()-1; i >= 0; i--){
-			if(modes.find(data[i]) != modes.end()){
-				return data[i];
-			}
-		}
-
-	}else{
-		return *(modes.begin());
-	}
+	return current_mode;
 }
 
 double multi_mcw_test(const byte data[]){
@@ -61,8 +43,7 @@ double multi_mcw_test(const byte data[]){
 		// Step 3a
 		for(int j = 0; j < 4; j++){
 			if(i > w[j]+1){
-				vector<byte> substring = substr(data, i-w[j]-1, w[j]);
-				frequent[j] = most_common_recent(substring);
+				frequent[j] = most_common_recent(data, i-w[j]-1, w[j]);
 			}else{
 				frequent[j] = -1;
 			}
