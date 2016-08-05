@@ -4,7 +4,7 @@ byte most_common_recent(const byte data[], const int pos, const int length){
 
 	byte current_mode;
 	int mode_frequency = -1;
-	array<int, 256> freq;
+	array<int, 256> freq = {0};
 
 	for(int i = 0; i < length; i++){
 		byte cur_val = data[pos+i];
