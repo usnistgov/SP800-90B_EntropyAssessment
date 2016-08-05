@@ -6,6 +6,7 @@
 #include "non_iid/multi_mmc_test.h"
 #include "non_iid/lag_test.h"
 #include "non_iid/multi_mcw_test.h"
+#include "non_iid/tuple.h"
 
 
 byte dataset[SIZE];
@@ -40,6 +41,11 @@ int main(){
 	// Section 6.3.4 - Estimate entropy with Compression Test
 
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
+	H_min = t_tuple_test(dataset);
+	#ifdef VERBOSE
+	cout << "t-Tuple Test Estimate = " << H_min << endl;
+	#endif
+	min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.6 - Estimate entropy with Longest Repeated Substring Test (LRS)
 	// Slow, needs speedup, wrap LRS functions into a single call
@@ -50,11 +56,11 @@ int main(){
 	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
-	H_min = multi_mcw_test(dataset);
-	#ifdef VERBOSE
-	cout << "Multi Most Common in Window (Multi MCW) Test = " << H_min << endl;
-	#endif
-	min_entropy = min(min_entropy, H_min);
+	// H_min = multi_mcw_test(dataset);
+	// #ifdef VERBOSE
+	// cout << "Multi Most Common in Window (Multi MCW) Test = " << H_min << endl;
+	// #endif
+	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
 	// H_min = lag_test(dataset);

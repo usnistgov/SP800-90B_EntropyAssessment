@@ -194,6 +194,22 @@ byte max_map(const map<byte, int> m){
 	return key;
 }
 
+template<typename T>
+T max_vector(const vector<T> &vals){
+	T max = vals[0];
+	for(int i = 0; i < vals.size(); i++){
+		if(vals[i] > max){
+			max = vals[i];
+		}
+	}
+
+	return max;
+}
+
+double divide(const int a, const int b){
+	return ((double)a / (double)b);
+}
+
 double calc_p_avg(const int C, const int N){
 	double p_global = ((double)C / (double)N);
 	return p_global + 2.576*sqrt((p_global - p_global*p_global)/(double)N);

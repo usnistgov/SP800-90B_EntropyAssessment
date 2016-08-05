@@ -102,11 +102,11 @@ if __name__ == '__main__':
         # minEntropy = min(minH, minEntropy)
 
 
-        # # Section 6.3.5 The t-Tuple Estimate
-        # pmax, minH = t_tuple(dataset)
-        # if verbose:
-        #     print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.5 The t-Tuple Estimate
+        pmax, minH = t_tuple(dataset)
+        if verbose:
+            print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
         
         # Section 6.3.6 The LRS Estimate
         # pmax, minH = LRS_estimate(dataset)
@@ -118,11 +118,11 @@ if __name__ == '__main__':
         # if verbose:
         #     print ("\nRunning predictor estimates:")
 
-        # # Section 6.3.7 Multi Most Common in Window prediction estimate
-        pmax, minH = MultiMCW(dataset, verbose)
-        if verbose:
-            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        minEntropy = min(minH, minEntropy)
+        # Section 6.3.7 Multi Most Common in Window prediction estimate
+        # pmax, minH = MultiMCW(dataset, verbose)
+        # if verbose:
+        #     print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        # minEntropy = min(minH, minEntropy)
 
         # Section 6.3.8 Lag prediction estimate
         # pmax, minH = Lag(dataset, verbose)
