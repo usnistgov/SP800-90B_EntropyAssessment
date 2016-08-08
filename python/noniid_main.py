@@ -95,18 +95,18 @@ if __name__ == '__main__':
         #         print("- Markov Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
         # minEntropy = min(minH, minEntropy)
 
-        # # Section 6.3.4 The Compression Estimate
-        # pmax, minH = maurer_universal_statistic(mapped, k)
-        # if verbose:
-        #     print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.4 The Compression Estimate
+        pmax, minH = maurer_universal_statistic(mapped, k)
+        if verbose:
+            print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.5 The t-Tuple Estimate
-        pmax, minH = t_tuple(dataset)
-        if verbose:
-            print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        minEntropy = min(minH, minEntropy)
+        # pmax, minH = t_tuple(dataset)
+        # if verbose:
+        #     print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        # minEntropy = min(minH, minEntropy)
         
         # Section 6.3.6 The LRS Estimate
         # pmax, minH = LRS_estimate(dataset)

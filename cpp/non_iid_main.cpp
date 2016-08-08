@@ -7,6 +7,7 @@
 #include "non_iid/lag_test.h"
 #include "non_iid/multi_mcw_test.h"
 #include "non_iid/tuple.h"
+#include "non_iid/compression_test.h"
 
 
 byte dataset[SIZE];
@@ -21,15 +22,18 @@ int main(){
 	double min_entropy = log2(SIZE);
 	double H_min;
 
+	#ifdef VERBOSE
+	cout << endl << "Running non-IID tests..." << endl;
+	#endif
+
 	// Section 6.3.1 - Estimate entropy with Most Common Value
 	// H_min = most_common(dataset);
 	// #ifdef VERBOSE
-	// cout << endl;
 	// cout << "Most Common Value Estimate = " << H_min << endl;
 	// #endif
 	// min_entropy = min(min_entropy, H_min);
 
-	// // Section 6.3.2 - Estimate entropy with Collision Test
+	// Section 6.3.2 - Estimate entropy with Collision Test
 	// H_min = collision_test(dataset, 8);
 	// #ifdef VERBOSE
 	// cout << "Collision Test Estimate = " << H_min << endl;
@@ -39,13 +43,18 @@ int main(){
 	// Section 6.3.3 - Estimate entropy with Markov Test
 
 	// Section 6.3.4 - Estimate entropy with Compression Test
-
-	// Section 6.3.5 - Estimate entropy with t-Tuple Test
-	H_min = t_tuple_test(dataset);
+	H_min = compression_test(dataset);
 	#ifdef VERBOSE
-	cout << "t-Tuple Test Estimate = " << H_min << endl;
+	cout << "Compression Test Estimate = " << H_min << endl;
 	#endif
 	min_entropy = min(min_entropy, H_min);
+
+	// Section 6.3.5 - Estimate entropy with t-Tuple Test
+	// H_min = t_tuple_test(dataset);
+	// #ifdef VERBOSE
+	// cout << "t-Tuple Test Estimate = " << H_min << endl;
+	// #endif
+	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.6 - Estimate entropy with Longest Repeated Substring Test (LRS)
 	// Slow, needs speedup, wrap LRS functions into a single call

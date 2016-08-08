@@ -73,8 +73,9 @@ int sum(const array<int, LENGTH> &arr){
 }
 
 // Quick sum vector
-long int sum(const vector<int> &v){
-	long int sum = 0;
+template<typename T>
+long double sum(const vector<T> &v){
+	long double sum = 0;
 	for(unsigned long int i = 0; i < v.size(); ++i){
 		sum += v[i];
 	}
