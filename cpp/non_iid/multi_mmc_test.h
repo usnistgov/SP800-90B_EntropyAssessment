@@ -93,9 +93,9 @@ double multi_mmc_test(const byte data[]){
 	double p_run = calc_run(correct);
 
 	#ifdef VERBOSE
-	cout << "Correct: " << C << endl;
-	cout << "P_avg (global): " << p_avg << endl;
-	cout << "P_run (local): " << p_run << endl;
+	cout << "\tCorrect: " << C << endl;
+	cout << "\tP_avg (global): " << p_avg << endl;
+	cout << "\tP_run (local): " << p_run << endl;
 	#endif
 
 	// Step 8
