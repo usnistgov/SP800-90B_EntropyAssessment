@@ -42,7 +42,7 @@ double markov_test(const byte data[], const int k, double alpha){
 		if(occurance[i] == 0){
 			epsilon_i[i] = 0.0;
 		}else{
-			sqrt(epsilon_term / (2*occurance[i]));
+			epsilon_i[i] = sqrt(epsilon_term / (2*occurance[i]));
 		}
 	}
 
