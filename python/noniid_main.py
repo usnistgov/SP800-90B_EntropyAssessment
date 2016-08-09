@@ -85,21 +85,21 @@ if __name__ == '__main__':
 
         # Section 6.3.3 The Markov Estimate
         # If more than 6 bits per symbol, map down to 6 bits per symbol and run Markov test
-        # if use_bits > 6:
-        #     pmax, minH = markov_test([s&63 for s in dataset], 64, 0.99)
-        #     if verbose:
-        #         print("- Markov Estimate (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # else:
-        #     pmax, minH = markov_test(mapped, k, 0.99)
-        #     if verbose:
-        #         print("- Markov Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        if use_bits > 6:
+            pmax, minH = markov_test([s&63 for s in dataset], 64, 0.99)
+            if verbose:
+                print("- Markov Estimate (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
+        else:
+            pmax, minH = markov_test(mapped, k, 0.99)
+            if verbose:
+                print("- Markov Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         # Section 6.3.4 The Compression Estimate
-        pmax, minH = maurer_universal_statistic(mapped, k)
-        if verbose:
-            print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        minEntropy = min(minH, minEntropy)
+        # pmax, minH = maurer_universal_statistic(mapped, k)
+        # if verbose:
+        #     print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        # minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.5 The t-Tuple Estimate

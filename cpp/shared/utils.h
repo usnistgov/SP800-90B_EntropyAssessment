@@ -207,6 +207,18 @@ T max_vector(const vector<T> &vals){
 	return max;
 }
 
+template<typename T>
+T max_arr(const T* vals, const unsigned int k){
+	T max = vals[0];
+	for(int i = 0; i < k; i++){
+		if(vals[i] > max){
+			max = vals[i];
+		}
+	}
+
+	return max;
+}
+
 double divide(const int a, const int b){
 	return ((double)a / (double)b);
 }

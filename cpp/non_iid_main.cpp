@@ -8,9 +8,11 @@
 #include "non_iid/multi_mcw_test.h"
 #include "non_iid/tuple.h"
 #include "non_iid/compression_test.h"
+#include "non_iid/markov_test.h"
 
 
 byte dataset[SIZE];
+int word_size = 8;
 
 int main(){
 
@@ -41,13 +43,27 @@ int main(){
 	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.3 - Estimate entropy with Markov Test
+	if(word_size > 6){
+		byte mapped_down[SIZE];
+		for(int i = 0; i < SIZE; i++){
+			mapped_down[i] = dataset[i] & 63;
+		}
 
-	// Section 6.3.4 - Estimate entropy with Compression Test
-	H_min = compression_test(dataset);
+		H_min = markov_test(mapped_down, 64, 0.99);
+	}else{
+		H_min = markov_test(dataset, 64, 0.99);
+	}
 	#ifdef VERBOSE
-	cout << "Compression Test Estimate = " << H_min << endl;
+	cout << "Markov Test Estimate = " << H_min << endl;
 	#endif
 	min_entropy = min(min_entropy, H_min);
+
+	// Section 6.3.4 - Estimate entropy with Compression Test
+	// H_min = compression_test(dataset);
+	// #ifdef VERBOSE
+	// cout << "Compression Test Estimate = " << H_min << endl;
+	// #endif
+	// min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
 	// H_min = t_tuple_test(dataset);
