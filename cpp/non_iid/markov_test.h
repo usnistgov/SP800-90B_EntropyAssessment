@@ -25,9 +25,10 @@ double markov_test(const byte data[], const int k, double alpha){
 
 	// Step 3
 	//   Remove 1 from the last occurance
-	//   Estimate probabilities of the transition matrix T
 	occurance[k-1]--;
 
+	// Step 4
+	//   Estimate probabilities of the transition matrix T
 	int trans_occurance[k][k] = {0};
 	int o_i = data[0];
 	for(int i = 1; i < SIZE; i++){
@@ -56,7 +57,7 @@ double markov_test(const byte data[], const int k, double alpha){
 		}
 	}
 
-	// Step 4
+	// Step 5
 	//   Using transition matrix T to find p_max
 	for(int j = 1; j < d; j++){
 		double h[k];
@@ -71,6 +72,8 @@ double markov_test(const byte data[], const int k, double alpha){
 	}
 
 	double p_max = max_arr(P, k);
-
+	
+	// Step 6
+	//   Return min entropy estimate
 	return -log2(p_max) / d;
 }
