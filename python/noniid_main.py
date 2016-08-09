@@ -68,20 +68,20 @@ if __name__ == '__main__':
         minEntropy = float(math.log(k,2))
 
 
-        # if verbose:
-        #     print ("\nRunning entropic statistic estimates:")
+        if verbose:
+            print ("\nRunning entropic statistic estimates:")
             
-        # # Section 6.3.1 The Most Common Value Estimate
-        # pmax, minH = most_common(dataset)
-        # if verbose:
-        #     print("- Most Common Value Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.1 The Most Common Value Estimate
+        pmax, minH = most_common(dataset)
+        if verbose:
+            print("- Most Common Value Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
-        # # Section 6.3.2 The Collision Estimate
-        # pmax, minH = collision_test(dataset, k)
-        # if verbose:
-        #     print("- Collision Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        # Section 6.3.2 The Collision Estimate
+        pmax, minH = collision_test(dataset, k)
+        if verbose:
+            print("- Collision Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         # Section 6.3.3 The Markov Estimate
         # If more than 6 bits per symbol, map down to 6 bits per symbol and run Markov test
@@ -96,39 +96,39 @@ if __name__ == '__main__':
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.4 The Compression Estimate
-        # pmax, minH = maurer_universal_statistic(mapped, k)
-        # if verbose:
-        #     print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = maurer_universal_statistic(mapped, k)
+        if verbose:
+            print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.5 The t-Tuple Estimate
-        # pmax, minH = t_tuple(dataset)
-        # if verbose:
-        #     print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = t_tuple(dataset)
+        if verbose:
+            print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
         
         # Section 6.3.6 The LRS Estimate
-        # pmax, minH = LRS_estimate(dataset)
-        # if verbose:
-        #     print("- LRS Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = LRS_estimate(dataset)
+        if verbose:
+            print("- LRS Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
 
-        # if verbose:
-        #     print ("\nRunning predictor estimates:")
+        if verbose:
+            print ("\nRunning predictor estimates:")
 
         # Section 6.3.7 Multi Most Common in Window prediction estimate
-        # pmax, minH = MultiMCW(dataset, verbose)
-        # if verbose:
-        #     print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = MultiMCW(dataset, verbose)
+        if verbose:
+            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         # Section 6.3.8 Lag prediction estimate
-        # pmax, minH = Lag(dataset, verbose)
-        # if verbose:
-        #     print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = Lag(dataset, verbose)
+        if verbose:
+            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.9 MultiMMC prediction estimate
@@ -139,10 +139,10 @@ if __name__ == '__main__':
         
 
         # Section 6.3.10 LZ78Y prediction estimate
-        # pmax, minH = LZ78Y(dataset, verbose)
-        # if verbose:
-        #     print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
-        # minEntropy = min(minH, minEntropy)
+        pmax, minH = LZ78Y(dataset, verbose)
+        if verbose:
+            print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+        minEntropy = min(minH, minEntropy)
 
         print("-----------------------")
         print("min-entropy = %g" % (minEntropy))
