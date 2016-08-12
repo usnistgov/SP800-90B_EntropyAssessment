@@ -24,20 +24,17 @@ typedef unsigned char byte;
 using namespace std;
 
 // Read in binary file to test
-void read_file(const char* file_path, byte data[]){
-	FILE* file = NULL;
+bool read_file(const char* file_path, byte data[]){
 
-	#ifdef VERBOSE
-	cout << "Opening file: " << file_path << endl;
-	#endif
-
-	file = fopen(file_path, "rb");
-	auto rc = fread(data, 1, SIZE, file);
+	FILE* file = fopen(file_path, "rb");
+	unsigned int rc = fread(data, 1, SIZE, file);
 	fclose(file);
+	
+	if(rc != SIZE){
+		return false;
+	}
 
-	#ifdef VERBOSE
-	cout << "Data read complete" << endl;
-	#endif
+	return true;
 }
 
 // Fisher-Yates Fast (in place) shuffle algorithm
@@ -140,7 +137,7 @@ void calc_proportions(const byte data[], vector<double> &p){
 double std_dev(const vector<int> x, const double x_mean){
 	double sum = 0.0;
 
-	for(int i = 0; i < x.size(); i++){
+	for(unsigned int i = 0; i < x.size(); i++){
 		sum += pow(x[i] - x_mean, 2);
 	}
 
@@ -182,7 +179,7 @@ array<byte, 16> fast_substr(const byte text[], const int pos, const int len){
 // Return the key that leads to the maximum value
 byte max_map(const map<byte, int> m){
 	int max = -1;
-	byte key;
+	byte key = 0;
 
 	map<byte, int>::const_iterator itr;
 	for(itr = m.begin(); itr != m.end(); ++itr){
@@ -249,19 +246,17 @@ double calc_qn(const double p, const int r, const int N){
 	return qn;
 }
 
+// Finds the longest stretch of 1s in a vector containing only 0s and 1s
 int find_max_run(const vector<int> &correct){
 	int run = 0; 
 	int max_run = 0;
-	int prev = -1;
 
-	for(int i = 0; i < correct.size(); i++){
+	for(unsigned int i = 0; i < correct.size(); i++){
 		run = (correct[i] ? run+1 : 0);
 		
 		if(run > max_run){
 			max_run = run;
 		}
-
-		prev = correct[i];
 	}
 
 	return max_run;

@@ -5,56 +5,95 @@
 #include "iid/chi_square_tests.h"
 
 
-byte dataset[SIZE];
+void print_usage(){
+	cout << "Usage is: ./iid_main.out <file_name> <bits_per_word> [-v]" << endl;
+	cout << "\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words)." << endl;
+	cout << "\t <bits_per_word>: Must be between 1-8, inclusive." << endl;
+	cout << "\t -v: Optional verbosity flag for more output." << endl;
+	cout << endl;
+}
 
-double mean = 0.0;
-double median = 0.0;
-bool is_binary = false;
+int main(int argc, char* argv[]){
 
-int main(){
+	byte dataset[SIZE];
+	bool verbose = false, is_binary;
+	double mean, median;
+
+	// Parse args
+	if(argc != 3 && argc != 4){
+		cout << "Incorrect usage." << endl;
+		print_usage();
+		exit(-1);
+	}else{
+
+		// Gather filename
+		const char* file_path = argv[1];
+
+		// Gather bits per word
+		const int word_size = atoi(argv[2]);
+		if(word_size < 1 || word_size > 8){
+			cout << "Invalid bits per word." << endl;
+			print_usage();
+			exit(-1);
+		}
+
+		const char verbose_flag = 'v';
+		if(argc == 4){
+			verbose = (argv[3][1] == verbose_flag);
+		}
+	}
 
 	// Read in file
 	const char* file_path = "../bin/truerand_8bit.bin";
-	read_file(file_path, dataset);
+
+	if(verbose){
+		cout << "Opening file: " << file_path << endl;
+	}
+
+	if(!read_file(file_path, dataset)){
+		cout << "Error reading file. Need 1 million entries for the tests to work." << endl;
+		print_usage();
+		exit(-1);
+	}
 
 	// Calculate baseline statistics
 	cout << "Calculating baseline statistics..." << endl;
 	calc_stats(dataset, mean, median, is_binary);
 
-	#ifdef VERBOSE
-	cout << "Mean: " << mean << endl;
-	cout << "Median: " << median << endl;
-	cout << "Binary: " << (is_binary ? "true" : "false") << endl;
-	#endif
+	if(verbose){
+		cout << "\tMean: " << mean << endl;
+		cout << "\tMedian: " << median << endl;
+		cout << "\tBinary: " << (is_binary ? "true" : "false") << endl << endl;
+	}
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary);
+	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary, verbose);
 
 	if(perm_test_pass){
 		cout << "** Passed IID permutation tests" << endl;
 	}else{
 		cout << "** Failed IID permutation tests" << endl;
-		return 0;
+		return -1;
 	}
 
 	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary);
+	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary, verbose);
 
 	if(chi_square_test_pass){
 		cout << "** Passed chi square tests" << endl;
 	}else{
 		cout << "** Failed chi square tests" << endl;
-		return 0;
+		return -1;
 	}
 
 	// Compute length of the longest repeated substring stats
-	bool len_LRS_test_pass = len_LRS_test(dataset);
+	bool len_LRS_test_pass = len_LRS_test(dataset, verbose);
 
 	if(len_LRS_test_pass){
 		cout << "** Passed length of longest repeated substring test" << endl;
 	}else{
 		cout << "** Failed length of longest repeated substring test" << endl;
-		return 0;
+		return -1;
 	}
 
 	// Compute the min-entropy of the dataset

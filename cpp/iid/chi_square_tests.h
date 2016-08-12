@@ -38,7 +38,6 @@ double chi_square_cutoff(const int df){
 */
 
 void calc_expectations(const vector<double> &p, vector<pair<double, pair<byte, byte>>> &e){
-	
 	for(int i = 0; i < 256; i++){
 		for(int j = 0; j < 256; j++){
 			e.push_back(pair<double, pair<byte, byte>>(p[i]*p[j]*(SIZE-1), pair<byte, byte>(i, j)));
@@ -351,7 +350,7 @@ void goodness_of_fit(const byte subset_data[10][SUBLENGTH], double &score, int &
 	df = 9*(bins.size()-1);
 }
 
-bool chi_square_tests(const byte data[], const double mean, const double median, const bool is_binary){
+bool chi_square_tests(const byte data[], const double mean, const double median, const bool is_binary, const bool verbose){
 
 	double score = 0.0;
 	int df = 0;
@@ -366,12 +365,12 @@ bool chi_square_tests(const byte data[], const double mean, const double median,
 	double cutoff = chi_square_cutoff(df);
 
 	// Print results
-	#ifdef VERBOSE
-	cout << "Chi square independence" << endl;
-	cout << "    score = " << score << endl;
-	cout << "    degrees of freedom = " << df << endl;
-	cout << "    cutoff = " << cutoff << endl;
-	#endif
+	if(verbose){
+		cout << "Chi square independence" << endl;
+		cout << "\tscore = " << score << endl;
+		cout << "\tdegrees of freedom = " << df << endl;
+		cout << "\tcutoff = " << cutoff << endl;
+	}
 
 	// Check result to return if test failed
 	if(score > cutoff){
@@ -397,12 +396,12 @@ bool chi_square_tests(const byte data[], const double mean, const double median,
 	cutoff = chi_square_cutoff(df);
 
 	// Print results
-	#ifdef VERBOSE
-	cout << "Chi square goodness of fit" << endl;
-	cout << "    score = " << score << endl;
-	cout << "    degrees of freedom = " << df << endl;
-	cout << "    cutoff = " << cutoff << endl;
-	#endif
+	if(verbose){
+		cout << "Chi square goodness of fit" << endl;
+		cout << "\tscore = " << score << endl;
+		cout << "\tdegrees of freedom = " << df << endl;
+		cout << "\tcutoff = " << cutoff << endl;
+	}
 
 	// Check result to return if test failed
 	if(score > cutoff){

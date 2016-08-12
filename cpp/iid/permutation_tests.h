@@ -4,6 +4,8 @@
 
 #include "../shared/utils.h"
 
+// Binary partition size
+#define BIN_PART_SIZE (SIZE/8)
 
 // The tests used
 const int num_tests = 19;
@@ -18,8 +20,8 @@ const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRun
 // 5.1 Conversion I
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks have the number of 1's counted and totaled
-vector<int> conversion1(const byte data[]){
-	vector<int> ret(SIZE/8, 0);
+array<int, BIN_PART_SIZE> conversion1(const byte data[]){
+	array<int, BIN_PART_SIZE> ret;
 
 	for(long int i = 0; i < SIZE; i+=8){
 		for(int j = 0; j < 8; j++){
@@ -33,8 +35,8 @@ vector<int> conversion1(const byte data[]){
 // 5.1 Conversion II
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks are then converted to decimal
-vector<int> conversion2(const byte data[]){
-	vector<int> ret(SIZE/8, 0);
+array<int, BIN_PART_SIZE> conversion2(const byte data[]){
+	array<int, BIN_PART_SIZE> ret;
 
 	for(int i = 0; i < SIZE; i+=8){
 		for(int j = 0; j < 8; j++){
@@ -68,11 +70,11 @@ double excursion(const byte data[], const double mean){
 }
 
 // Helper for 5.1.2, 5.1.3, and 5.1.4
-// Builds a vector of the runs of consecutive values
-// Pushes +1 to the vector if the value is >= the previous
-// Pushes -1 to the vector if the value is < than the previous
-vector<byte> alt_sequence1(const byte data[]){
-	vector<byte> ret(SIZE-1, 0);
+// Builds a array of the runs of consecutive values
+// Pushes +1 to the array if the value is >= the previous
+// Pushes -1 to the array if the value is < than the previous
+array<byte, SIZE> alt_sequence1(const byte data[]){
+	array<byte, SIZE> ret;
 
 	for(long int i = 0; i < SIZE-1; i++){
 		ret[i] = ((data[i] > data[i+1]) ? -1 : 1);
@@ -82,11 +84,11 @@ vector<byte> alt_sequence1(const byte data[]){
 }
 
 // Helper for 5.1.5 and 5.1.6
-// Builds a vector of the runs of values compared to the median
-// Pushes +1 to the vector if the value is >= the median
-// Pushes -1 to the vector if the value is < than the median
-vector<byte> alt_sequence2(const byte data[], const double median){
-	vector<byte> ret(SIZE, 0);
+// Builds a array of the runs of values compared to the median
+// Pushes +1 to the array if the value is >= the median
+// Pushes -1 to the array if the value is < than the median
+array<byte, SIZE> alt_sequence2(const byte data[], const double median){
+	array<byte, SIZE> ret;
 
 	for(long int i = 0; i < SIZE; i++){
 		ret[i] = ((data[i] < median) ? -1 : 1);
@@ -99,7 +101,7 @@ vector<byte> alt_sequence2(const byte data[], const double median){
 // Determines the number of runs in the sequence.
 // A run is when multiple consecutive values are all >= the prior
 // or all < the prior
-long int num_directional_runs(const vector<byte> &alt_seq){
+long int num_directional_runs(const array<byte, SIZE> &alt_seq){
 	long int num_runs = 0;
 	for(long int i = 1; i < SIZE-1; i++){
 		if(alt_seq[i] != alt_seq[i-1]){
@@ -112,7 +114,7 @@ long int num_directional_runs(const vector<byte> &alt_seq){
 
 // 5.1.3 Length of Directional Runs
 // Determines the length of the longest run
-long int len_directional_runs(const vector<byte> &alt_seq){
+long int len_directional_runs(const array<byte, SIZE> &alt_seq){
 	long int max_run = 0;
 	long int run = 1;
 
@@ -138,7 +140,7 @@ long int len_directional_runs(const vector<byte> &alt_seq){
 // 5.1.4 Number of Increases and Decreases
 // Determines the maximum number of increases or decreases between
 // consecutive values
-long int num_increases_decreases(const vector<byte> &alt_seq){
+long int num_increases_decreases(const array<byte, SIZE> &alt_seq){
 	long int pos = 0;
 	for(long int i = 0; i < SIZE-1; i++){
 		if(alt_seq[i] == 1) pos++;
@@ -152,7 +154,7 @@ long int num_increases_decreases(const vector<byte> &alt_seq){
 // to the median of the dataset
 // This is similar to a normal run, but instead of being compared
 // to the previous value, each value is compared to the median
-long int num_runs_median(const vector<byte> &alt_seq){
+long int num_runs_median(const array<byte, SIZE> &alt_seq){
 	long int num_runs = 1;
 
 	for(long int i = 1; i < SIZE; i++){
@@ -167,7 +169,7 @@ long int num_runs_median(const vector<byte> &alt_seq){
 // 5.1.6 Length of Runs Based on the Median
 // Determines the length of the longest run that is constructed
 // with respect to the median
-long int len_runs_median(const vector<byte> &alt_seq){
+long int len_runs_median(const array<byte, SIZE> &alt_seq){
 	long int max_run = 0;
 	long int run = 1;
 
@@ -317,7 +319,7 @@ unsigned int compression(const byte data[]){
 * ---------------------------------------------
 */
 
-void conversions(const byte data[], vector<int> &cs1, vector<int> &cs2){
+void conversions(const byte data[], array<int, BIN_PART_SIZE> &cs1, array<int, BIN_PART_SIZE> &cs2){
 	cs1 = conversion1(data);
 	cs2 = conversion2(data);
 }
@@ -329,7 +331,7 @@ void excursion_test(const byte data[], const double mean, map<string, long doubl
 
 void directional_tests(const byte data[], const bool is_binary, map<string, long double> &stats){
 
-	vector<byte> alt_seq;
+	array<byte, SIZE> alt_seq;
 
 	if(is_binary){
 		alt_seq = alt_sequence1(data); // should be cs1
@@ -344,7 +346,7 @@ void directional_tests(const byte data[], const bool is_binary, map<string, long
 
 void consecutive_runs_tests(const byte data[], const double median, const bool is_binary, map<string, long double> &stats){
 
-	vector<byte> alt_seq;
+	array<byte, SIZE> alt_seq;
 
 	if(is_binary){
 		alt_seq = alt_sequence2(data, median); // should be cs2, 0.5
@@ -412,7 +414,7 @@ void compression_test(const byte data[], map<string, long double> &stats){
 void run_tests(const byte data[], const double mean, const double median, const bool is_binary, map<string, long double> &stats){
 
 	// Conversions for binary data
-	vector<int> cs1, cs2;
+	array<int, BIN_PART_SIZE> cs1, cs2;
 	if(is_binary){
 		conversions(data, cs1, cs2);
 	}
@@ -433,25 +435,23 @@ void run_tests(const byte data[], const double mean, const double median, const 
 * ---------------------------------------------
 */
 
-bool permutation_tests(const byte ds[], const double mean, const double median, const bool is_binary){
+bool permutation_tests(const byte ds[], const double mean, const double median, const bool is_binary, const bool verbose){
 
-	// We need a copy because the tests take in by reference
+	// We need a copy because the tests take in by reference and modify it
 	byte data[SIZE];
 	for(int i = 0; i < SIZE; i++){
 		data[i] = ds[i];
 	}
 
 	// Counters for the pass/fail of each statistic
-	map<int, int*> C;
+	map<int, array<int, 2>> C;
 
 	// Original test results (t) and permuted test results (t')
 	map<string, long double> t, tp;
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
-		C[i] = new int[2];
-		C[i][0] = 0;
-		C[i][1] = 0;
+		C[i] = {0};
 
 		t[test_names[i]] = -1;
 		tp[test_names[i]] = -1;
@@ -461,24 +461,22 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	cout << "Beginning initial tests..." << endl;
 	run_tests(data, mean, median, is_binary, t);
 
-	#ifdef VERBOSE
-	cout << endl << "Initial test results" << endl;
-	for(int i = 0; i < num_tests; i++){
-		cout << setw(23) << test_names[i] << ": ";
-		cout << t[test_names[i]] << endl;
+	if(verbose){
+		cout << endl << "Initial test results" << endl;
+		for(int i = 0; i < num_tests; i++){
+			cout << setw(23) << test_names[i] << ": ";
+			cout << t[test_names[i]] << endl;
+		}
+		cout << endl;
 	}
-	cout << endl;
-	#endif
 
 	// Permutation tests, shuffle -> run -> aggregate
 	cout << "Beginning permutation tests..." << endl;
 	for(int i = 0; i < PERMS; i++){
 
-		#ifdef VERBOSE
-		if(i % 100 == 0){
-			cout << "\rPermutation Test: " << (i/(double)PERMS)*100 << "% complete" << flush;
+		if(verbose){
+			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
 		}
-		#endif
 
 		shuffle(data);
 		run_tests(data, mean, median, is_binary, tp);
@@ -493,35 +491,27 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 		}
 	}
 
-	#ifdef VERBOSE
-	cout << endl << endl;
-	cout << "                statistic  C[i][0]  C[i][1]" << endl;
-	cout << "-------------------------------------------" << endl;
-	for(int i = 0; i < num_tests; i++){
-		if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
-			cout << setw(24) << test_names[i] << "*";
-		}else{
-			cout << setw(25) << test_names[i];
+	if(verbose){
+		cout << endl << endl;
+		cout << "                statistic  C[i][0]  C[i][1]" << endl;
+		cout << "-------------------------------------------" << endl;
+		for(int i = 0; i < num_tests; i++){
+			if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
+				cout << setw(24) << test_names[i] << "*";
+			}else{
+				cout << setw(25) << test_names[i];
+			}
+			cout << setw(8) << C[i][0];
+			cout << setw(8) << C[i][1] << endl;
 		}
-		cout << setw(8) << C[i][0];
-		cout << setw(8) << C[i][1] << endl;
+		cout << "(* denotes failed test)" << endl;
+		cout << endl;
 	}
-	cout << "(* denotes failed test)" << endl;
-	cout << endl;
-	#endif
 
-	// Validity check for real data sets. Disappears if the test is a small scale test
-	#if PERMS == 10000
 	for(int i = 0; i < num_tests; i++){
 		if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
 			return false;
 	 	}
-	}
-	#endif
-
-	// Free memory
-	for(int i = 0; i < num_tests; i++){
-		delete[](C[i]);
 	}
 
 	return true;

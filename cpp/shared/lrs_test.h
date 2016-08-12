@@ -27,7 +27,7 @@ void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector
 
 		// Store all the indexes of n-tuple substrings that occur more than once
 		for(itr = indexes.begin(); itr != indexes.end(); ++itr){
-			for(int i = 0; i < itr->second.size(); i++){
+			for(unsigned int i = 0; i < itr->second.size(); i++){
 				good_indexes.push_back(itr->second[i]);
 			}
 
@@ -36,7 +36,7 @@ void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector
 		indexes.clear();
 
 		// Extend the n-tuples to (n+1)-tuples and store like before
-		for(int i = 0; i < good_indexes.size(); i++){
+		for(unsigned int i = 0; i < good_indexes.size(); i++){
 			indexes[substr(text, good_indexes[i], substr_len)].push_back(good_indexes[i]);
 		}
 	}
@@ -107,7 +107,7 @@ void calc_collision_proportion(const vector<double> &p, double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[]){
+bool len_LRS_test(const byte data[], const bool verbose){
 
 	vector<double> p(256, 0.0);
 	calc_proportions(data, p);
@@ -122,9 +122,12 @@ bool len_LRS_test(const byte data[]){
 
 	double pr_e = 1 - pow(1 - pow(p_col, lrs), overlap);
 
-	#ifdef VERBOSE
-	cout << "P_col: " << p_col << " LRS: " << lrs << " Pr(E >= 1): " << pr_e << endl;
-	#endif
+	if(verbose){
+		cout << "Longest Repeated Substring results" << endl;
+		cout << "\tP_col: " << p_col << endl;
+		cout << "\tLength of LRS: " << lrs << endl;
+		cout << "\tPr(E >= 1): " << pr_e << endl;
+	}
 
 	return (pr_e >= 0.001);
 }
@@ -157,7 +160,7 @@ double LRS_test_noniid(const byte data[]){
 	}
 
 	double p_max = 0.0;
-	for(int i = 0; i < p.size(); i++){
+	for(unsigned int i = 0; i < p.size(); i++){
 		if(p[i] > p_max){
 			p_max = p[i];
 		}
