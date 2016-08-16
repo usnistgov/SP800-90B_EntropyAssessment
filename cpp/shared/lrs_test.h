@@ -138,7 +138,7 @@ double LRS_test_noniid(const byte data[]){
 	int v = len_LRS(data, 1, u);
 
 	if(v < u){
-		cout << "Error in LRS" << endl;
+		cout << "Error in LRS. Aborting." << endl;
 		return 0.0;
 	}
 

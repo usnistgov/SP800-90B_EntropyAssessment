@@ -1,6 +1,6 @@
 #include "../shared/utils.h"
 
-double LZ78Y_test(const byte data[]){
+double LZ78Y_test(const byte data[], const bool verbose){
 
 	// Step 1
 	int B = 16;
@@ -16,11 +16,11 @@ double LZ78Y_test(const byte data[]){
 	array<byte, 16> substring;
 	for(int i = B+1; i < SIZE; i++){
 
-		#ifdef VERBOSE
+		if(verbose){
 			if(i % 10000 == 0){
 				cout << "\rLZ78Y Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
 			}
-		#endif
+		}
 
 		// Step 3a
 		for(int j = B; j >= 1; j--){
@@ -58,9 +58,9 @@ double LZ78Y_test(const byte data[]){
 		}
 	}
 
-	#ifdef VERBOSE
-	cout << endl;
-	#endif
+	if(verbose){
+		cout << endl;
+	}
 
 	// Step 4
 	int C = sum(correct);
@@ -69,11 +69,11 @@ double LZ78Y_test(const byte data[]){
 	// Step 5
 	double p_run = calc_run(correct);
 
-	#ifdef VERBOSE
-	cout << "\tCorrect: " << C << endl;
-	cout << "\tP_avg (global): " << p_avg << endl;
-	cout << "\tP_run (local): " << p_run << endl;
-	#endif
+	if(verbose){
+		cout << "\tCorrect: " << C << endl;
+		cout << "\tP_avg (global): " << p_avg << endl;
+		cout << "\tP_run (local): " << p_run << endl;
+	}
 
 	// Step 6
 	return -log2(max(p_avg, p_run));

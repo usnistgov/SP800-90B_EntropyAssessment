@@ -1,26 +1,11 @@
-iid: compile-iid run
-
-compile-iid:
+iid:
 	g++ -std=c++11 iid_main.cpp -lbz2
 
-verbose-iid: compile-verbose-iid run
+fast-iid:
+	g++ -std=c++11 -O2 iid_main.cpp -lbz2 
 
-compile-verbose-iid:
-	g++ -std=c++11 iid_main.cpp -lbz2 -DVERBOSE
-
-fast:
-	g++ -std=c++11 -O2 iid_main.cpp -lbz2 -DVERBOSE
-	./a.out
-
-run:
-	./a.out
-
-non-iid: compile-non-iid run
-
-compile-non-iid:
+non-iid:
 	g++ -std=c++11 non_iid_main.cpp
 
-verbose-non-iid: compile-verbose-non-iid run
-
-compile-verbose-non-iid:
-	g++ -std=c++11 non_iid_main.cpp -DVERBOSE
+fast-non-iid:
+	g++ -std=c++11 -O2 non_iid_main.cpp

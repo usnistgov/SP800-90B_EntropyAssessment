@@ -1,6 +1,6 @@
 #include "../shared/utils.h"
 
-double lag_test(const byte data[]){
+double lag_test(const byte data[], const bool verbose){
 	
 	// Step 1
 	int D = 128;
@@ -15,11 +15,11 @@ double lag_test(const byte data[]){
 	// Step 3
 	for(int i = 2; i < SIZE+1; i++){
 
-		#ifdef VERBOSE
-		if(i % 10000 == 0){
-			cout << "\rLag Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
+		if(verbose){
+			if(i % 10000 == 0){
+				cout << "\rLag Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
+			}
 		}
-		#endif
 
 		// Step 3a
 		for(int d = 1; d < D+1; d++){
@@ -44,9 +44,9 @@ double lag_test(const byte data[]){
 		}
 	}
 
-	#ifdef VERBOSE
-	cout << endl;
-	#endif
+	if(verbose){
+		cout << endl;
+	}
 
 	// Step 4
 	int C = sum(correct);
@@ -57,11 +57,11 @@ double lag_test(const byte data[]){
 	// Step 6
 	double p_run = calc_run(correct);
 
-	#ifdef VERBOSE
-	cout << "\tCorrect: " << C << endl;
-	cout << "\tP_avg (global): " << p_avg << endl;
-	cout << "\tP_run (local): " << p_run << endl;
-	#endif
+	if(verbose){
+		cout << "\tCorrect: " << C << endl;
+		cout << "\tP_avg (global): " << p_avg << endl;
+		cout << "\tP_run (local): " << p_run << endl;
+	}
 
 	// Step 7
 	return -log2(max(p_avg, p_run));

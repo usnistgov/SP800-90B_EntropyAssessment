@@ -82,7 +82,7 @@ bool binary_search(const double lbound, const int n, double &p){
 
 	if(lbound > E_p_maxvalid){
 		p = 0.0;
-		cout << "Bad bound" << endl;
+		cout << "Bad bound in binary search for collision test. Aborting." << endl;
 		return false;
 	}
 
@@ -129,7 +129,7 @@ double collision_test(const byte data[], const int word_size){
 	int v = t.size();
 
 	if(v < 1000){
-		cout << "v is less than 1000" << endl;
+		cout << "v is less than 1000 in collision test. Aborting." << endl;
 		return 0.0;
 	}
 

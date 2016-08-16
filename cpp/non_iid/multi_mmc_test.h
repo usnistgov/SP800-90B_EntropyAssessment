@@ -1,6 +1,6 @@
 #include "../shared/utils.h"
 
-double multi_mmc_test(const byte data[]){
+double multi_mmc_test(const byte data[], const bool verbose){
 
 	// Step 1
 	int D = 16;
@@ -21,11 +21,11 @@ double multi_mmc_test(const byte data[]){
 
 		array<byte, 16> substring;
 
-		#ifdef VERBOSE
-		if(i % 10000 == 0){
-			cout << "\rMultiMMC Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
+		if(verbose){
+			if(i % 10000 == 0){
+				cout << "\rMultiMMC Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
+			}
 		}
-		#endif
 
 		// Step 4a
 		for(int d = 0; d < D; d++){
@@ -83,9 +83,9 @@ double multi_mmc_test(const byte data[]){
 	}
 
 	// Offsets from flush printing to place carrige on next line
-	#ifdef VERBOSE
-	cout << endl;
-	#endif
+	if(verbose){
+		cout << endl;
+	}
 
 	// Step 5
 	int C = sum(correct);
@@ -96,11 +96,11 @@ double multi_mmc_test(const byte data[]){
 	// Step 7
 	double p_run = calc_run(correct);
 
-	#ifdef VERBOSE
-	cout << "\tCorrect: " << C << endl;
-	cout << "\tP_avg (global): " << p_avg << endl;
-	cout << "\tP_run (local): " << p_run << endl;
-	#endif
+	if(verbose){
+		cout << "\tCorrect: " << C << endl;
+		cout << "\tP_avg (global): " << p_avg << endl;
+		cout << "\tP_run (local): " << p_run << endl;		
+	}
 
 	// Step 8
 	return -log2(max(p_avg, p_run));

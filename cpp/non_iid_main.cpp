@@ -125,21 +125,21 @@ int main(int argc, char* argv[]){
 	cout << endl << "Predictor estimates:" << endl;
 
 	// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
-	H_min = multi_mcw_test(dataset);
+	H_min = multi_mcw_test(dataset, verbose);
 	if(verbose){
 		cout << "Multi Most Common in Window (Multi MCW) Test = " << H_min << endl;
 	}
 	min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
-	H_min = lag_test(dataset);
+	H_min = lag_test(dataset, verbose);
 	if(verbose){
 		cout << "Lag Prediction Test = " << H_min << endl;
 	}
 	min_entropy = min(min_entropy, H_min);
 
 	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
-	H_min = multi_mmc_test(dataset);
+	H_min = multi_mmc_test(dataset, verbose);
 	if(verbose){
 		cout << "Multi Markov Model with Counting (MultiMMC) Prediction Test = " << H_min << endl;
 	}
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]){
 
 	// Section 6.3.10 - Estimate entropy with LZ78Y Test
 	// Not super fast, just a touch longer than the python but with -O3 is super fast
-	H_min = LZ78Y_test(dataset);
+	H_min = LZ78Y_test(dataset, verbose);
 	if(verbose){
 		cout << "LZ78Y Prediction Test = " << H_min << endl;
 	}

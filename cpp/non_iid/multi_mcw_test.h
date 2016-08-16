@@ -19,7 +19,7 @@ byte most_common_recent(const byte data[], const int pos, const int length){
 	return current_mode;
 }
 
-double multi_mcw_test(const byte data[]){
+double multi_mcw_test(const byte data[], const bool verbose){
 	
 	// Step 1
 	array<int, 4> w = {63, 255, 1023, 4095};
@@ -34,11 +34,11 @@ double multi_mcw_test(const byte data[]){
 	// Step 3
 	for(int i = w[0]+1; i < SIZE+1; i++){
 
-		#ifdef VERBOSE
-		if(i % 10000 == 0){
-			cout << "\rMulti Most Common in Window (MultiMCW) Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
+		if(verbose){
+			if(i % 10000 == 0){
+				cout << "\rMulti Most Common in Window (MultiMCW) Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
+			}
 		}
-		#endif
 
 		// Step 3a
 		for(int j = 0; j < 4; j++){
@@ -63,9 +63,9 @@ double multi_mcw_test(const byte data[]){
 		}
 	}
 
-	#ifdef VERBOSE
-	cout << endl;
-	#endif
+	if(verbose){
+		cout << endl;
+	}
 
 	// Step 4
 	int C = sum(correct);
@@ -76,11 +76,11 @@ double multi_mcw_test(const byte data[]){
 	// Step 6
 	double p_run = calc_run(correct);
 
-	#ifdef VERBOSE
-	cout << "\tCorrect: " << C << endl;
-	cout << "\tP_avg (global): " << p_avg << endl;
-	cout << "\tP_run (local): " << p_run << endl;
-	#endif
+	if(verbose){
+		cout << "\tCorrect: " << C << endl;
+		cout << "\tP_avg (global): " << p_avg << endl;
+		cout << "\tP_run (local): " << p_run << endl;
+	}
 
 	// Step 7
 	return -log2(max(p_avg, p_run));
