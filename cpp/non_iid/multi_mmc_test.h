@@ -29,9 +29,8 @@ double multi_mmc_test(const byte data[]){
 
 		// Step 4a
 		for(int d = 0; d < D; d++){
-			substring = fast_substr(data, i-d-1, d);
-
 			if(d+1 < i-1){
+				substring = fast_substr(data, i-d-1, d);
 				if(M[d].find(substring) == M[d].end()){
 					M[d][substring][data[i-1]] = 0;
 				}
@@ -43,7 +42,12 @@ double multi_mmc_test(const byte data[]){
 		// Step 4b
 		for(int d = 0; d < D; d++){
 			int ymax = 0;
-			substring = fast_substr(data, i-d, d);
+
+			if(i-d < 0){
+				substring = fast_substr(data, 0, d);
+			}else{
+				substring = fast_substr(data, i-d, d);
+			}
 
 			if(M[d].find(substring) != M[d].end()){
 
