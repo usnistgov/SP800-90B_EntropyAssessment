@@ -9,3 +9,6 @@ non-iid:
 
 fast-non-iid:
 	g++ -std=c++11 -O2 non_iid_main.cpp
+
+run:
+	./a.out ../bin/truerand_8bit.bin 8 -v

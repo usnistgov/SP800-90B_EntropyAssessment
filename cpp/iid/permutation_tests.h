@@ -8,7 +8,7 @@
 #define BIN_PART_SIZE (SIZE/8)
 
 // The tests used
-const int num_tests = 19;
+const unsigned int num_tests = 19;
 const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRuns","numIncreasesDecreases","numRunsMedian","lenRunsMedian","avgCollision","maxCollision","periodicity(1)","periodicity(2)","periodicity(8)","periodicity(16)","periodicity(32)","covariance(1)","covariance(2)","covariance(8)","covariance(16)","covariance(32)","compression"};
 
 /*
@@ -20,11 +20,11 @@ const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRun
 // 5.1 Conversion I
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks have the number of 1's counted and totaled
-vector<int> conversion1(const byte data[]){
-	vector<int> ret(BIN_PART_SIZE, 0);
+array<byte, BIN_PART_SIZE> conversion1(const byte data[]){
+	array<byte, BIN_PART_SIZE> ret = {0};
 
-	for(long int i = 0; i < SIZE; i+=8){
-		for(int j = 0; j < 8; j++){
+	for(unsigned int i = 0; i < SIZE; i+=8){
+		for(unsigned int j = 0; j < 8; j++){
 			ret[i/8] += data[i+j];
 		}
 	}
@@ -35,11 +35,11 @@ vector<int> conversion1(const byte data[]){
 // 5.1 Conversion II
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks are then converted to decimal
-vector<int> conversion2(const byte data[]){
-	vector<int> ret(BIN_PART_SIZE, 0);
+array<byte, BIN_PART_SIZE> conversion2(const byte data[]){
+	array<byte, BIN_PART_SIZE> ret = {0};
 
-	for(int i = 0; i < SIZE; i+=8){
-		for(int j = 0; j < 8; j++){
+	for(unsigned int i = 0; i < SIZE; i+=8){
+		for(unsigned int j = 0; j < 8; j++){
 			ret[i/8] += data[i+j] * pow(2, (7-j));
 		}
 	}
@@ -55,7 +55,7 @@ double excursion(const byte data[], const double mean){
 	double max = 0;
 	double running_sum = 0;
 
-	for(long int i = 0; i < SIZE; i++){
+	for(unsigned int i = 0; i < SIZE; i++){
 		running_sum += data[i];
 		d_i = running_sum - ((i+1) * mean);
 
@@ -73,10 +73,10 @@ double excursion(const byte data[], const double mean){
 // Builds a array of the runs of consecutive values
 // Pushes +1 to the array if the value is >= the previous
 // Pushes -1 to the array if the value is < than the previous
-vector<byte> alt_sequence1(const byte data[]){
-	vector<byte> ret(SIZE-1, 0);
+vector<int> alt_sequence1(const byte data[], const unsigned int n){
+	vector<int> ret(n-1, 0);
 
-	for(long int i = 0; i < SIZE-1; i++){
+	for(unsigned int i = 0; i < n-1; i++){
 		ret[i] = ((data[i] > data[i+1]) ? -1 : 1);
 	}
 
@@ -87,10 +87,10 @@ vector<byte> alt_sequence1(const byte data[]){
 // Builds a array of the runs of values compared to the median
 // Pushes +1 to the array if the value is >= the median
 // Pushes -1 to the array if the value is < than the median
-vector<byte> alt_sequence2(const byte data[], const double median){
-	vector<byte> ret(SIZE, 0);
+vector<int> alt_sequence2(const byte data[], const double median, const unsigned int n){
+	vector<int> ret(n, 0);
 
-	for(long int i = 0; i < SIZE; i++){
+	for(unsigned int i = 0; i < n; i++){
 		ret[i] = ((data[i] < median) ? -1 : 1);
 	}
 
@@ -101,9 +101,14 @@ vector<byte> alt_sequence2(const byte data[], const double median){
 // Determines the number of runs in the sequence.
 // A run is when multiple consecutive values are all >= the prior
 // or all < the prior
-long int num_directional_runs(const vector<byte> &alt_seq){
-	long int num_runs = 0;
-	for(long int i = 1; i < SIZE-1; i++){
+// 5.1.5 Number of Runs Based on the Median
+// Determines the number of runs that are constructed with respect
+// to the median of the dataset
+// This is similar to a normal run, but instead of being compared
+// to the previous value, each value is compared to the median
+unsigned int num_directional_runs(const vector<int> &alt_seq){
+	unsigned int num_runs = 0;
+	for(unsigned int i = 1; i < alt_seq.size(); i++){
 		if(alt_seq[i] != alt_seq[i-1]){
 			num_runs++;
 		}
@@ -114,11 +119,14 @@ long int num_directional_runs(const vector<byte> &alt_seq){
 
 // 5.1.3 Length of Directional Runs
 // Determines the length of the longest run
-long int len_directional_runs(const vector<byte> &alt_seq){
-	long int max_run = 0;
-	long int run = 1;
+// 5.1.6 Length of Runs Based on the Median
+// Determines the length of the longest run that is constructed
+// with respect to the median
+unsigned int len_directional_runs(const vector<int> &alt_seq){
+	unsigned int max_run = 0;
+	unsigned int run = 1;
 
-	for(long int i = 1; i < SIZE-1; i++){
+	for(unsigned int i = 1; i < alt_seq.size(); i++){
 		if(alt_seq[i] == alt_seq[i-1]){
 			run++;
 		}else{
@@ -140,56 +148,14 @@ long int len_directional_runs(const vector<byte> &alt_seq){
 // 5.1.4 Number of Increases and Decreases
 // Determines the maximum number of increases or decreases between
 // consecutive values
-long int num_increases_decreases(const vector<byte> &alt_seq){
-	long int pos = 0;
-	for(long int i = 0; i < SIZE-1; i++){
+unsigned int num_increases_decreases(const vector<int> &alt_seq){
+	unsigned int pos = 0;
+	for(unsigned int i = 0; i < alt_seq.size(); i++){
 		if(alt_seq[i] == 1) pos++;
 	}
 
-	return max(pos, SIZE-pos);
-}
-
-// 5.1.5 Number of Runs Based on the Median
-// Determines the number of runs that are constructed with respect
-// to the median of the dataset
-// This is similar to a normal run, but instead of being compared
-// to the previous value, each value is compared to the median
-long int num_runs_median(const vector<byte> &alt_seq){
-	long int num_runs = 1;
-
-	for(long int i = 1; i < SIZE; i++){
-		if(alt_seq[i] != alt_seq[i-1]){
-			num_runs++;
-		}
-	}
-
-	return num_runs;
-}
-
-// 5.1.6 Length of Runs Based on the Median
-// Determines the length of the longest run that is constructed
-// with respect to the median
-long int len_runs_median(const vector<byte> &alt_seq){
-	long int max_run = 0;
-	long int run = 1;
-
-	for(long int i = 1; i < SIZE; i++){
-		if(alt_seq[i] == alt_seq[i-1]){
-			run++;
-		}else{
-			if(run > max_run){
-				max_run = run;
-			}
-			run = 1;
-		}
-	}
-
-	// Handle the last run
-	if(run > max_run){
-		max_run = run;
-	}
-
-	return max_run;
+	unsigned reverse_pos = alt_seq.size() - pos;
+	return max(pos, reverse_pos);
 }
 
 // Helper function to prepare for 5.1.7 and 5.1.8
@@ -198,20 +164,20 @@ long int len_runs_median(const vector<byte> &alt_seq){
 // based on the average amount until the next collision (about 16-19)
 // Just advance maybe 4-5 per iteration and back up if collisions are found based on how many collision are found.
 // POC: https://repl.it/C4eI
-vector<int> find_collisions(const byte data[]){
-	vector<int> ret;
-	set<int> dups;
+vector<unsigned int> find_collisions(const byte data[], const unsigned int n){
+	vector<unsigned int> ret;
+	set<unsigned int> dups;
 
-	unsigned long int i = 0;
-	unsigned long int check_size;
+	unsigned int i = 0;
+	unsigned int check_size;
 
 	// Begin from each element
-	while(i < SIZE){
+	while(i < n){
 
 		check_size = 0;
 
 		// Progressively increase the number of elements checked
-		while(check_size < (SIZE - i)){
+		while(check_size < (n - i)){
 
 			// Toss elements into a set
 			dups.insert(data[i+check_size]);
@@ -223,7 +189,7 @@ vector<int> find_collisions(const byte data[]){
 				// Advance outer loop past the collision end
 				ret.push_back(check_size+1);
 				i += check_size;
-				check_size = SIZE;
+				check_size = n;
 				dups.clear();
 			}
 
@@ -238,16 +204,16 @@ vector<int> find_collisions(const byte data[]){
 
 // 5.1.7 Average Collision Test
 // Counts the number of successive samples until a duplicate is found
-double avg_collision(const vector<int> &col_seq){
+double avg_collision(const vector<unsigned int> &col_seq){
 
-	return sum(col_seq)/float(col_seq.size());
+	return divide(sum(col_seq), col_seq.size());
 }
 
 // 5.1.8 Maximum Collision Test
 // Determines the maximum number of samples without a duplicate
-long int max_collision(const vector<int> &col_seq){
-	long int max = -1;
-	for(unsigned long int i = 0; i < col_seq.size(); i++){
+unsigned int max_collision(const vector<unsigned int> &col_seq){
+	unsigned int max = 0;
+	for(unsigned int i = 0; i < col_seq.size(); i++){
 		if(max < col_seq[i]) max = col_seq[i];
 	}
 
@@ -257,10 +223,10 @@ long int max_collision(const vector<int> &col_seq){
 // 5.1.9 Periodicity Test
 // Determines the number of periodic structures
 // Based on lag parameter p
-long int periodicity(const byte data[], const int p){
-	long int T = 0;
+unsigned int periodicity(const byte data[], const unsigned int p, const unsigned int n){
+	unsigned int T = 0;
 
-	for(long int i = 0; i < SIZE-p; i++){
+	for(unsigned int i = 0; i < n-p; i++){
 		if(data[i] == data[i+p]){
 			T++;
 		}
@@ -272,10 +238,10 @@ long int periodicity(const byte data[], const int p){
 // 5.1.10 Covariance Test
 // Measures the strength of lagged correlation
 // Based on lag parameter p
-long int covariance(const byte data[], const int p){
-	long int T = 0;
+unsigned long int covariance(const byte data[], const unsigned int p, const unsigned int n){
+	unsigned long int T = 0;
 
-	for(long int i = 0; i < SIZE-p; i++){
+	for(unsigned int i = 0; i < n-p; i++){
 		T += data[i] * data[i+p];
 	}
 
@@ -289,8 +255,8 @@ unsigned int compression(const byte data[]){
 
 	// Build string of bytes
 	string msg = "";
-	for(long int i = 0; i < SIZE; i++){
-		msg += to_string((int)data[i]);		// Dependent on C++11
+	for(unsigned int i = 0; i < SIZE; i++){
+		msg += to_string((unsigned int)data[i]);		// Dependent on C++11
 		msg += " ";
 	}
 
@@ -319,11 +285,6 @@ unsigned int compression(const byte data[]){
 * ---------------------------------------------
 */
 
-void conversions(const byte data[], vector<int> &cs1, vector<int> &cs2){
-	cs1 = conversion1(data);
-	cs2 = conversion2(data);
-}
-
 void excursion_test(const byte data[], const double mean, map<string, long double> &stats){
 
 	stats["excursion"] = excursion(data, mean);
@@ -331,12 +292,13 @@ void excursion_test(const byte data[], const double mean, map<string, long doubl
 
 void directional_tests(const byte data[], const bool is_binary, map<string, long double> &stats){
 
-	vector<byte> alt_seq;
+	vector<int> alt_seq;
 
 	if(is_binary){
-		alt_seq = alt_sequence1(data); // should be cs1
+		array<byte, BIN_PART_SIZE> cs1 = conversion1(data);
+		alt_seq = alt_sequence1(cs1.data(), BIN_PART_SIZE);
 	}else{
-		alt_seq = alt_sequence1(data);
+		alt_seq = alt_sequence1(data, SIZE);
 	}
 
 	stats["numDirectionalRuns"] = num_directional_runs(alt_seq);
@@ -346,26 +308,28 @@ void directional_tests(const byte data[], const bool is_binary, map<string, long
 
 void consecutive_runs_tests(const byte data[], const double median, const bool is_binary, map<string, long double> &stats){
 
-	vector<byte> alt_seq;
+	vector<int> alt_seq;
 
 	if(is_binary){
-		alt_seq = alt_sequence2(data, median); // should be cs2, 0.5
+		array<byte, BIN_PART_SIZE> cs2 = conversion2(data);
+		alt_seq = alt_sequence2(cs2.data(), 0.5, BIN_PART_SIZE);
 	}else{
-		alt_seq = alt_sequence2(data, median);
+		alt_seq = alt_sequence2(data, median, SIZE);
 	}
 
-	stats["numRunsMedian"] = num_runs_median(alt_seq);
-	stats["lenRunsMedian"] = len_runs_median(alt_seq);
+	stats["numRunsMedian"] = num_directional_runs(alt_seq);
+	stats["lenRunsMedian"] = len_directional_runs(alt_seq);
 }
 
 void collision_tests(const byte data[], const bool is_binary, map<string, long double> &stats){
 
-	vector<int> col_seq;
+	vector<unsigned int> col_seq;
 
 	if(is_binary){
-		col_seq = find_collisions(data);	// should be cs2
+		array<byte, BIN_PART_SIZE> cs2 = conversion2(data);
+		col_seq = find_collisions(cs2.data(), BIN_PART_SIZE);
 	}else{
-		col_seq = find_collisions(data);
+		col_seq = find_collisions(data, SIZE);
 	}
 
 	stats["avgCollision"] = avg_collision(col_seq);
@@ -375,34 +339,36 @@ void collision_tests(const byte data[], const bool is_binary, map<string, long d
 void periodicity_tests(const byte data[], const bool is_binary, map<string, long double> &stats){
 
 	if(is_binary){
-		stats["periodicity(1)"] = periodicity(data, 1);		// top should be cs1
-		stats["periodicity(2)"] = periodicity(data, 2);
-		stats["periodicity(8)"] = periodicity(data, 8);
-		stats["periodicity(16)"] = periodicity(data, 16);
-		stats["periodicity(32)"] = periodicity(data, 32);
+		array<byte, BIN_PART_SIZE> cs1 = conversion1(data);
+		stats["periodicity(1)"] = periodicity(cs1.data(), 1, BIN_PART_SIZE);
+		stats["periodicity(2)"] = periodicity(cs1.data(), 2, BIN_PART_SIZE);
+		stats["periodicity(8)"] = periodicity(cs1.data(), 8, BIN_PART_SIZE);
+		stats["periodicity(16)"] = periodicity(cs1.data(), 16, BIN_PART_SIZE);
+		stats["periodicity(32)"] = periodicity(cs1.data(), 32, BIN_PART_SIZE);
 	}else{
-		stats["periodicity(1)"] = periodicity(data, 1);
-		stats["periodicity(2)"] = periodicity(data, 2);
-		stats["periodicity(8)"] = periodicity(data, 8);
-		stats["periodicity(16)"] = periodicity(data, 16);
-		stats["periodicity(32)"] = periodicity(data, 32);
+		stats["periodicity(1)"] = periodicity(data, 1, SIZE);
+		stats["periodicity(2)"] = periodicity(data, 2, SIZE);
+		stats["periodicity(8)"] = periodicity(data, 8, SIZE);
+		stats["periodicity(16)"] = periodicity(data, 16, SIZE);
+		stats["periodicity(32)"] = periodicity(data, 32, SIZE);
 	}
 }
 
 void covariance_tests(const byte data[], const bool is_binary, map<string, long double> &stats){
 
 	if(is_binary){
-		stats["covariance(1)"] = covariance(data, 1);		// top should be cs1
-		stats["covariance(2)"] = covariance(data, 2);
-		stats["covariance(8)"] = covariance(data, 8);
-		stats["covariance(16)"] = covariance(data, 16);
-		stats["covariance(32)"] = covariance(data, 32);
+		array<byte, BIN_PART_SIZE> cs1 = conversion1(data);
+		stats["covariance(1)"] = covariance(cs1.data(), 1, BIN_PART_SIZE);		// top should be cs1
+		stats["covariance(2)"] = covariance(cs1.data(), 2, BIN_PART_SIZE);
+		stats["covariance(8)"] = covariance(cs1.data(), 8, BIN_PART_SIZE);
+		stats["covariance(16)"] = covariance(cs1.data(), 16, BIN_PART_SIZE);
+		stats["covariance(32)"] = covariance(cs1.data(), 32, BIN_PART_SIZE);
 	}else{
-		stats["covariance(1)"] = covariance(data, 1);
-		stats["covariance(2)"] = covariance(data, 2);
-		stats["covariance(8)"] = covariance(data, 8);
-		stats["covariance(16)"] = covariance(data, 16);
-		stats["covariance(32)"] = covariance(data, 32);
+		stats["covariance(1)"] = covariance(data, 1, SIZE);
+		stats["covariance(2)"] = covariance(data, 2, SIZE);
+		stats["covariance(8)"] = covariance(data, 8, SIZE);
+		stats["covariance(16)"] = covariance(data, 16, SIZE);
+		stats["covariance(32)"] = covariance(data, 32, SIZE);
 	}
 }
 
@@ -412,12 +378,6 @@ void compression_test(const byte data[], map<string, long double> &stats){
 }
 
 void run_tests(const byte data[], const double mean, const double median, const bool is_binary, map<string, long double> &stats){
-
-	// Conversions for binary data
-	vector<int> cs1, cs2;
-	if(is_binary){
-		conversions(data, cs1, cs2);
-	}
 
 	// Perform tests
 	excursion_test(data, mean, stats);
