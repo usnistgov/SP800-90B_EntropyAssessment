@@ -19,7 +19,7 @@ double G(const double p){
 	}
 
 	in_sum = 0;
-	for(int i = 0; i < st.size(); i++){
+	for(unsigned int i = 0; i < st.size(); i++){
 		in_sum += ((SIZE-i-(d+1)) * st[i]);
 	}
 
@@ -88,7 +88,7 @@ double compression_test(const byte data[]){
 	double c = 0.7 - (0.8/b) + ((4 + (32/b) * pow(v, -3.0/b)) / 15);
 	double sigma = 0.0;
 
-	for(int i = 0; i < D.size(); i++){
+	for(unsigned int i = 0; i < D.size(); i++){
 		sigma += pow(D[i], 2);
 	}
 
