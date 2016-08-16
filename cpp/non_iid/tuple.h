@@ -68,7 +68,7 @@ double t_tuple_test(const byte data[]){
 	}
 
 	vector<double> P, P_max;
-	for(int i = 0; i < Q.size(); i++){
+	for(unsigned int i = 0; i < Q.size(); i++){
 		P.push_back(divide(Q[i], SIZE-i));
 		P_max.push_back(pow(P[i], divide(1, i+1)));
 	}
