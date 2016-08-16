@@ -20,8 +20,8 @@ const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRun
 // 5.1 Conversion I
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks have the number of 1's counted and totaled
-array<int, BIN_PART_SIZE> conversion1(const byte data[]){
-	array<int, BIN_PART_SIZE> ret;
+vector<int> conversion1(const byte data[]){
+	vector<int> ret(BIN_PART_SIZE, 0);
 
 	for(long int i = 0; i < SIZE; i+=8){
 		for(int j = 0; j < 8; j++){
@@ -35,8 +35,8 @@ array<int, BIN_PART_SIZE> conversion1(const byte data[]){
 // 5.1 Conversion II
 // Takes a binary sequence and partitions it into 8-bit blocks
 // Blocks are then converted to decimal
-array<int, BIN_PART_SIZE> conversion2(const byte data[]){
-	array<int, BIN_PART_SIZE> ret;
+vector<int> conversion2(const byte data[]){
+	vector<int> ret(BIN_PART_SIZE, 0);
 
 	for(int i = 0; i < SIZE; i+=8){
 		for(int j = 0; j < 8; j++){
@@ -73,8 +73,8 @@ double excursion(const byte data[], const double mean){
 // Builds a array of the runs of consecutive values
 // Pushes +1 to the array if the value is >= the previous
 // Pushes -1 to the array if the value is < than the previous
-array<byte, SIZE> alt_sequence1(const byte data[]){
-	array<byte, SIZE> ret;
+vector<byte> alt_sequence1(const byte data[]){
+	vector<byte> ret(SIZE-1, 0);
 
 	for(long int i = 0; i < SIZE-1; i++){
 		ret[i] = ((data[i] > data[i+1]) ? -1 : 1);
@@ -87,8 +87,8 @@ array<byte, SIZE> alt_sequence1(const byte data[]){
 // Builds a array of the runs of values compared to the median
 // Pushes +1 to the array if the value is >= the median
 // Pushes -1 to the array if the value is < than the median
-array<byte, SIZE> alt_sequence2(const byte data[], const double median){
-	array<byte, SIZE> ret;
+vector<byte> alt_sequence2(const byte data[], const double median){
+	vector<byte> ret(SIZE, 0);
 
 	for(long int i = 0; i < SIZE; i++){
 		ret[i] = ((data[i] < median) ? -1 : 1);
@@ -101,7 +101,7 @@ array<byte, SIZE> alt_sequence2(const byte data[], const double median){
 // Determines the number of runs in the sequence.
 // A run is when multiple consecutive values are all >= the prior
 // or all < the prior
-long int num_directional_runs(const array<byte, SIZE> &alt_seq){
+long int num_directional_runs(const vector<byte> &alt_seq){
 	long int num_runs = 0;
 	for(long int i = 1; i < SIZE-1; i++){
 		if(alt_seq[i] != alt_seq[i-1]){
@@ -114,7 +114,7 @@ long int num_directional_runs(const array<byte, SIZE> &alt_seq){
 
 // 5.1.3 Length of Directional Runs
 // Determines the length of the longest run
-long int len_directional_runs(const array<byte, SIZE> &alt_seq){
+long int len_directional_runs(const vector<byte> &alt_seq){
 	long int max_run = 0;
 	long int run = 1;
 
@@ -140,7 +140,7 @@ long int len_directional_runs(const array<byte, SIZE> &alt_seq){
 // 5.1.4 Number of Increases and Decreases
 // Determines the maximum number of increases or decreases between
 // consecutive values
-long int num_increases_decreases(const array<byte, SIZE> &alt_seq){
+long int num_increases_decreases(const vector<byte> &alt_seq){
 	long int pos = 0;
 	for(long int i = 0; i < SIZE-1; i++){
 		if(alt_seq[i] == 1) pos++;
@@ -154,7 +154,7 @@ long int num_increases_decreases(const array<byte, SIZE> &alt_seq){
 // to the median of the dataset
 // This is similar to a normal run, but instead of being compared
 // to the previous value, each value is compared to the median
-long int num_runs_median(const array<byte, SIZE> &alt_seq){
+long int num_runs_median(const vector<byte> &alt_seq){
 	long int num_runs = 1;
 
 	for(long int i = 1; i < SIZE; i++){
@@ -169,7 +169,7 @@ long int num_runs_median(const array<byte, SIZE> &alt_seq){
 // 5.1.6 Length of Runs Based on the Median
 // Determines the length of the longest run that is constructed
 // with respect to the median
-long int len_runs_median(const array<byte, SIZE> &alt_seq){
+long int len_runs_median(const vector<byte> &alt_seq){
 	long int max_run = 0;
 	long int run = 1;
 
@@ -319,7 +319,7 @@ unsigned int compression(const byte data[]){
 * ---------------------------------------------
 */
 
-void conversions(const byte data[], array<int, BIN_PART_SIZE> &cs1, array<int, BIN_PART_SIZE> &cs2){
+void conversions(const byte data[], vector<int> &cs1, vector<int> &cs2){
 	cs1 = conversion1(data);
 	cs2 = conversion2(data);
 }
@@ -331,7 +331,7 @@ void excursion_test(const byte data[], const double mean, map<string, long doubl
 
 void directional_tests(const byte data[], const bool is_binary, map<string, long double> &stats){
 
-	array<byte, SIZE> alt_seq;
+	vector<byte> alt_seq;
 
 	if(is_binary){
 		alt_seq = alt_sequence1(data); // should be cs1
@@ -346,7 +346,7 @@ void directional_tests(const byte data[], const bool is_binary, map<string, long
 
 void consecutive_runs_tests(const byte data[], const double median, const bool is_binary, map<string, long double> &stats){
 
-	array<byte, SIZE> alt_seq;
+	vector<byte> alt_seq;
 
 	if(is_binary){
 		alt_seq = alt_sequence2(data, median); // should be cs2, 0.5
@@ -414,7 +414,7 @@ void compression_test(const byte data[], map<string, long double> &stats){
 void run_tests(const byte data[], const double mean, const double median, const bool is_binary, map<string, long double> &stats){
 
 	// Conversions for binary data
-	array<int, BIN_PART_SIZE> cs1, cs2;
+	vector<int> cs1, cs2;
 	if(is_binary){
 		conversions(data, cs1, cs2);
 	}
