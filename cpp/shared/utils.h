@@ -195,7 +195,7 @@ byte max_map(const map<byte, int> m){
 template<typename T>
 T max_vector(const vector<T> &vals){
 	T max = vals[0];
-	for(int i = 0; i < vals.size(); i++){
+	for(unsigned int i = 0; i < vals.size(); i++){
 		if(vals[i] > max){
 			max = vals[i];
 		}
@@ -207,7 +207,7 @@ T max_vector(const vector<T> &vals){
 template<typename T>
 T max_arr(const T* vals, const unsigned int k){
 	T max = vals[0];
-	for(int i = 0; i < k; i++){
+	for(unsigned int i = 0; i < k; i++){
 		if(vals[i] > max){
 			max = vals[i];
 		}
