@@ -19,12 +19,8 @@ int main(){
 	for(int j = 0; j < PERMS; ++j){
 		int r;
 		for(int i = SIZE-1; i > 0; --i){
-			r = (rand() / (float)RAND_MAX) * (i+1);
+			r = (rand() / (double)RAND_MAX) * (i+1);
 			SWAP(vals[r], vals[i]);
 		}
-	}
-
-	for(int i = 0; i < 10; i++){
-		std::cout << rand() << std::endl;
 	}
 }
