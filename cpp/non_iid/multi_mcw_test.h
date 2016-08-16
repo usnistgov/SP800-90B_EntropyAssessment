@@ -2,7 +2,7 @@
 
 byte most_common_recent(const byte data[], const int pos, const int length){
 
-	byte current_mode;
+	byte current_mode = 0;
 	int mode_frequency = -1;
 	array<int, 256> freq = {0};
 
