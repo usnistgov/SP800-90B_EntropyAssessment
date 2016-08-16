@@ -54,7 +54,7 @@ int main(int argc, char* argv[]){
 		cout << "Opening file: " << file_path << endl;
 	}
 
-	if(!read_file(file_path, dataset)){
+	if(!read_file(file_path, dataset, word_size)){
 		cout << "Error reading file. Need 1 million entries for the tests to work." << endl;
 		print_usage();
 		exit(-1);

@@ -48,7 +48,7 @@ int main(int argc, char* argv[]){
 		cout << "Opening file: " << file_path << endl;
 	}
 
-	if(!read_file(file_path, dataset)){
+	if(!read_file(file_path, dataset, word_size)){
 		cout << "Error reading file. Need 1 million entries for the tests to work." << endl;
 		print_usage();
 		exit(-1);
@@ -74,29 +74,29 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary, verbose);
+	// // Compute chi square stats
+	// bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary, verbose);
 
-	if(chi_square_test_pass){
-		cout << "** Passed chi square tests" << endl;
-	}else{
-		cout << "** Failed chi square tests" << endl;
-		return -1;
-	}
+	// if(chi_square_test_pass){
+	// 	cout << "** Passed chi square tests" << endl;
+	// }else{
+	// 	cout << "** Failed chi square tests" << endl;
+	// 	return -1;
+	// }
 
-	// Compute length of the longest repeated substring stats
-	bool len_LRS_test_pass = len_LRS_test(dataset, verbose);
+	// // Compute length of the longest repeated substring stats
+	// bool len_LRS_test_pass = len_LRS_test(dataset, verbose);
 
-	if(len_LRS_test_pass){
-		cout << "** Passed length of longest repeated substring test" << endl;
-	}else{
-		cout << "** Failed length of longest repeated substring test" << endl;
-		return -1;
-	}
+	// if(len_LRS_test_pass){
+	// 	cout << "** Passed length of longest repeated substring test" << endl;
+	// }else{
+	// 	cout << "** Failed length of longest repeated substring test" << endl;
+	// 	return -1;
+	// }
 
-	// Compute the min-entropy of the dataset
-	double H_min = most_common(dataset);
-	cout << "min-entropy = " << H_min << endl;
+	// // Compute the min-entropy of the dataset
+	// double H_min = most_common(dataset);
+	// cout << "min-entropy = " << H_min << endl;
 
 	return 0;
 }

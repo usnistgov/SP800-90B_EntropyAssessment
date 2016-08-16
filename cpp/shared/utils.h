@@ -24,12 +24,18 @@ typedef unsigned char byte;
 using namespace std;
 
 // Read in binary file to test
-bool read_file(const char* file_path, byte data[]){
+bool read_file(const char* file_path, byte data[], const int word_size){
 
 	FILE* file = fopen(file_path, "rb");
 	unsigned int rc = fread(data, 1, SIZE, file);
 	fclose(file);
 	
+	int mask = pow(2, word_size) - 1;
+
+	for(int i = 0; i < SIZE; i++){
+		data[i] &= mask;
+	}
+
 	if(rc != SIZE){
 		return false;
 	}
