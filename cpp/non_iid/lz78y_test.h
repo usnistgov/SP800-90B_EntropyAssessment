@@ -13,10 +13,8 @@ double LZ78Y_test(const byte data[]){
 	int D_size = 0;
 
 	// Step 3
+	array<byte, 16> substring;
 	for(int i = B+1; i < SIZE; i++){
-
-		// Pull entire region for faster look ups
-		array<byte, 16> substring, subregion = fast_substr(data, i-B-1, B);
 
 		#ifdef VERBOSE
 			if(i % 10000 == 0){
@@ -26,8 +24,7 @@ double LZ78Y_test(const byte data[]){
 
 		// Step 3a
 		for(int j = B; j >= 1; j--){
-
-			substring = fast_substr(subregion.data(), B-j, j);
+			substring = fast_substr(data, i-j-1, j);
 
 			if(D_size < max_dict_size){
 				if(D.find(substring) == D.end()){
@@ -41,11 +38,10 @@ double LZ78Y_test(const byte data[]){
 
 		// Step 3b
 		int max_count = 0;
-		byte prediction;
+		byte prediction = 0;
 
 		for(int j = B; j >= 1; j--){
-
-			substring = fast_substr(subregion.data(), B-j+1, j);
+			substring = fast_substr(data, i-j, j);
 
 			if(D.find(substring) != D.end()){
 				byte y = max_map(D[substring]);
