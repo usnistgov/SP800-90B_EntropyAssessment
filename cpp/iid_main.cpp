@@ -18,6 +18,7 @@ int main(int argc, char* argv[]){
 	byte dataset[SIZE];
 	bool verbose = false, is_binary;
 	double mean, median;
+	char* file_path;
 
 	// Parse args
 	if(argc != 3 && argc != 4){
@@ -27,7 +28,7 @@ int main(int argc, char* argv[]){
 	}else{
 
 		// Gather filename
-		const char* file_path = argv[1];
+		file_path = argv[1];
 
 		// Gather bits per word
 		const int word_size = atoi(argv[2]);
@@ -42,9 +43,6 @@ int main(int argc, char* argv[]){
 			verbose = (argv[3][1] == verbose_flag);
 		}
 	}
-
-	// Read in file
-	const char* file_path = "../bin/truerand_8bit.bin";
 
 	if(verbose){
 		cout << "Opening file: " << file_path << endl;
