@@ -428,15 +428,14 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	map<int, array<int, 2>> C;
 
 	// Original test results (t) and permuted test results (t' or tp)
-	map<string, long double> t;
-	if(!threading) map<string, long double> tp;
+	map<string, long double> t, tp;
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
 		C[i] = {0};
 
 		t[test_names[i]] = -1;
-		if(!threading) tp[test_names[i]] = -1;
+		tp[test_names[i]] = -1;
 	}
 
 	// Run initial tests
@@ -462,7 +461,8 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 		vector<future<map<string, long double>>> results;
 	}
 
-	cout << "Beginning permutation tests..." << endl;
+	// Permutation tests, shuffle -> run -> aggregate
+	cout << "Beginning permutation tests... these may take some time" << endl;
 	for(int i = 0; i < PERMS; i++){
 
 		if(verbose && !threading){
@@ -474,16 +474,16 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 			// Define lambda function to perform the tests
 			auto lambda_test = [&](){
 
-				map<string, long double> tp;
+				map<string, long double> result_tp;
 
 				for(int i = 0; i < num_tests; i++){
-					tp[test_names[i]] = -1;
+					result_tp[test_names[i]] = -1;
 				}
 
 				shuffle(data);
-				run_tests(data, mean, median, is_binary, tp);
+				run_tests(data, mean, median, is_binary, result_tp);
 
-				return tp;
+				return result_tp;
 			};
 
 			// Give lambda to the queue for the threads to run
