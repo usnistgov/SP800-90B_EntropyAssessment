@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bzlib.h" // sudo apt-get install libbz2-dev
+#include "ThreadPool.h"
 
 #include "../shared/utils.h"
 
@@ -395,7 +396,24 @@ void run_tests(const byte data[], const double mean, const double median, const 
 * ---------------------------------------------
 */
 
-bool permutation_tests(const byte ds[], const double mean, const double median, const bool is_binary, const bool verbose){
+void print_results(map<int, array<int, 2>> &C){
+	cout << endl << endl;
+	cout << "                statistic  C[i][0]  C[i][1]" << endl;
+	cout << "-------------------------------------------" << endl;
+	for(int i = 0; i < num_tests; i++){
+		if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
+			cout << setw(24) << test_names[i] << "*";
+		}else{
+			cout << setw(25) << test_names[i];
+		}
+		cout << setw(8) << C[i][0];
+		cout << setw(8) << C[i][1] << endl;
+	}
+	cout << "(* denotes failed test)" << endl;
+	cout << endl;
+}
+
+bool permutation_tests(const byte ds[], const double mean, const double median, const bool is_binary, const int num_threads, const bool verbose){
 
 	// We need a copy because the tests take in by reference and modify it
 	byte data[SIZE];
@@ -406,31 +424,37 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	// Counters for the pass/fail of each statistic
 	map<int, array<int, 2>> C;
 
-	// Original test results (t) and permuted test results (t')
-	map<string, long double> t, tp;
+	// Original test results (t) and permuted test results (t' or tp)
+	map<string, long double> t;
+	// map<string, long double> tp;
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
 		C[i] = {0};
 
 		t[test_names[i]] = -1;
-		tp[test_names[i]] = -1;
+		// tp[test_names[i]] = -1;
 	}
 
 	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
 	run_tests(data, mean, median, is_binary, t);
 
-	if(verbose){
-		cout << endl << "Initial test results" << endl;
-		for(int i = 0; i < num_tests; i++){
-			cout << setw(23) << test_names[i] << ": ";
-			cout << t[test_names[i]] << endl;
-		}
-		cout << endl;
-	}
+	/*
+	* if(verbose){
+	* 	cout << endl << "Initial test results" << endl;
+	* 	for(int i = 0; i < num_tests; i++){
+	* 		cout << setw(23) << test_names[i] << ": ";
+	* 		cout << t[test_names[i]] << endl;
+	* 	}
+	* 	cout << endl;
+	* }
+	*/
 
 	// Permutation tests, shuffle -> run -> aggregate
+	ThreadPool pool(num_threads);
+	vector<future<map<string, long double>>> results;
+
 	cout << "Beginning permutation tests..." << endl;
 	for(int i = 0; i < PERMS; i++){
 
@@ -438,35 +462,43 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
 		}
 
-		shuffle(data);
-		run_tests(data, mean, median, is_binary, tp);
-
-		// Aggregate results into the counters
-		for(int j = 0; j < num_tests; j++){
-			if(tp[test_names[j]] > t[test_names[j]]){
-				C[j][0]++;
-			}else if(tp[test_names[j]] == tp[test_names[j]]){
-				C[j][1]++;
+		auto lambda_test = [&](){
+			map<string, long double> tp;
+			for(int i = 0; i < num_tests; i++){
+				tp[test_names[i]] = -1;
 			}
-		}
+			shuffle(data);
+			run_tests(data, mean, median, is_binary, tp);
+			return tp;
+		};
+
+		results.emplace_back(pool.enqueue(lambda_test));
+
+		// shuffle(data);
+		// run_tests(data, mean, median, is_binary, tp);
 	}
 
-	if(verbose){
-		cout << endl << endl;
-		cout << "                statistic  C[i][0]  C[i][1]" << endl;
-		cout << "-------------------------------------------" << endl;
+	for(auto &&result : results){
+		auto tmp_result = result.get();
 		for(int i = 0; i < num_tests; i++){
-			if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){
-				cout << setw(24) << test_names[i] << "*";
-			}else{
-				cout << setw(25) << test_names[i];
+			if(tmp_result[test_names[i]] > t[test_names[i]]){
+				C[i][0]++;
+			}else if(tmp_result[test_names[i]] == t[test_names[i]]){
+				C[i][1]++;
 			}
-			cout << setw(8) << C[i][0];
-			cout << setw(8) << C[i][1] << endl;
 		}
-		cout << "(* denotes failed test)" << endl;
-		cout << endl;
 	}
+
+	// // Aggregate results into the counters
+	// for(int j = 0; j < num_tests; j++){
+	// 	if(tp[test_names[j]] > t[test_names[j]]){
+	// 		C[j][0]++;
+	// 	}else if(tp[test_names[j]] == t[test_names[j]]){
+	// 		C[j][1]++;
+	// 	}
+	// }
+
+	if(verbose) print_results(C);
 
 	for(int i = 0; i < num_tests; i++){
 		if((C[i][0] + C[i][1] <= 5) || C[i][0] >= PERMS-5){

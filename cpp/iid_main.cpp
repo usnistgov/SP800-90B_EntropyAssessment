@@ -9,6 +9,7 @@ void print_usage(){
 	cout << "Usage is: ./iid_main.out <file_name> <bits_per_word> [-v]" << endl;
 	cout << "\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words)." << endl;
 	cout << "\t <bits_per_word>: Must be between 1-8, inclusive." << endl;
+	cout << "\t <num_threads>: Number of threads for faster permutation tests. Recommended is 4. Supports 0-9 threads. Use 0 or 1 for no threads." << endl;
 	cout << "\t -v: Optional verbosity flag for more output." << endl;
 	cout << endl;
 }
@@ -19,9 +20,10 @@ int main(int argc, char* argv[]){
 	bool verbose = false, is_binary;
 	double mean, median;
 	char* file_path;
+	int word_size, num_threads = 4;
 
 	// Parse args
-	if(argc != 3 && argc != 4){
+	if(argc < 3){
 		cout << "Incorrect usage." << endl;
 		print_usage();
 		exit(-1);
@@ -31,17 +33,23 @@ int main(int argc, char* argv[]){
 		file_path = argv[1];
 
 		// Gather bits per word
-		const int word_size = atoi(argv[2]);
+		word_size = atoi(argv[2]);
 		if(word_size < 1 || word_size > 8){
 			cout << "Invalid bits per word." << endl;
 			print_usage();
 			exit(-1);
 		}
 
-		const char verbose_flag = 'v';
-		if(argc == 4){
-			verbose = (argv[3][1] == verbose_flag);
+		// Gather thread count
+		num_threads = atoi(argv[3]);
+		if(num_threads < 0 || num_threads > 9){
+			cout << "Invalid number of threads." << endl;
+			print_usage();
+			exit(-1);
 		}
+
+		const char verbose_flag = 'v';
+		verbose = (argv[4][1] == verbose_flag);
 	}
 
 	if(verbose){
@@ -65,7 +73,7 @@ int main(int argc, char* argv[]){
 	}
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary, verbose);
+	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary, num_threads, verbose);
 
 	if(perm_test_pass){
 		cout << "** Passed IID permutation tests" << endl;
