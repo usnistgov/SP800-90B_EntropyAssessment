@@ -456,6 +456,8 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 
 	// Permutation tests, shuffle -> run -> aggregate
 	if(threading){
+
+		// Generate pool of threads and prepare the results data structure
 		ThreadPool pool(num_threads);
 		vector<future<map<string, long double>>> results;
 	}
@@ -468,17 +470,26 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 		}
 
 		if(threading){
+
+			// Define lambda function to perform the tests
 			auto lambda_test = [&](){
+
 				map<string, long double> tp;
+
 				for(int i = 0; i < num_tests; i++){
 					tp[test_names[i]] = -1;
 				}
+
 				shuffle(data);
 				run_tests(data, mean, median, is_binary, tp);
+
 				return tp;
 			};
 
+			// Give lambda to the queue for the threads to run
 			results.emplace_back(pool.enqueue(lambda_test));
+
+		// If threading is not enabled
 		}else{
 			
 			shuffle(data);
@@ -496,8 +507,13 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	}
 
 	if(threading){
+
+		// Aggregate results
 		for(auto &&result : results){
+
+			// .get() can only be run once, but we need it twice
 			auto tmp_result = result.get();
+
 			for(int i = 0; i < num_tests; i++){
 				if(tmp_result[test_names[i]] > t[test_names[i]]){
 					C[i][0]++;
