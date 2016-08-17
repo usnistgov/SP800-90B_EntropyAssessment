@@ -426,14 +426,12 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 
 	// Original test results (t) and permuted test results (t' or tp)
 	map<string, long double> t;
-	// map<string, long double> tp;
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
 		C[i] = {0};
 
 		t[test_names[i]] = -1;
-		// tp[test_names[i]] = -1;
 	}
 
 	// Run initial tests
@@ -451,33 +449,34 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	* }
 	*/
 
-	// Permutation tests, shuffle -> run -> aggregate
+	// Spawn thread pool
 	ThreadPool pool(num_threads);
 	vector<future<map<string, long double>>> results;
 
-	cout << "Beginning permutation tests..." << endl;
+	// Permutation tests, shuffle -> run -> aggregate
+	cout << "Beginning permutation tests... these may take some time" << endl;
 	for(int i = 0; i < PERMS; i++){
 
-		if(verbose){
-			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
-		}
-
+		// Define a lambda function for the tests with result tp
 		auto lambda_test = [&](){
+			
 			map<string, long double> tp;
+			
 			for(int i = 0; i < num_tests; i++){
 				tp[test_names[i]] = -1;
 			}
+			
 			shuffle(data);
 			run_tests(data, mean, median, is_binary, tp);
+			
 			return tp;
 		};
 
+		// Send lambda function to the queue for the threads to run
 		results.emplace_back(pool.enqueue(lambda_test));
-
-		// shuffle(data);
-		// run_tests(data, mean, median, is_binary, tp);
 	}
 
+	// Aggregate results
 	for(auto &&result : results){
 		auto tmp_result = result.get();
 		for(int i = 0; i < num_tests; i++){
@@ -488,15 +487,6 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 			}
 		}
 	}
-
-	// // Aggregate results into the counters
-	// for(int j = 0; j < num_tests; j++){
-	// 	if(tp[test_names[j]] > t[test_names[j]]){
-	// 		C[j][0]++;
-	// 	}else if(tp[test_names[j]] == t[test_names[j]]){
-	// 		C[j][1]++;
-	// 	}
-	// }
 
 	if(verbose) print_results(C);
 
