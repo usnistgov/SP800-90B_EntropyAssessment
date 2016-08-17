@@ -415,6 +415,9 @@ void print_results(map<int, array<int, 2>> &C){
 
 bool permutation_tests(const byte ds[], const double mean, const double median, const bool is_binary, const int num_threads, const bool verbose){
 
+	// Determine if threading is active
+	bool threading = !(num_threads == 0 || num_threads == 1);
+
 	// We need a copy because the tests take in by reference and modify it
 	byte data[SIZE];
 	for(int i = 0; i < SIZE; i++){
@@ -426,14 +429,14 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 
 	// Original test results (t) and permuted test results (t' or tp)
 	map<string, long double> t;
-	// map<string, long double> tp;
+	if(!threading) map<string, long double> tp;
 
 	// Build map of results
 	for(int i = 0; i < num_tests; i++){
 		C[i] = {0};
 
 		t[test_names[i]] = -1;
-		// tp[test_names[i]] = -1;
+		if(!threading) tp[test_names[i]] = -1;
 	}
 
 	// Run initial tests
@@ -452,51 +455,58 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	*/
 
 	// Permutation tests, shuffle -> run -> aggregate
-	ThreadPool pool(num_threads);
-	vector<future<map<string, long double>>> results;
+	if(threading){
+		ThreadPool pool(num_threads);
+		vector<future<map<string, long double>>> results;
+	}
 
 	cout << "Beginning permutation tests..." << endl;
 	for(int i = 0; i < PERMS; i++){
 
-		if(verbose){
+		if(verbose && !threading){
 			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
 		}
 
-		auto lambda_test = [&](){
-			map<string, long double> tp;
-			for(int i = 0; i < num_tests; i++){
-				tp[test_names[i]] = -1;
-			}
+		if(threading){
+			auto lambda_test = [&](){
+				map<string, long double> tp;
+				for(int i = 0; i < num_tests; i++){
+					tp[test_names[i]] = -1;
+				}
+				shuffle(data);
+				run_tests(data, mean, median, is_binary, tp);
+				return tp;
+			};
+
+			results.emplace_back(pool.enqueue(lambda_test));
+		}else{
+			
 			shuffle(data);
 			run_tests(data, mean, median, is_binary, tp);
-			return tp;
-		};
-
-		results.emplace_back(pool.enqueue(lambda_test));
-
-		// shuffle(data);
-		// run_tests(data, mean, median, is_binary, tp);
-	}
-
-	for(auto &&result : results){
-		auto tmp_result = result.get();
-		for(int i = 0; i < num_tests; i++){
-			if(tmp_result[test_names[i]] > t[test_names[i]]){
-				C[i][0]++;
-			}else if(tmp_result[test_names[i]] == t[test_names[i]]){
-				C[i][1]++;
+			
+			// Aggregate results into the counters
+			for(int j = 0; j < num_tests; j++){
+			 	if(tp[test_names[j]] > t[test_names[j]]){
+			 		C[j][0]++;
+			 	}else if(tp[test_names[j]] == t[test_names[j]]){
+			 		C[j][1]++;
+			 	}
 			}
 		}
 	}
 
-	// // Aggregate results into the counters
-	// for(int j = 0; j < num_tests; j++){
-	// 	if(tp[test_names[j]] > t[test_names[j]]){
-	// 		C[j][0]++;
-	// 	}else if(tp[test_names[j]] == t[test_names[j]]){
-	// 		C[j][1]++;
-	// 	}
-	// }
+	if(threading){
+		for(auto &&result : results){
+			auto tmp_result = result.get();
+			for(int i = 0; i < num_tests; i++){
+				if(tmp_result[test_names[i]] > t[test_names[i]]){
+					C[i][0]++;
+				}else if(tmp_result[test_names[i]] == t[test_names[i]]){
+					C[i][1]++;
+				}
+			}
+		}
+	}
 
 	if(verbose) print_results(C);
 
