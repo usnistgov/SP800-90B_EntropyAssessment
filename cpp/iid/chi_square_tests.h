@@ -25,7 +25,7 @@ double calc_chi_square_cutoff(const int df){
 
 double chi_square_cutoff(const int df){
 	if(df < 101){
-		return critical_value[df];
+		return critical_value[df-1];
 	}else{
 		return calc_chi_square_cutoff(df);
 	}
@@ -285,6 +285,56 @@ void calc_T(const vector<vector<byte>> &bins, const vector<double> &bin_value, c
 */
 
 void binary_chi_square_independence(const byte data[], double &score, int &df){
+
+	double p0 = 0.0, p1 = 0.0;
+
+	for(int i = 0; i < SIZE; i++){
+		p0 += divide(1.0-data[i], SIZE);
+		p1 += divide(data[i], SIZE);
+	}
+
+	int m = 11;
+	double threshhold = divide(5, SIZE);
+	while(m > 1){
+		if(pow(p0, m) > threshhold && pow(p1, m) > threshhold){
+			break;
+		}else{
+			m--;
+		}
+	}
+
+	if(m <= 1){
+		score = 0.0;
+		df = 0;
+	}else{
+
+		double T = 0;
+
+		// Count occurances of m-bit tuples by converting to decimal and using as index in a vector
+		vector<int> occ(pow(2, m), 0);
+		for(int i = 0; i < SIZE-m+1; i++){
+
+			int decimal = 0;
+			for(int j = 0; j < m; j++){
+				decimal += (pow(2, j) * data[i+j]);
+			}
+
+			occ[decimal]++;
+		}
+
+		for(unsigned int i = 0; i < occ.size(); i++){
+
+			// GCC only
+			int w = __builtin_popcount(i);
+
+			double e = pow(p1, w) * pow(p0, m-w) * (SIZE-m+1);
+
+			T += pow(occ[i]-e, 2) / e;
+		}
+
+		score = T;
+		df = pow(2, m) - 1;
+	}
 }
 
 void chi_square_independence(const byte data[], double &score, int &df){
@@ -320,6 +370,32 @@ void chi_square_independence(const byte data[], double &score, int &df){
 }
 
 void binary_goodness_of_fit(const byte data[10][SUBLENGTH], double &score, int &df){
+
+	int ones = 0;
+	for(int i = 0; i < 10; i++){
+		for(int j = 0; j < SUBLENGTH; j++){
+			ones += data[i][j];
+		}
+	}
+
+	double p = divide(ones, SIZE);
+
+	double T = 0;
+
+	double e = p * SUBLENGTH;
+
+	for(int i = 0; i < 10; i++){
+		int o = 0;
+
+		for(int j = 0; j < SUBLENGTH; j++){
+			o += data[i][j];
+		}
+
+		T += pow(o-e, 2) / e;
+	}
+
+	score = T;
+	df = 9;
 }
 
 void goodness_of_fit(const byte subset_data[10][SUBLENGTH], double &score, int &df){
@@ -376,6 +452,10 @@ bool chi_square_tests(const byte data[], const double mean, const double median,
 	if(score > cutoff){
 		return false;
 	}
+
+	// Reset score and df
+	score = 0.0;
+	df = 0;
 
 	// Divide dataset into 10 equal subgroups
 	byte data_subsets[10][SUBLENGTH];
