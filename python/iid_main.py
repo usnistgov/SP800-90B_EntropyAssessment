@@ -77,14 +77,14 @@ if __name__ == '__main__':
             sys.exit(0)
 
         # run LRS test
-        # if lenLRS(dataset, verbose):
-        #     if verbose:
-        #         print ("** Passed LRS test")
-        #     print ("\nIID = True")
-        # else:
-        #     print ("** Failed LRS test")
-        #     print ("IID = False")
-        #     sys.exit(0)
+        if lenLRS(dataset, verbose):
+            if verbose:
+                print ("** Passed LRS test")
+            print ("\nIID = True")
+        else:
+            print ("** Failed LRS test")
+            print ("IID = False")
+            sys.exit(0)
 
         ############################################
         # STEP 2: Calculate min-entropy of dataset #

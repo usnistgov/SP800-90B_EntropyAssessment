@@ -92,15 +92,15 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	// // Compute length of the longest repeated substring stats
-	// bool len_LRS_test_pass = len_LRS_test(dataset, verbose);
+	// Compute length of the longest repeated substring stats
+	bool len_LRS_test_pass = len_LRS_test(dataset, verbose);
 
-	// if(len_LRS_test_pass){
-	// 	cout << "** Passed length of longest repeated substring test" << endl;
-	// }else{
-	// 	cout << "** Failed length of longest repeated substring test" << endl;
-	// 	return -1;
-	// }
+	if(len_LRS_test_pass){
+		cout << "** Passed length of longest repeated substring test" << endl;
+	}else{
+		cout << "** Failed length of longest repeated substring test" << endl;
+		return -1;
+	}
 
 	// Compute the min-entropy of the dataset
 	double H_min = most_common(dataset);

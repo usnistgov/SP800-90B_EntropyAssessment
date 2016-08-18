@@ -31,15 +31,12 @@ def lenLRS(s, verbose=False):
     # 2. calculate the collision probability
     p_col = sum(map(lambda x: x ** 2, p))
 
-    print(p_col)
-
     # 3. find the length of the longest repeated substring W
     W = find_v(s,1,2)
 
     # 4. Calculate the number of overlapping subsequences of length W in S and
     #    the number of pairs as (L-W+1) choose 2
     N = (L-W+1)*(L-W) / 2 
-    print("N: %d" % N)
 
     # 5. Let E be a binomially distributed random variable with parameters
     #    N = L-W+1 choose 2 and a probability of success p_col. Calculate the
