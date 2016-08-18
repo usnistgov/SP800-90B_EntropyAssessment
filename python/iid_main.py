@@ -54,17 +54,17 @@ if __name__ == '__main__':
         # STEP 1: Determine if Dataset is IID #
         #######################################
         # determine if dataset is IID using shuffle and Chi-square tests
-        # passed_permutation_tests = permutation_test(dataset, max_processes, verbose)
+        passed_permutation_tests = permutation_test(dataset, max_processes, verbose)
 
-        # if passed_permutation_tests:
-        #     if verbose:
-        #         print ("** Passed IID permutation tests")
-        # else:
-        #     if verbose:
-        #         print ("** Failed IID permutation tests")
-        #     print ("IID = False")
-        #     print ("min-entropy = 0.0")
-        #     sys.exit(0)
+        if passed_permutation_tests:
+            if verbose:
+                print ("** Passed IID permutation tests")
+        else:
+            if verbose:
+                print ("** Failed IID permutation tests")
+            print ("IID = False")
+            print ("min-entropy = 0.0")
+            sys.exit(0)
 
         # run chi-square tests on dataset
         if pass_chi_square_tests(dataset, verbose):
