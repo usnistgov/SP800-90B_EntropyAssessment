@@ -452,16 +452,13 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	* 	cout << endl;
 	* }
 	*/
+	
+	// Generate pool of threads and prepare the results data structure
+	ThreadPool pool((threading ? num_threads : 0));
+	vector<future<map<string, long double>>> results;
 
 	// Permutation tests, shuffle -> run -> aggregate
-	if(threading){
-
-		// Generate pool of threads and prepare the results data structure
-		ThreadPool pool(num_threads);
-		vector<future<map<string, long double>>> results;
-	}
-
-	// Permutation tests, shuffle -> run -> aggregate
+	cout << "Threading is " << (threading ? "on" : "off") << endl;
 	cout << "Beginning permutation tests... these may take some time" << endl;
 	for(int i = 0; i < PERMS; i++){
 
