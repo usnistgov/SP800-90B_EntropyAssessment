@@ -369,7 +369,7 @@ def permutation_test(s, verbose=False):
         t['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
 
     if is_binary:
-        sp2= altSequence2(cs2, 0.5)
+        sp2= altSequence2(s, 0.5)
     else:
         sp2= altSequence2(s, median)
     t['numRunsMedian'] = numRunsMedian(sp2)
@@ -449,7 +449,7 @@ def permutation_test(s, verbose=False):
             tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
 
         if is_binary:
-            sp2= altSequence2(cs2, 0.5)
+            sp2= altSequence2(s, 0.5)
         else:
             sp2= altSequence2(s, median)
         tp['numRunsMedian'] = numRunsMedian(sp2)
