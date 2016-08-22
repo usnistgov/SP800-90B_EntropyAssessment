@@ -300,7 +300,7 @@ def altSequence2(s, X):
     #1. Find the median X of S (argument into function)
     #2. construct a temporary sequence s'
     sp = []
-    for i in range(L-1):
+    for i in range(L):
         if s[i] < X:
             sp.append(-1)
         else:
