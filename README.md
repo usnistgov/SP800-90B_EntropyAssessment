@@ -34,6 +34,8 @@ an example of this command looks like
 
 	./a.out ../bin/truerand_4bit.bin 4 0 -v
 
+For threads, the recommended number of threads is 4. The program has not been tested with more than 4 threads. The most common case is that your CPU is quad-core or dual-quad core and using 4 threads maxes out the CPU. Using no threading for example, usually only uses 1 core on the CPU.
+
 All provided binaries are stored in the `bin/` folder, but if you have one you want to test, just link it using a relative path from the executable.
 
 An example also exists in the `Makefile` under
