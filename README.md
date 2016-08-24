@@ -1,7 +1,9 @@
 # EntropyAssessment
+
 Cryptographic random bit generators (RBGs), also known as random number generators (RNGs), require a noise source that produces digital outputs with some level of unpredictability, expressed as min-entropy. 
 
 ## Disclaimer
+
 This project is not currently associated with NIST, it is merely a C++ port form the provided Python code. 
 
 ## Requirements
