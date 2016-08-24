@@ -76,9 +76,9 @@ int main(int argc, char* argv[]){
 	bool perm_test_pass = permutation_tests(dataset, mean, median, is_binary, num_threads, verbose);
 
 	if(perm_test_pass){
-		cout << "** Passed IID permutation tests" << endl;
+		cout << "** Passed IID permutation tests" << endl << endl;
 	}else{
-		cout << "** Failed IID permutation tests" << endl;
+		cout << "** Failed IID permutation tests" << endl << endl;
 		return -1;
 	}
 
@@ -86,9 +86,9 @@ int main(int argc, char* argv[]){
 	bool chi_square_test_pass = chi_square_tests(dataset, mean, median, is_binary, verbose);
 
 	if(chi_square_test_pass){
-		cout << "** Passed chi square tests" << endl;
+		cout << "** Passed chi square tests" << endl << endl;
 	}else{
-		cout << "** Failed chi square tests" << endl;
+		cout << "** Failed chi square tests" << endl << endl;
 		return -1;
 	}
 
@@ -96,15 +96,15 @@ int main(int argc, char* argv[]){
 	bool len_LRS_test_pass = len_LRS_test(dataset, verbose);
 
 	if(len_LRS_test_pass){
-		cout << "** Passed length of longest repeated substring test" << endl;
+		cout << "** Passed length of longest repeated substring test" << endl << endl;
 	}else{
-		cout << "** Failed length of longest repeated substring test" << endl;
+		cout << "** Failed length of longest repeated substring test" << endl << endl;
 		return -1;
 	}
 
 	// Compute the min-entropy of the dataset
 	double H_min = most_common(dataset);
-	cout << "min-entropy = " << H_min << endl;
+	cout << "min-entropy = " << H_min << endl << endl;
 
 	return 0;
 }
