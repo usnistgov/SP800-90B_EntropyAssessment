@@ -6,7 +6,7 @@ This project is not currently associated with NIST, it is merely a C++ port form
 
 ## Requirements
 
-This code package requires a C++11 compiler. GCC is preferred (and the only platform tested). There is one method that involves a GCC-only method (`chi_square_tests.h`, `binary_goodness_of_fit()`). To run this you will need GCC.
+This code package requires a C++11 compiler. GCC is preferred (and the only platform tested). There is one method that involves a GCC-only method (`chi_square_tests.h -> binary_goodness_of_fit() -> __builtin_popcount()`). To run this you will need GCC.
 
 ## How to run
 
@@ -17,14 +17,6 @@ For IID tests use the following command to compile the program:
     g++ -std=c++11 iid_main.cpp -lbz2 -pthread
 
 If you want additional compiler optimizations (which make a huge difference in runtime) add `-O2` to the end of the command. There was not much noticed difference between anything `-O3` and above.
-
-If you want to use the `Makefile` for this command, just run
-
-    make iid
-
-or for optimized executables
-
-    make fast-iid
 
 Then you can run the program with
 
@@ -38,23 +30,11 @@ For threads, the recommended number of threads is 4. The program has not been te
 
 All provided binaries are stored in the `bin/` folder, but if you have one you want to test, just link it using a relative path from the executable.
 
-An example also exists in the `Makefile` under
-
-    make run-iid
-
-The verbose flag is recommended as the IID tests do take a while to run. The flag provides more detailed output as well as some progression on the project. (Note: When using threading, the progression is not available unfortunately.)
+The verbose flag `-v` is recommended as the IID tests do take a while to run. The flag provides more detailed output as well as some progression on the project. (Note: When using threading, the progression is not available unfortunately.)
 
 To run the non-IID tests, use the following command to compile:
 
     g++ -std=c++11 non_iid_main.cpp
-
-This command is found in the `Makefile` under
-
-	make non-iid
-
-Again optimization is available under
-
-	make fast-non-iid
 
 or just by adding `-O2` to the end of the compilation command.
 
@@ -62,11 +42,9 @@ Running works the same way but without the threading flag. This looks like
 
 	./a.out <binary_file> <bits_per_word> [-v]
 
-which is under the `Makefile` as 
+## Make
 
-	make run-non-iid
-
-Again using the verbose flag is recommended (and provided under the `Makefile`). 
+A `Makefile` is provided with examples of these commands. Take a look at the file before using though as there is no default action.
 
 ## Summary of Changes (Why the fork?)
 1. Python is slow
