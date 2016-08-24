@@ -8,6 +8,14 @@ This project is not currently associated with NIST, it is merely a C++ port form
 
 This code package requires a C++11 compiler. GCC is preferred (and the only platform tested). There is one method that involves a GCC-only method (`chi_square_tests.h -> binary_goodness_of_fit() -> __builtin_popcount()`). To run this you will need GCC.
 
+## Overview
+
+* `bin/` has a bunch of binary files for testing
+* `cpp/` holds the new codebase
+* `entropy_scraper/` holds a python script used to gather some binary files from the [NIST Beacon](www.nist.gov/itl/csd/ct/nist_beacon.cfm)
+* `python/` is the original codebase which is much more readable than the `c++` port
+* `test/` should be removed soon, was used for local testing of algorithms
+
 ## Notes for running
 
 * The verbose flag `-v` is recommended as the tests do take a while to run. The flag provides more detailed output as well as some progression on the project. (Note: When using threading for IID, the progression is not available unfortunately.)
