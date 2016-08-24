@@ -23,7 +23,7 @@ int main(int argc, char* argv[]){
 	int word_size, num_threads = 4;
 
 	// Parse args
-	if(argc < 3){
+	if(argc < 4){
 		cout << "Incorrect usage." << endl;
 		print_usage();
 		exit(-1);
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]){
 		}
 
 		const char verbose_flag = 'v';
-		verbose = (argv[4][1] == verbose_flag);
+		if(argc == 5) verbose = (argv[4][1] == verbose_flag);
 	}
 
 	if(verbose){
