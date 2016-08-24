@@ -12,7 +12,7 @@ This code package requires a C++11 compiler. GCC is preferred (and the only plat
 
 * `bin/` has a bunch of binary files for testing
 * `cpp/` holds the new codebase
-* `entropy_scraper/` holds a python script used to gather some binary files from the [NIST Beacon](https://www.nist.gov/itl/csd/ct/nist_beacon.cfm)
+* `entropy_scraper/` holds a python script used to gather some binary files from the [NIST Beacon](http://www.nist.gov/itl/csd/ct/nist_beacon.cfm)
 * `python/` is the original codebase which is much more readable than the `c++` port
 * `test/` should be removed soon, was used for local testing of algorithms
 
