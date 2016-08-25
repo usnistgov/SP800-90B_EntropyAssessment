@@ -82,4 +82,4 @@ For more information on the estimation methods, see [SP 800-90B second draft](ht
 * Use the `divide()` util for division to keep code clean
 * Enforce 1mil sample size
 * Restart tests?
-
+* Could use a birthday-attack type randomized approach to finding collisions in `permutation_tests.h`
