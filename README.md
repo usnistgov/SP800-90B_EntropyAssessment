@@ -81,3 +81,5 @@ For more information on the estimation methods, see [SP 800-90B second draft](ht
 * Clean up utils, don't know if they are all actually used
 * Use the `divide()` util for division to keep code clean
 * Enforce 1mil sample size
+* Restart tests?
+
