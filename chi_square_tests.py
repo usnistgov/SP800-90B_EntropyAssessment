@@ -17,6 +17,7 @@ import math
 from collections import OrderedDict, Counter
 from operator import itemgetter
 import itertools
+import sys
 
 # does the dataset pass the chi-square tests?
 def pass_chi_square_tests(dataset, verbose=False):
@@ -94,7 +95,10 @@ def chi_square_independence(s):
     more = True
     while more:
         try:
-            pair = pair_iterator.next()
+            if sys.version_info >= (3,0):
+                pair = pair_iterator.__next__()
+            else:
+                pair = pair_iterator.next()
             e[pair] = p[pair[0]]*p[pair[1]]*(L-1)
         except:
             more = False
