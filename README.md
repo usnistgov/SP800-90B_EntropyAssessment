@@ -2,6 +2,8 @@
 Cryptographic random bit generators (RBGs), also known as random number generators (RNGs), require a noise source that produces digital outputs with some level of unpredictability, expressed as min-entropy. 
 The SP800-90B_EntropyAssessment python package implements the min-entropy assessment methods included in the 2016 draft of Special Publication 800-90B.
 
+Please note that this code package was published to assist in the evaluation of the entropy estimation methods provided in the draft publication. As such, it is written to resemble the pseudocode in the draft, and is not optimized for performance. After SP 800-90B is finalized, the code will be ported to another language and performance improvements will be made.
+
 ##Disclaimer
 NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.
 
