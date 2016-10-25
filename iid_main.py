@@ -51,7 +51,7 @@ if __name__ == '__main__':
         # STEP 1: Determine if Dataset is IID #
         #######################################
         # determine if dataset is IID using shuffle and Chi-square tests
-        passed_permutation_tests = permutation_test(dataset, verbose)
+        passed_permutation_tests = permutation_test(list(dataset), verbose)
 
         if passed_permutation_tests:
             if verbose:
