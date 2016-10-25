@@ -147,7 +147,7 @@ def chi_square_independence(s):
 
     # caclulate the test statistic, T
     T = 0
-    for i in range(q):
+    for i in range(q+1):
         T += float((bins[i][1] - bins[i][2])**2)/bins[i][2]
 
     # return statistic with q-1 df (since our indices start at 0, df is q)
