@@ -17,14 +17,14 @@ def markov_test(s, k, alpha):
     # where k^2 is the number of terms in the transition matrix and d=128 is
     # the assumed length of the Markov chain.
     d = 128
-    alpha_exp = max(k * k, d)
-    alpha = math.pow(alpha, alpha_exp)
+    alpha_exp = k * k + k
+    alpha = math.pow(alpha, 1.0/alpha_exp)
 
     # 2. Estimate the initial state probability distribution, P, with:
     # Pi = min(1, o_i/L + epsilon)
     count = [s.count(i) for i in range(k)]
     L = len(s)
-    epsilon_term = math.log(1.0/(1.0 - alpha),2)
+    epsilon_term = math.log(1.0/(1.0 - alpha))
     epsilon = math.sqrt(epsilon_term/(2 * L))
     P = [min(1.0, count[i]/float(L) + epsilon) for i in range(k)]
 
