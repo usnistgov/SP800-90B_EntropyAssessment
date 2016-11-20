@@ -165,7 +165,7 @@ def maurer_universal_statistic(dataset, k):
     # 5. Compute the lower-bound of the 99% confidence interval for the mean 
     #    based on a normal distribution (student-T distribution is the nominal
     #    distribution, but the sample size is expected to be large.)
-    mu_bar = mu - (2.576*sigma)/sqrt(v)
+    mu_bar = mu - (2.5758293035489008*sigma)/sqrt(v)
     #print("\tmu=%g, sigma=%g, mu_bar=%g\n" % (mu, sigma, mu_bar))
     
     # 6. Using a binary search, solve for parameter p
