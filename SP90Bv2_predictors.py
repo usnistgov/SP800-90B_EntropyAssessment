@@ -9,12 +9,10 @@
 # March 3, 2106
 
 
-
 from collections import Counter, defaultdict
 import math
 import sys
-from decimal import * #needed for qn
-getcontext().prec = 10
+from is_close import isclose
 
 
 #############################
@@ -23,7 +21,7 @@ getcontext().prec = 10
 def calcPavg(C,N):
     alpha=0.01
     p_global = float(C)/N
-    p_globalprime = p_global + 2.576*math.sqrt(float(p_global)*(1-p_global)/(N-1))
+    p_globalprime = p_global + 2.5758293035489008*math.sqrt(float(p_global)*(1-p_global)/(N-1))
 
     return p_globalprime
 
@@ -38,23 +36,33 @@ def find_root(p,r):
     # Feller states that in practice, second element is usually sufficient.
     # Iterate 10 times and take result.
 
-    p = Decimal(str(p))
-    q = 1-p
+    p = p
+    q = 1.0-p
 
-    s = Decimal(1) #last value of sequence. This is s_0.
+    s = 1 #last value of sequence. This is s_0.
     for i in range(10):
-            s = 1+q*(p**r)*(s**(r+1))
+            s = 1.0+q*((p*s)**r)*s
     return s
-    
-def calc_qn(p,r,n):
-    p = Decimal(str(p))
-    q = 1-p
-    x = Decimal(str(find_root(p,r)))
-    
-    qn = (1-p*x)/Decimal((r+1-r*x)*q)
-    qn = qn/(x**(n+1))
 
-    return qn
+def iterativePowMul(m, b, e):
+    r = m
+    curPow = b
+    bitmask = 0x01
+
+    while e != 0:
+        if e & bitmask:
+            r = r * curPow 
+            e = e & (~bitmask)
+        curPow = curPow * curPow
+        bitmask = bitmask << 1
+
+    return r
+ 
+def calc_qn(p,r,n):
+    q = 1-p
+    x = find_root(p,r)
+    
+    return iterativePowMul((1.0-p*x)/((r+1.0-r*x)*q), 1/x, n+1)
 
 def findMaxRun(correct):
     #find the longest run
@@ -77,32 +85,59 @@ def findMaxRun(correct):
 def calcRun(correct, verbose=False):
     N = len(correct)
     alpha = 0.99
+    tolerance = 1e-09
+
+    #our target is close to 1.0, so the system DBL_EPSILON is fine
+    absEpsilon = 4.0 * sys.float_info.epsilon
     
     #find the longest run        
     r = findMaxRun(correct)
-    alpha = Decimal(str(alpha))
-    
+
+    ldomain = 0.0
+    hdomain = 1.0
+
+    lbound = ldomain
+    lvalue = float("inf")
+    hbound = hdomain
+    hvalue = float("-inf")
+
     # do a binary search for p
-    p = Decimal(str(0.5))
-    adj = Decimal(str(0.5))
+    center = (lbound + hbound) / 2
+    assert (center > ldomain) and (center < hdomain)
 
-    #find probability there is no run of length r+1
-    qn = calc_qn(p,r+1,N)
-     
+    centerVal = calc_qn(center,r+1,N)
 
-    for i in range(30): 
-            adj /= 2
-            if qn > alpha:
-                    p += adj
-            else:
-                    p -= adj
-                    
-            qn = calc_qn(p,r+1,N)
-            if abs(qn-alpha) <= 0.0001: break
-   
-    return p
-        
-    
+    for rounds in range(1076):
+        if isclose(alpha, centerVal, tolerance, absEpsilon):
+            return True, center, r+1
+
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found" % rounds)
+            return False, -1.0, r+1
+
+        if alpha < centerVal:
+            lbound = center
+            lvalue = centerVal
+        else:
+            hbound = center
+            hvalue = centerVal
+
+        if (alpha > lvalue) or (alpha < hvalue):
+            print ("Target is not within the search interval after %d rounds" % rounds)
+            return False, -1.0, r+1
+
+        center = (lbound + hbound) / 2.0
+
+        if (center <= ldomain) or (center >= hdomain):
+            print ("The next center is outside of the proscribed domain after %d rounds" % rounds)
+            return False, -1.0, r+1
+
+        centerVal = calc_qn(center,r+1,N)
+
+    if isclose(alpha, centerVal, tolerance, absEpsilon):
+        return True, p, r+1
+    else:
+        return False, -1.0, r+1
 
 ################################
 # MultiMCW Prediction Estimate #
@@ -141,7 +176,7 @@ def MultiMCW(S, verbose=False):
         if verbose and i%10000 ==0:
             sys.stdout.write("\rComputing MultiMCW Prediction Estimate: %d percent complete" % (float(i)/L*100))
             sys.stdout.flush()
-        
+
         #step 3a
         for j in [0,1,2,3]: #adjusted for index starting at 0
             if i>w[j]+1:
@@ -180,7 +215,9 @@ def MultiMCW(S, verbose=False):
     Pavg = calcPavg(C, N)
 
     #step 6
-    Prun = calcRun(correct)
+    foundIt, Prun, myr = calcRun(correct, verbose)
+    if not foundIt:
+        print ("Couldn't locate target")
 
     #step 7
     minH = -math.log(max(Pavg, Prun),2)
@@ -188,6 +225,7 @@ def MultiMCW(S, verbose=False):
     if verbose:
         print("\n\tPglobal: %f" % Pavg)
         print("\tPlocal: %f"% Prun)
+
 
     return [max(Pavg, Prun), minH]
 
@@ -243,7 +281,9 @@ def Lag(S, verbose=False):
     Pavg = calcPavg(C, N)
 
     #step 6
-    Prun = calcRun(correct)\
+    foundIt, Prun, myr = calcRun(correct, verbose)
+    if not foundIt:
+        print ("Couldn't locate target")
 
     #step 7
     minH = -math.log(max(Pavg, Prun),2)
@@ -331,7 +371,9 @@ def MultiMMC(S, verbose=False):
     Pavg = calcPavg(C, N)
 
     #step 7
-    Prun = calcRun(correct)
+    foundIt, Prun, myr = calcRun(correct, verbose)
+    if not foundIt:
+        print ("Couldn't locate target")
 
     #step 8
     minH = -math.log(max(Pavg, Prun),2)
@@ -399,7 +441,9 @@ def LZ78Y(S, verbose=False):
     Pavg = calcPavg(C, N)
 
     #step 5
-    Prun = calcRun(correct)
+    foundIt, Prun, myr = calcRun(correct, verbose)
+    if not foundIt:
+        print ("Couldn't locate target")
 
     #step 6
     minH = -math.log(max(Pavg, Prun),2)

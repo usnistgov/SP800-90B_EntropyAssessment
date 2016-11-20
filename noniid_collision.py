@@ -11,21 +11,73 @@
 # Updated by Kerry McKay, Nov 2015
 
 import math
+from is_close import isclose
+import numpy as np
+import sys
 
-# Continued fraction for F(1/z) derived from Eq. 8.9.2 at http://dlmf.nist.gov/8.9
 # Used in Step 9 in Section 6.3.2
-def F(n, zInv):
-    z = 1.0/zInv
-    denom = 1.0 + n/z
+#revised to be more consistent with the standard function in 8.9.2 here: http://dlmf.nist.gov/8.9
+#Note that if we call the continued fraction from the DLMF as L(a, z), we are interested in
+#F(k, z) = L(k+1, 1/z). Thus (in the notation of http://dlmf.nist.gov/3.10)
+#b_0 = 0, b_j = 1 (j>0)
+#a_1 = z, a_2 = (-k) z, a_3 = z, a_4 = (1-k)z, a_5 = 2z, etc.
+def F(k, z):
 
-    for i in range(1, n):
-        denom = z + -i/denom
-        denom = 1.0 + (n-i)/denom
+    #first, correct "a" so that it means the same thing as in 8.9.2
+    a = k+1
 
-    denom = z + -n/denom
-    return 1.0/denom
+    tiny = 1E-30
+    epsilon = sys.float_info.epsilon
+    maxiter = 500
 
+    #Now apply the modified Lentz's algorithm (see Numerical Recipes, section 5.2)
+    #f_0 = tiny, as b_0 = 0
+    #C_0 = tiny
+    #D_0 = 0
 
+    #j = 1 
+    #a_1 = z
+    #D_1 = 1 + a_1 D_0 = 1.0
+    #C_1 = 1 + a_1 / C_0 (or tiny if this yields 0)
+    D = 1.0
+    C = 1.0 + z/tiny
+    if C == 0.0:
+        C = tiny
+
+    delta = C * D
+    f = tiny*delta
+
+    for j in range(1, maxiter):
+        #2j
+        aj = (j-a)*z
+        D = 1.0 + aj * D
+        if D == 0.0:
+            D = tiny
+        C = 1.0 + aj/C
+        if C == 0.0:
+            C = tiny
+        D = 1.0 / D
+        delta = C * D
+        f = f*delta
+
+        #2j+1
+        aj = j*z
+        D = 1.0 + aj * D
+        if D == 0.0:
+            D = tiny
+        C = 1.0 + aj/C
+        if C == 0.0:
+            C = tiny
+        D = 1.0 / D
+        delta = C * D
+        f = f*delta
+
+        if abs(delta - 1.0) < epsilon:
+            #print('F: return %.17g after %d rounds' % (f, 2*j+1))
+            return f
+
+    print('Fell through after maximum iterations')
+    return f
 # Expected value of statistic based on one-parameter family of prob distributions
 # Used in step 9 of Section 6.3.2 (right side of equation)
 def calcEpS(p, k):
@@ -39,30 +91,66 @@ def calcEpS(p, k):
 
 
 # Binary search for p that solves equation in step 9 of Section 6.3.2
-def solve_for_p(mu_bar, n):
-    minp = 1.0/float(n) 
-    p_c = (1-minp)/2.0+minp
-    adj = (1-minp)
-    Ep = calcEpS(p_c, n)
-    Ep_maxvalid = calcEpS(1.0/float(n),n)
-    if mu_bar > Ep_maxvalid:
-        return False, 0.0
-    while abs(mu_bar - Ep) > .0001:
-        adj /= 2.0
-        if mu_bar < Ep:
-            p_c += adj
-            # caclEps will crash if p_c is exactly 1.
-            if p_c==1.0:
-                p_c -= 0.0001
-        else:
-            p_c -= adj
-            #occasionally dips below lowest possible pmax. This is to fix that
-            if p_c < minp:
-                p_c = minp
-        Ep = calcEpS(p_c, n)
-        #print('\tp = %g, Ep = %g, mu_bar = %g' % (p_c, Ep, mu_bar))
-    return True, p_c
+#note, this presumes a decreasing function
+def solve_for_p(mu_bar, n, tolerance=1e-09):
+    assert n > 0
 
+    if mu_bar > calcEpS(1.0/float(n), n):
+        print ("Sought value is greater than largest possible value. Giving up.")
+        return False, 0.0
+
+    #This is a hackish way of checking to see if the difference is within approximately 4 ULPs
+    absEpsilon = 4.0 * max((np.nextafter(mu_bar, mu_bar+1.0) - mu_bar), (mu_bar - np.nextafter(mu_bar, mu_bar-1.0)))
+    #If we don't have numpy, then this will work for most of the ranges we're concerned with
+    #absEpsilon = sys.float_info.epsilon
+
+    ldomain = 1.0/float(n)
+    hdomain = 1.0
+
+    lbound = ldomain
+    lvalue = float("inf")
+    hbound = hdomain
+    hvalue = float("-inf")
+
+    #Note that the bounds are in the interval [0, 1], so underflows
+    #are an issue, but overflows are not
+    center = (lbound + hbound) / 2
+    assert (center > ldomain) and (center < hdomain)
+
+    centerVal = calcEpS(center, n)
+
+    for j in range(1, 1076):
+        if isclose(mu_bar, centerVal, tolerance, absEpsilon):
+            return True, center
+
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found" % j)
+            return False, 0.0
+
+        if mu_bar < centerVal:
+            lbound = center
+            lvalue = centerVal
+        else:
+            hbound = center
+            hvalue = centerVal
+
+        if (mu_bar > lvalue) or (mu_bar < hvalue):
+            print ("Target is not within the search interval after %d rounds" % j)
+            return False, 0.0
+
+        center = (lbound + hbound) / 2.0
+
+        if (center <= ldomain) or (center >= hdomain):
+            print ("The next center is outside of the proscribed domain after %d rounds" % j)
+            return False, 0.0
+
+        centerVal = calcEpS(center, n)
+
+    if isclose(mu_bar, centerVal, tolerance, absEpsilon):
+        return True, p
+    else:
+        print ("Binary search failed to converge, or the sought value is outside the interval.")
+        return False, 0.0
 
 # Section 6.3.2- Collision Estimate
 def collision_test(s, n):
@@ -97,7 +185,7 @@ def collision_test(s, n):
 
     # 8. Compute the lower-bound of the confidence interval for the mean
     # based on a normal distribution with confidence level alpha=0.95
-    mu_bar = mu -(2.576 * sigma / math.sqrt(v))
+    mu_bar = mu -(2.5758293035489008 * sigma / math.sqrt(v))
 
     # 9. Using a binary search, solve for the parameter p s.t. Ep equals mu_bar
     valid, p = solve_for_p(mu_bar, n)

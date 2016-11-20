@@ -14,6 +14,11 @@
 from math import sqrt
 from math import log
 from math import floor
+
+import numpy as np
+import sys
+
+from is_close import isclose
 #from multiprocessing import Pool
 
 
@@ -49,26 +54,64 @@ def EppM(p, n, v):
 
 # Binary search algorithm to find value of p s.t. the expected value
 # of the Maurer Universal Statistic equals mu_bar within tolerance
-def solve_for_p(mu_bar, n, v, tolerance=0.00001):
-    minp = 1.0/float(n) 
-    p = (1-minp)/2.0+minp
-    adj = (1-minp)
+#presumes a decreasing function
+def solve_for_p(mu_bar, n, v, tolerance=1e-09):
+    assert n > 0
 
-    Ep_maxvalid = EppM(1.0/float(n), n, v)
-    if mu_bar > Ep_maxvalid:
+    #This is a hackish way of checking to see if the difference is within approximately 4 ULPs
+    absEpsilon = 4.0 * max((np.nextafter(mu_bar, mu_bar+1.0) - mu_bar), (mu_bar - np.nextafter(mu_bar, mu_bar-1.0)))
+    #If we don't have numpy, then this will work for most of the ranges we're concerned with
+    #absEpsilon = sys.float_info.epsilon
+
+    if mu_bar > EppM(1.0/float(n), n, v):
         return False, 0.0
 
-    Ep = EppM(p, n, v)
-    while abs(mu_bar - Ep) > tolerance:
-        adj /= 2.0
-        if mu_bar > Ep:
-            p -= adj
+    ldomain = 1.0/float(n)
+    hdomain = 1.0
+
+    lbound = ldomain
+    lvalue = float("inf")
+    hbound = hdomain
+    hvalue = float("-inf")
+
+    #Note that the bounds are in the interval [0, 1], so underflows
+    #are an issue, but overflows are not
+    center = (lbound + hbound) / 2
+    assert (center > ldomain) and (center < hdomain)
+
+    centerVal = EppM(center, n, v)
+
+    for rounds in range(1076):
+        if isclose(mu_bar, centerVal, tolerance, absEpsilon):
+            return True, center;
+
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found" % rounds)
+            return False, 0.0
+
+        if mu_bar < centerVal:
+            lbound = center
+            lvalue = centerVal
         else:
-            p += adj
-        Ep = EppM(p, n, v)
+            hbound = center
+            hvalue = centerVal
 
-    return True, p
+        if (mu_bar > lvalue) or (mu_bar < hvalue):
+            print ("Target is not within the search interval after %d rounds" % rounds)
+            return False, 0.0
 
+        center = (lbound + hbound) / 2.0
+
+        if (center <= ldomain) or (center >= hdomain):
+            print ("The next center is outside of the proscribed domain after %d rounds" % rounds)
+            return False, 0.0
+        
+        centerVal = EppM(center, n, v)
+
+    if isclose(mu_bar, centerVal, tolerance, absEpsilon):
+        return True, p
+    else:
+        return False, 0.0
 
 # Maurer Universal Statistic compression test
 
@@ -120,8 +163,9 @@ def maurer_universal_statistic(dataset, k):
     sigma = c*sigma
 
     # 5. Compute the lower-bound of the 99% confidence interval for the mean 
-    #    based on a normal distribution
-    mu_bar = mu - (2.576*sigma)/sqrt(v)
+    #    based on a normal distribution (student-T distribution is the nominal
+    #    distribution, but the sample size is expected to be large.)
+    mu_bar = mu - (2.5758293035489008*sigma)/sqrt(v)
     #print("\tmu=%g, sigma=%g, mu_bar=%g\n" % (mu, sigma, mu_bar))
     
     # 6. Using a binary search, solve for parameter p
