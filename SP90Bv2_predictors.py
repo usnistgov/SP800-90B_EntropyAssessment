@@ -21,7 +21,7 @@ from is_close import isclose
 def calcPavg(C,N):
     alpha=0.01
     p_global = float(C)/N
-    p_globalprime = p_global + 2.576*math.sqrt(float(p_global)*(1-p_global)/(N-1))
+    p_globalprime = p_global + 2.5758293035489008*math.sqrt(float(p_global)*(1-p_global)/(N-1))
 
     return p_globalprime
 

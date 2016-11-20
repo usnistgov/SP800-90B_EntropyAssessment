@@ -27,7 +27,7 @@ def most_common(s):
 
     # 2. Calculate an upper bound on the probability of the most common value,
     #    p_u
-    ubound = pmax + 2.576*math.sqrt( pmax * (1.0-pmax)/L )
+    ubound = pmax + 2.5758293035489008*math.sqrt( pmax * (1.0-pmax)/L )
     pu = min(1,ubound)
 
     # 3. The estimated min-entropy is -log_2(p_u)
