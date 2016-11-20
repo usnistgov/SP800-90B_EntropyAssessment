@@ -11,6 +11,9 @@
 # Updated by Kerry McKay, Nov 2015
 
 import math
+from is_close import isclose
+import numpy as np
+import sys
 
 # Continued fraction for F(1/z) derived from Eq. 8.9.2 at http://dlmf.nist.gov/8.9
 # Used in Step 9 in Section 6.3.2
@@ -25,7 +28,6 @@ def F(n, zInv):
     denom = z + -n/denom
     return 1.0/denom
 
-
 # Expected value of statistic based on one-parameter family of prob distributions
 # Used in step 9 of Section 6.3.2 (right side of equation)
 def calcEpS(p, k):
@@ -39,30 +41,66 @@ def calcEpS(p, k):
 
 
 # Binary search for p that solves equation in step 9 of Section 6.3.2
-def solve_for_p(mu_bar, n):
-    minp = 1.0/float(n) 
-    p_c = (1-minp)/2.0+minp
-    adj = (1-minp)
-    Ep = calcEpS(p_c, n)
-    Ep_maxvalid = calcEpS(1.0/float(n),n)
-    if mu_bar > Ep_maxvalid:
-        return False, 0.0
-    while abs(mu_bar - Ep) > .0001:
-        adj /= 2.0
-        if mu_bar < Ep:
-            p_c += adj
-            # caclEps will crash if p_c is exactly 1.
-            if p_c==1.0:
-                p_c -= 0.0001
-        else:
-            p_c -= adj
-            #occasionally dips below lowest possible pmax. This is to fix that
-            if p_c < minp:
-                p_c = minp
-        Ep = calcEpS(p_c, n)
-        #print('\tp = %g, Ep = %g, mu_bar = %g' % (p_c, Ep, mu_bar))
-    return True, p_c
+#note, this presumes a decreasing function
+def solve_for_p(mu_bar, n, tolerance=1e-09):
+    assert n > 0
 
+    if mu_bar > calcEpS(1.0/float(n), n):
+        print ("Sought value is greater than largest possible value. Giving up.")
+        return False, 0.0
+
+    #This is a hackish way of checking to see if the difference is within approximately 4 ULPs
+    absEpsilon = 4.0 * max((np.nextafter(mu_bar, mu_bar+1.0) - mu_bar), (mu_bar - np.nextafter(mu_bar, mu_bar-1.0)))
+    #If we don't have numpy, then this will work for most of the ranges we're concerned with
+    #absEpsilon = sys.float_info.epsilon
+
+    ldomain = 1.0/float(n)
+    hdomain = 1.0
+
+    lbound = ldomain
+    lvalue = float("inf")
+    hbound = hdomain
+    hvalue = float("-inf")
+
+    #Note that the bounds are in the interval [0, 1], so underflows
+    #are an issue, but overflows are not
+    center = (lbound + hbound) / 2
+    assert (center > ldomain) and (center < hdomain)
+
+    centerVal = calcEpS(center, n)
+
+    for j in range(1, 1076):
+        if isclose(mu_bar, centerVal, tolerance, absEpsilon):
+            return True, center
+
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found" % j)
+            return False, 0.0
+
+        if mu_bar < centerVal:
+            lbound = center
+            lvalue = centerVal
+        else:
+            hbound = center
+            hvalue = centerVal
+
+        if (mu_bar > lvalue) or (mu_bar < hvalue):
+            print ("Target is not within the search interval after %d rounds" % j)
+            return False, 0.0
+
+        center = (lbound + hbound) / 2.0
+
+        if (center <= ldomain) or (center >= hdomain):
+            print ("The next center is outside of the proscribed domain after %d rounds" % j)
+            return False, 0.0
+
+        centerVal = calcEpS(center, n)
+
+    if isclose(mu_bar, centerVal, tolerance, absEpsilon):
+        return True, p
+    else:
+        print ("Binary search failed to converge, or the sought value is outside the interval.")
+        return False, 0.0
 
 # Section 6.3.2- Collision Estimate
 def collision_test(s, n):
