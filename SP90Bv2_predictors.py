@@ -173,10 +173,10 @@ def MultiMCW(S, verbose=False):
     
     #step 3
     for i in range(w[0]+1,L+1):
-        if verbose and i%10000 ==0:
-            sys.stdout.write("\rComputing MultiMCW Prediction Estimate: %d percent complete" % (float(i)/L*100))
-            sys.stdout.flush()
-
+        #if verbose and i%10000 ==0:
+        #    sys.stdout.write("\rComputing MultiMCW Prediction Estimate: %d percent complete" % (float(i)/L*100))
+        #    sys.stdout.flush()
+        
         #step 3a
         for j in [0,1,2,3]: #adjusted for index starting at 0
             if i>w[j]+1:
@@ -223,9 +223,8 @@ def MultiMCW(S, verbose=False):
     minH = -math.log(max(Pavg, Prun),2)
     
     if verbose:
-        print("\n\tPglobal: %f" % Pavg)
-        print("\tPlocal: %f"% Prun)
-
+        print ("\tPglobal: %f (C = %d)" % (Pavg, C))
+        print ("\tPlocal: %f (r = %d)" % (Prun, myr))
 
     return [max(Pavg, Prun), minH]
 
@@ -248,9 +247,9 @@ def Lag(S, verbose=False):
 
     #step 3
     for i in range(2,L+1):
-        if verbose and i%10000 ==0:
-            sys.stdout.write("\rComputing Lag Prediction Estimate: %d percent complete" % (float(i)/L*100))
-            sys.stdout.flush()
+        #if verbose and i%10000 ==0:
+        #    sys.stdout.write("\rComputing Lag Prediction Estimate: %d percent complete" % (float(i)/L*100))
+        #    sys.stdout.flush()
 
         #step 3a
         for d in range(1,D+1):
@@ -290,8 +289,8 @@ def Lag(S, verbose=False):
     
     
     if verbose:
-        print("\n\tPglobal: %f" % Pavg)
-        print("\tPlocal: %f"% Prun)
+        print ("\tPglobal: %f (C = %d)" % (Pavg, C))
+        print ("\tPlocal: %f (r = %d)" % (Prun, myr))
 
     return [max(Pavg, Prun), minH]
 
@@ -321,9 +320,9 @@ def MultiMMC(S, verbose=False):
 
     #step 4
     for i in range(3, L+1):
-        if verbose and i%10000 ==0:
-            sys.stdout.write("\rComputing MultiMMC Prediction Estimate: %d percent complete" % (float(i)/L*100))
-            sys.stdout.flush()
+        #if verbose and i%10000 ==0:
+        #    sys.stdout.write("\rComputing MultiMMC Prediction Estimate: %d percent complete" % (float(i)/L*100))
+        #    sys.stdout.flush()
 
         #step 4a
         for d in depths:
@@ -379,8 +378,8 @@ def MultiMMC(S, verbose=False):
     minH = -math.log(max(Pavg, Prun),2)
     
     if verbose:
-        print("\n\tPglobal: %f" % Pavg)
-        print("\tPlocal: %f"% Prun)
+        print ("\tPglobal: %f (C = %d)" % (Pavg, C))
+        print ("\tPlocal: %f (r = %d)" % (Prun, myr))
 
     return [max(Pavg, Prun), minH]
 
@@ -407,9 +406,9 @@ def LZ78Y(S, verbose=False):
     # step 3
     for i in range(B+2, L+1):
 
-        if verbose and i%10000==0:
-            sys.stdout.write("\rComputing LZ78Y Prediction Estimate: %d percent complete" % (float(i)/L*100))
-            sys.stdout.flush()
+        #if verbose and i%10000==0:
+        #    sys.stdout.write("\rComputing LZ78Y Prediction Estimate: %d percent complete" % (float(i)/L*100))
+        #    sys.stdout.flush()
 
         #step 3a: add previous element to dictionary
         for j in range(B,0,-1):
@@ -448,8 +447,8 @@ def LZ78Y(S, verbose=False):
     #step 6
     minH = -math.log(max(Pavg, Prun),2)
     if verbose:
-        print("\n\tPglobal: %f" % Pavg)
-        print("\tPlocal: %f"% Prun)
+        print ("\tPglobal: %f (C = %d)" % (Pavg, C))
+        print ("\tPlocal: %f (r = %d)" % (Prun, myr))
 
     return [max(Pavg, Prun), minH]
 

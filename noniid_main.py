@@ -69,79 +69,97 @@ if __name__ == '__main__':
 
 
         if verbose:
-            print ("\nRunning entropic statistic estimates:")
+            print ("Running entropic statistic estimates:")
             
         # Section 6.3.1 The Most Common Value Estimate
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         pmax, minH = most_common(dataset)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("- Most Common Value Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("- Most Common Value Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.2 The Collision Estimate
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         pmax, minH = collision_test(dataset, k)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("- Collision Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("- Collision Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.3 The Markov Estimate
         # If more than 6 bits per symbol, map down to 6 bits per symbol and run Markov test
         if use_bits > 6:
+            startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
             pmax, minH = markov_test([s&63 for s in dataset], 64, 0.99)
+            endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
             if verbose:
-                print("- Markov Estimate (map 6 bits): p(max) = %g, min-entropy = %g" % (pmax, minH))
+                print("- Markov Estimate (map 6 bits): p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         else:
+            startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
             pmax, minH = markov_test(mapped, k, 0.99)
+            endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
             if verbose:
-                print("- Markov Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+                print("- Markov Estimate: p(max) = %g, min-entropy = %g  (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.4 The Compression Estimate
-        pmax, minH = maurer_universal_statistic(mapped, k)
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
+        pmax, minH = maurer_universal_statistic(mapped, k, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("- Compression Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
-
         # Section 6.3.5 The t-Tuple Estimate
-        pmax, minH = t_tuple(dataset)
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
+        pmax, minH = t_tuple(dataset, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("- t-Tuple Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
         
         # Section 6.3.6 The LRS Estimate
-        pmax, minH = LRS_estimate(dataset)
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
+        pmax, minH = LRS_estimate(dataset, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("- LRS Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("- LRS Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
 
-        if verbose:
-            print ("\nRunning predictor estimates:")
-
         # Section 6.3.7 Multi Most Common in Window prediction estimate
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         pmax, minH = MultiMCW(dataset, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+            print("MultiMCW Prediction Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
         # Section 6.3.8 Lag prediction estimate
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         pmax, minH = Lag(dataset, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+            print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
 
         # Section 6.3.9 MultiMMC prediction estimate
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         pmax, minH = MultiMMC(dataset, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
+            print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
         
 
         # Section 6.3.10 LZ78Y prediction estimate
+        startTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         pmax, minH = LZ78Y(dataset, verbose)
+        endTime = time.clock_gettime(time.CLOCK_PROCESS_CPUTIME_ID);
         if verbose:
-            print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
+            print("LZ78Y Prediction Estimate: p(max) = %g, min-entropy = %g (%d ns)" % (pmax, minH, 1000000000*(endTime - startTime)))
         minEntropy = min(minH, minEntropy)
 
         print("-----------------------")

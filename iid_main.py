@@ -45,7 +45,7 @@ if __name__ == '__main__':
             # print file and dataset details
             print ("Read in file %s, %d bytes long." % (datafile, len(bytes_in)))
             print ("Dataset: %d %d-bit symbols, %d symbols in alphabet." % (len(dataset), bits_per_symbol, k))
-            print ("Output symbol values: min = %d, max = %d\n" % (min(dataset), max(dataset)))
+            print ("Output symbol values: min = %d, max = %d" % (min(dataset), max(dataset)))
 
         #######################################
         # STEP 1: Determine if Dataset is IID #
@@ -76,7 +76,7 @@ if __name__ == '__main__':
         if lenLRS(dataset, verbose):
             if verbose:
                 print ("** Passed LRS test")
-            print ("\nIID = True")
+            print ("IID = True")
         else:
             print ("** Failed LRS test")
             print ("IID = False")

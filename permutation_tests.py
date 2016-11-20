@@ -413,15 +413,28 @@ def permutation_test(s, verbose=False):
         
     t['compression'] = compression(s)
 
+    # Print everything
+    print ("Max excursion: %.17g" % (t['excursion']))
+    print ("Number of directional runs: %u" % (t['numDirectionalRuns']))
+    print ("Longest directional run: %u" % (t['lenDirectionalRuns']))
+    print ("Maximum Changes: %u" % (t['numIncreasesDecreases']))
+    print ("Number of runs: %u" % (t['numRunsMedian']))
+    print ("Longest run: %u" % (t['lenRunsMedian']))
+    print ("Mean Collision Dist: %.17g" % (t['avgCollision']))
+    print ("Max Collision Dist: %u" % (t['maxCollision']))
+    print ("Periodicity: %u %u %u %u %u" % (t['periodicity(1)'], t['periodicity(2)'], t['periodicity(8)'], t['periodicity(16)'], t['periodicity(32)']))
+    print ("Covariance: %u %u %u %u %u" % (t['covariance(1)'], t['covariance(2)'], t['covariance(8)'], t['covariance(16)'], t['covariance(32)']))
+    print ("Compressed to: %u" % (t['compression']))
+
     # 2. For j=1 to 10000
         # 2.1 Permute the input data using Fisher-Yates
     
     if verbose:
         print ("Calculating statistics on permuted sequences")
     for j in range(10000):
-        if verbose:
-            sys.stdout.write("\rpermutation tests:\t%.2f percent complete" % (float(j)/100))
-            sys.stdout.flush()
+        #if verbose:
+        #    sys.stdout.write("\rpermutation tests:\t%.2f percent complete" % (float(j)/100))
+        #    sys.stdout.flush()
         shuffle(s)
 
         # 2.2 for each test i

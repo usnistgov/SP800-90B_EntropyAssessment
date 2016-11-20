@@ -29,7 +29,7 @@ def t_tuple(s, verbose=False):
         i += 1
         c = Counter(find_tuples(s, i))
         if verbose:
-          print ("\ntuples (and counts):", c)
+          #print ("\ntuples (and counts):", c)
           print ("max occurances:",c.most_common(1))
         count = c.most_common(1)[0][1]
         Q.append(c.most_common(1)[0][1])
@@ -41,7 +41,7 @@ def t_tuple(s, verbose=False):
     t = i-1
 
     if verbose:
-        print ("\nt:", t)
+        print ("t:", t)
         print ("Q:", Q)
 
 

@@ -123,7 +123,7 @@ def solve_for_p(mu_bar, n, v, tolerance=1e-09):
 # index value and not a difference.
 
 # Sec. 6.3.4 The Compression Estimate
-def maurer_universal_statistic(dataset, k):
+def maurer_universal_statistic(dataset, k, verbose=False):
     # 1. Partition the dataset into two disjoint groups. These two groups
     #    will form the dictionary and the test data.
     # 1.a. Create the dictionary from the first d=1000 observations,
@@ -157,6 +157,7 @@ def maurer_universal_statistic(dataset, k):
     b = floor(log(max(dataset),2.0))+1
     D = [log(Di, 2.0) for Di in D]
     mu = sum(D) / v
+    #compute the variance of the dataset
     c = 0.7 - 0.8/b + (4+32.0/b)*(v**(-3.0/b))/15
     sigma = sum([Di * Di for Di in D])/v - (mu * mu)
     sigma = sqrt(sigma)
@@ -166,7 +167,8 @@ def maurer_universal_statistic(dataset, k):
     #    based on a normal distribution (student-T distribution is the nominal
     #    distribution, but the sample size is expected to be large.)
     mu_bar = mu - (2.5758293035489008*sigma)/sqrt(v)
-    #print("\tmu=%g, sigma=%g, mu_bar=%g\n" % (mu, sigma, mu_bar))
+    if verbose: 
+        print("\tmu=%g, sigma=%g, mu_bar=%g" % (mu, sigma, mu_bar))
     
     # 6. Using a binary search, solve for parameter p
     valid, p = solve_for_p(mu_bar, k, v)
