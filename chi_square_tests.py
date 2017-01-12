@@ -166,6 +166,8 @@ def kbit_element(bits):
 
 
 # Testing independence for Binary Data - Section 5.2.3
+#Only results in a chi-square distribution if they are non-overlapping
+#symbols -- JEH
 def binary_chi_square_independence(s):
     L = len(s)
 
@@ -191,8 +193,9 @@ def binary_chi_square_independence(s):
         # 2a. Let o be the number of times that the pattern occurs in the
         #     input sequence S. Note that the tuples are allowed to overlap.
         m_tuples = itertools.product([0,1], repeat=m)
+        M = math.floor(L / m)
         o = {}
-        for i in range(L-m+1):
+        for i in range(0, L, m):
             t = tuple(s[i:i+m])
             o[t] = o.get(t, 0) + 1
 
@@ -200,13 +203,13 @@ def binary_chi_square_independence(s):
             # 2b. Let w be the number of ones in the tuple
             w = sum(t)
             
-            # 2c. Let e = p_1**w * p_0**(m-w) * (L-m+1)
-            e = math.pow(p1,w)*math.pow(p0,m-w)*(L-m+1)
+            # 2c. Let e = p_1**w * p_0**(m-w) * (M)
+            e = math.pow(p1,w)*math.pow(p0,m-w)*(M)
 
             #update T
             T += math.pow(o.get(tuple(t),0)-e,2)/float(e)
                 
-        return T, math.pow(2,m)-1
+        return T, math.pow(2,m)-2
     
     else:
         return None, None
@@ -224,6 +227,8 @@ def binary_goodness_of_fit(subsets):
     c = [sum(s) for s in subsets] # number of ones in all 10 subsets
     L = sum([len(s) for s in subsets]) # number of elements in all 10 subsets
     p = sum(c)/float(L) #proportion
+    #Note, this proportion is ultimately based on number of 1s over all, 
+    #so reduces the degrees of freedom by 1
 
     
     # 2. Partition S into ten non-overlapping sub-sequences of length floor(L/10).
@@ -233,15 +238,18 @@ def binary_goodness_of_fit(subsets):
     T = 0
 
     # 4. Let the expected number of ones in each sub-sequence S_d be e=p*floor(L/10)
-    e = p*math.floor(L/10)
+    M = math.floor(L/10)
+    e1 = p*M
+    e0 = M - e1
 
     # 5. for d = 0 to 9
     for d in range(10):
         # 5a. Let o_i be the number of ones in S_d
-        o = sum(subsets[d])
+        o1 = sum(subsets[d])
+        o0 = M - o1
 
         # 5b. update the test statistic, T
-        T += float(o - e)**2/e
+        T += float(o1 - e1)**2/e1 + float(o0 - e0)**2/e0
 
     # T is a chi-square random variable with 9 degrees of freedom.
     return T, 9
