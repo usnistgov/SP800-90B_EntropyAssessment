@@ -61,7 +61,7 @@ def solve_for_p(mu_bar, n, v, tolerance=1e-09):
     #This is a hackish way of checking to see if the difference is within approximately 4 ULPs
     absEpsilon = 4.0 * max((np.nextafter(mu_bar, mu_bar+1.0) - mu_bar), (mu_bar - np.nextafter(mu_bar, mu_bar-1.0)))
     #If we don't have numpy, then this will work for most of the ranges we're concerned with
-    #absEpsilon = sys.float_info.epsilon
+    #absEpsilon = 4.0*sys.float_info.epsilon
 
     if mu_bar > EppM(1.0/float(n), n, v):
         return False, 0.0
@@ -83,11 +83,7 @@ def solve_for_p(mu_bar, n, v, tolerance=1e-09):
 
     for rounds in range(1076):
         if isclose(mu_bar, centerVal, tolerance, absEpsilon):
-            return True, center;
-
-        if lbound >= hbound:
-            print ("Bounds have converged after %d rounds and target was not found" % rounds)
-            return False, 0.0
+            return True, center
 
         if mu_bar < centerVal:
             lbound = center
@@ -96,22 +92,44 @@ def solve_for_p(mu_bar, n, v, tolerance=1e-09):
             hbound = center
             hvalue = centerVal
 
+#We now verify that ldomain <= lbound < center < hbound <= hdomain
+#and that target in [ hvalue, lvalue ]
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found. Returning largest bound." % rounds)
+            return True, min(max(lbound, hbound), hdomain)
+
+        if (lbound < ldomain) or (lbound > hdomain) or (hbound < ldomain) or (hbound > hdomain):
+            print ("The current search interval is not a subset of the domain after %d rounds and target was not found." % rounds)
+            return False, 0.0
+
         if (mu_bar > lvalue) or (mu_bar < hvalue):
             print ("Target is not within the search interval after %d rounds" % rounds)
             return False, 0.0
 
+        lastCenter = center
         center = (lbound + hbound) / 2.0
 
-        if (center <= ldomain) or (center >= hdomain):
-            print ("The next center is outside of the proscribed domain after %d rounds" % rounds)
+        if (center <= lbound) or (center >= hbound):
+            print ("The next center is outside of the search interval after %d rounds" % rounds)
             return False, 0.0
+
+        if lastCenter == center:
+            print ("Detected cycle after %d rounds. Returning upper bound." % rounds)
+            return True, hbound
         
         centerVal = EppM(center, n, v)
 
+        #invariant: if this isn't true, then this isn't loosely monotonic
+        if (centerVal < hvalue) or (centerVal > lvalue):
+            print ("CenterVal is not within the search value interval after %d rounds. Returning upper bound." % rounds)
+            return True, hbound
+
+    #We ran out of rounds for the binary search
     if isclose(mu_bar, centerVal, tolerance, absEpsilon):
         return True, p
     else:
-        return False, 0.0
+        print ("Ran out of search rounds. Returning upper bound")
+        return True, min(hbound, hdomain)
 
 # Maurer Universal Statistic compression test
 

@@ -78,6 +78,7 @@ def F(k, z):
 
     print('Fell through after maximum iterations')
     return f
+
 # Expected value of statistic based on one-parameter family of prob distributions
 # Used in step 9 of Section 6.3.2 (right side of equation)
 def calcEpS(p, k):
@@ -102,7 +103,7 @@ def solve_for_p(mu_bar, n, tolerance=1e-09):
     #This is a hackish way of checking to see if the difference is within approximately 4 ULPs
     absEpsilon = 4.0 * max((np.nextafter(mu_bar, mu_bar+1.0) - mu_bar), (mu_bar - np.nextafter(mu_bar, mu_bar-1.0)))
     #If we don't have numpy, then this will work for most of the ranges we're concerned with
-    #absEpsilon = sys.float_info.epsilon
+    #absEpsilon = 4.0 * sys.float_info.epsilon
 
     ldomain = 1.0/float(n)
     hdomain = 1.0
@@ -123,10 +124,6 @@ def solve_for_p(mu_bar, n, tolerance=1e-09):
         if isclose(mu_bar, centerVal, tolerance, absEpsilon):
             return True, center
 
-        if lbound >= hbound:
-            print ("Bounds have converged after %d rounds and target was not found" % j)
-            return False, 0.0
-
         if mu_bar < centerVal:
             lbound = center
             lvalue = centerVal
@@ -134,23 +131,43 @@ def solve_for_p(mu_bar, n, tolerance=1e-09):
             hbound = center
             hvalue = centerVal
 
+#We now verify that ldomain <= lbound < center < hbound <= hdomain
+#and that target in [ hvalue, lvalue ]
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found. Returning largest bound." % rounds)
+            return True, min(max(lbound, hbound), hdomain)
+
+        if (lbound < ldomain) or (lbound > hdomain) or (hbound < ldomain) or (hbound > hdomain):
+            print ("The current search interval is not a subset of the domain after %d rounds and target was not found." % rounds)
+            return False, 0.0
+
         if (mu_bar > lvalue) or (mu_bar < hvalue):
             print ("Target is not within the search interval after %d rounds" % j)
             return False, 0.0
 
+        lastCenter = center
         center = (lbound + hbound) / 2.0
 
-        if (center <= ldomain) or (center >= hdomain):
-            print ("The next center is outside of the proscribed domain after %d rounds" % j)
+        if (center <= lbound) or (center >= hbound):
+            print ("The next center is outside of the search interval after %d rounds" % j)
             return False, 0.0
 
+        if lastCenter == center:
+            print ("Detected cycle after %d rounds. Returning upper bound." % j)
+            return True, hbound
+
         centerVal = calcEpS(center, n)
+
+        #invariant: if this isn't true, then this isn't loosely monotonic
+        if (centerVal < hvalue) or (centerVal > lvalue):
+            print ("CenterVal is not within the search value interval after %d rounds. Returning upper bound." % j)
+            return True, hbound
 
     if isclose(mu_bar, centerVal, tolerance, absEpsilon):
         return True, p
     else:
-        print ("Binary search failed to converge, or the sought value is outside the interval.")
-        return False, 0.0
+        print ("Binary search failed to converge. Returning upper bound.")
+        return True, min(hbound, hdomain)
 
 # Section 6.3.2- Collision Estimate
 def collision_test(s, n):

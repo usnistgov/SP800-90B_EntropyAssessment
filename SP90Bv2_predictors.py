@@ -87,7 +87,7 @@ def calcRun(correct, verbose=False):
     alpha = 0.99
     tolerance = 1e-09
 
-    #our target is close to 1.0, so the system DBL_EPSILON is fine
+    #our target is expected to be "close" to 1.0, so the system DBL_EPSILON is fine
     absEpsilon = 4.0 * sys.float_info.epsilon
     
     #find the longest run        
@@ -101,6 +101,8 @@ def calcRun(correct, verbose=False):
     hbound = hdomain
     hvalue = float("-inf")
 
+    #Note that the bounds are in the interval [0, 1], so underflows
+    #are an issue, but overflows are not
     # do a binary search for p
     center = (lbound + hbound) / 2
     assert (center > ldomain) and (center < hdomain)
@@ -111,10 +113,6 @@ def calcRun(correct, verbose=False):
         if isclose(alpha, centerVal, tolerance, absEpsilon):
             return True, center, r+1
 
-        if lbound >= hbound:
-            print ("Bounds have converged after %d rounds and target was not found" % rounds)
-            return False, -1.0, r+1
-
         if alpha < centerVal:
             lbound = center
             lvalue = centerVal
@@ -122,22 +120,44 @@ def calcRun(correct, verbose=False):
             hbound = center
             hvalue = centerVal
 
+#We now verify that ldomain <= lbound < center < hbound <= hdomain
+#and that target in [ hvalue, lvalue ]
+        if lbound >= hbound:
+            print ("Bounds have converged after %d rounds and target was not found. Returning largest bound." % rounds)
+            return True, min(max(lbound, hbound), hdomain), r+1
+
+        if ((lbound < ldomain) or (lbound > hdomain) or (hbound < ldomain) or (hbound > hdomain)):
+            print ("The current search interval is not a subset of the domain after %d rounds and target was not found." % rounds)
+            return False, 0.0, r+1
+
         if (alpha > lvalue) or (alpha < hvalue):
             print ("Target is not within the search interval after %d rounds" % rounds)
             return False, -1.0, r+1
 
+        lastCenter = center
         center = (lbound + hbound) / 2.0
 
-        if (center <= ldomain) or (center >= hdomain):
-            print ("The next center is outside of the proscribed domain after %d rounds" % rounds)
+        if (center <= lbound) or (center >= hbound):
+            print ("The next center is outside of the search interval after %d rounds" % rounds)
             return False, -1.0, r+1
+
+        if lastCenter == center:
+            print ("Detected cycle after %d rounds. Returning upper bound." % rounds)
+            return True, hbound, r+1
 
         centerVal = calc_qn(center,r+1,N)
 
+        #invariant: if this isn't true, then this isn't loosely monotonic
+        if (centerVal < hvalue) or (centerVal > lvalue):
+            print ("CenterVal is not within the search value interval after %d rounds. Returning upper bound." % rounds)
+            return True, hbound, r+1
+
+    #We ran out of rounds for the binary search
     if isclose(alpha, centerVal, tolerance, absEpsilon):
         return True, p, r+1
     else:
-        return False, -1.0, r+1
+        print ("Ran out of search rounds. Returning upper bound")
+        return True, min(hbound, hdomain), r+1
 
 ################################
 # MultiMCW Prediction Estimate #
