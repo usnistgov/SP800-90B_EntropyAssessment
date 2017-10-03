@@ -46,11 +46,12 @@ if __name__ == '__main__':
             print ("Read in file %s, %d bytes long." % (datafile, len(bytes_in)))
             print ("Dataset: %d %d-bit symbols, %d symbols in alphabet." % (len(dataset), bits_per_symbol, k))
             print ("Output symbol values: min = %d, max = %d\n" % (min(dataset), max(dataset)))
-
+		
         #######################################
         # STEP 1: Determine if Dataset is IID #
         #######################################
         # determine if dataset is IID using shuffle and Chi-square tests
+
         passed_permutation_tests = permutation_test(list(dataset), verbose)
 
         if passed_permutation_tests:
@@ -86,7 +87,7 @@ if __name__ == '__main__':
         # STEP 2: Calculate min-entropy of dataset #
         ############################################
         pmax, minH = most_common(dataset)
-        print("min-entropy = %g" % (minH))
+        print("min-entropy = %g bits out of %g bits" % (minH, bits_per_symbol))
 
 
-        print("\nDon't forget to run the sanity check on a restart dataset using H_I = %g" % minH )
+        print("\nDon't forget to run the sanity check on a restart dataset using H_I = %g bits out of %g bits" % (minH,bits_per_symbol)) 
