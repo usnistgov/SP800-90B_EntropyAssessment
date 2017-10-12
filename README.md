@@ -71,5 +71,5 @@ The file restart.py performs the sanity checks on the restart dataset. The progr
 For more information on using this code, such as optional arguments, see the user guide in this repository.
 For more information on the estimation methods, see [SP 800-90B second draft](http://csrc.nist.gov/publications/drafts/800-90/sp800-90b_second_draft.pdf).
 
-###Contact Information
+### Contact Information
 This code is currently maintained by Kerry McKay and John Kelsey.
