@@ -40,10 +40,13 @@ if __name__ == '__main__':
     else:
         use_bits = bits_per_symbol
     verbose = bool(args.verbose)
+    start_position = int (args.start_position)
+    read_amount = int (args.read_amount)
 
     with open(datafile, 'rb') as file:
         # Read in raw bytes and convert to list of output symbols
-        bytes_in = bytearray(file.read())
+        bytes_in = bytearray(file.read(start_position))
+        bytes_in = bytearray(file.read(read_amount))
         dataset = to_dataset(bytes_in, bits_per_symbol)
         k = len(set(dataset))
         if verbose:

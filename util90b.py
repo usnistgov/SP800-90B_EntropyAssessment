@@ -33,6 +33,10 @@ def get_parser(test):
         
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='verbose mode: show detailed test results')
 
+    parser.add_argument('-s', '--start', dest='start_position', metavar='start_position', help='start byte position in file')
+
+    parser.add_argument('-r', '--read', dest='read_amount', metavar='read_amount', help='bytes to read from file')
+
     return parser
 
 # Convert a bytearray of raw bytes to a list containing the dataset
@@ -46,16 +50,21 @@ def to_dataset(bytes, bits_per_symbol):
     assert bits_per_symbol > 0
     assert bits_per_symbol <= 8
 
-    # mask for relevant bits
-    mask = 2**bits_per_symbol - 1
+    print ("converting %d bytes of data to ints using %d bits per int" % (len (bytes), bits_per_symbol))
+    converted_bytes = []
+    work_bin = ''
+    for byte in bytes:
+      byte_bin = bin (int (byte))
+      byte_bin = byte_bin [2:]
+      while len (byte_bin) < 8:
+        byte_bin = '0' + byte_bin
+      work_bin += byte_bin
+      while len (work_bin) >= bits_per_symbol:
+        new_int = int (work_bin [:bits_per_symbol], 2)
+        work_bin = work_bin [bits_per_symbol:]
+        converted_bytes.append (new_int)
+    return converted_bytes
 
-    N = len(bytes)
-    print ("reading %d bytes of data" % N)
-
-    if bits_per_symbol <= 8: # includes 1-bit per symbol
-        return [b & mask for b in bytes]
-    else:
-        return list()
 
 
 # Map dataset to list 0..n. This is necessary for datasets here k is not
@@ -125,6 +134,8 @@ def get_z(alpha):
                 5E-08: 5.451310443,
                 1.95312E-08: 5.61610279}
     
+    keys = list (z_values.keys ())
+    keys.sort ()
     if alpha in z_values.keys():
         return z_values[alpha]
     else:

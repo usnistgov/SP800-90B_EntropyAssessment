@@ -354,6 +354,8 @@ def permutation_test(s, verbose=False):
         cs2 = conversion2(s)
 
     t['excursion'] = excursion(s, mean)
+    if verbose:
+      print ("t['excursion'] %s" % (str (t['excursion'])))
     
     if is_binary:
         # conversion 1 required for binary data for directional run and
@@ -367,6 +369,10 @@ def permutation_test(s, verbose=False):
         t['numDirectionalRuns'] = numDirectionalRuns(sp1)
         t['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
         t['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
+    if verbose:
+      print ("t['numDirectionalRuns'] %s" % (str (t['numDirectionalRuns'])))
+      print ("t['lenDirectionalRuns'] %s" % (str (t['lenDirectionalRuns'])))
+      print ("t['numIncreasesDecreases'] %s" % (str (t['numIncreasesDecreases'])))
 
     if is_binary:
         sp2= altSequence2(s, 0.5)
@@ -374,6 +380,9 @@ def permutation_test(s, verbose=False):
         sp2= altSequence2(s, median)
     t['numRunsMedian'] = numRunsMedian(sp2)
     t['lenRunsMedian'] = lenRunsMedian(sp2)
+    if verbose:
+      print ("t['numRunsMedian'] %s" % (str (t['numRunsMedian'])))
+      print ("t['lenRunsMedian'] %s" % (str (t['lenRunsMedian'])))
 
     if is_binary:
         # conversion 2 required for collision statistics on binary data
@@ -382,6 +391,9 @@ def permutation_test(s, verbose=False):
         collision_list = findCollisions(s)
     t['avgCollision'] = avgCollision(collision_list)
     t['maxCollision'] = maxCollision(collision_list)
+    if verbose:
+      print ("t['avgCollision'] %s" % (str (t['avgCollision'])))
+      print ("t['maxCollision'] %s" % (str (t['maxCollision'])))
 
     if is_binary:
         # conversion 1 required for periodicity statistics on binary data
@@ -396,6 +408,12 @@ def permutation_test(s, verbose=False):
         t['periodicity(8)'] = periodicity(s,8)
         t['periodicity(16)'] = periodicity(s,16)
         t['periodicity(32)'] = periodicity(s,32)
+    if verbose:
+      print ("t['periodicity(1)'] %s" % (str (t['periodicity(1)'])))
+      print ("t['periodicity(2)'] %s" % (str (t['periodicity(2)'])))
+      print ("t['periodicity(8)'] %s" % (str (t['periodicity(8)'])))
+      print ("t['periodicity(16)'] %s" % (str (t['periodicity(16)'])))
+      print ("t['periodicity(32)'] %s" % (str (t['periodicity(32)'])))
         
     if is_binary:
         # conversion 1 required for covariance statistics on binary data
@@ -410,18 +428,23 @@ def permutation_test(s, verbose=False):
         t['covariance(8)'] = covariance(s,8)
         t['covariance(16)'] = covariance(s,16)
         t['covariance(32)'] = covariance(s,32)
+    if verbose:
+      print ("t['covariance(1)'] %s" % (str (t['covariance(1)'])))
+      print ("t['covariance(2)'] %s" % (str (t['covariance(2)'])))
+      print ("t['covariance(8)'] %s" % (str (t['covariance(8)'])))
+      print ("t['covariance(16)'] %s" % (str (t['covariance(16)'])))
+      print ("t['covariance(32)'] %s" % (str (t['covariance(32)'])))
         
     t['compression'] = compression(s)
+    if verbose:
+      print ("t['compression'] %s\n" % (str (t['compression'])))
 
     # 2. For j=1 to 10000
         # 2.1 Permute the input data using Fisher-Yates
-    
+
     if verbose:
         print ("Calculating statistics on permuted sequences")
     for j in range(10000):
-        if verbose:
-            sys.stdout.write("\rpermutation tests:\t%.2f percent complete" % (float(j)/100))
-            sys.stdout.flush()
         shuffle(s)
 
         # 2.2 for each test i
@@ -433,72 +456,162 @@ def permutation_test(s, verbose=False):
             cs1 = conversion1(s)
             cs2 = conversion2(s)
 
-        tp['excursion'] = excursion(s, mean)
+        if ((C['excursion'][0]+C['excursion'][1]) <= 5) or (((j + 1) - C['excursion'][0]) <= 5):
+          tp['excursion'] = excursion(s, mean)
         
         if is_binary:
             # conversion 1 required for binary data for directional run and
             # increases/decreases statistics
             sp1 = altSequence1(cs1)
-            tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
-            tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
-            tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
+            if ((C['numDirectionalRuns'][0]+C['numDirectionalRuns'][1]) <= 5) or (((j + 1) - C['numDirectionalRuns'][0]) <= 5):
+              tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
+            if ((C['lenDirectionalRuns'][0]+C['lenDirectionalRuns'][1]) <= 5) or (((j + 1) - C['lenDirectionalRuns'][0]) <= 5):
+              tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
+            if ((C['numIncreasesDecreases'][0]+C['numIncreasesDecreases'][1]) <= 5) or (((j + 1) - C['numIncreasesDecreases'][0]) <= 5):
+              tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
         else:
             sp1 = altSequence1(s)
-            tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
-            tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
-            tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
+            if ((C['numDirectionalRuns'][0]+C['numDirectionalRuns'][1]) <= 5) or (((j + 1) - C['numDirectionalRuns'][0]) <= 5):
+              tp['numDirectionalRuns'] = numDirectionalRuns(sp1)
+            if ((C['lenDirectionalRuns'][0]+C['lenDirectionalRuns'][1]) <= 5) or (((j + 1) - C['lenDirectionalRuns'][0]) <= 5):
+              tp['lenDirectionalRuns'] = lenDirectionalRuns(sp1)
+            if ((C['numIncreasesDecreases'][0]+C['numIncreasesDecreases'][1]) <= 5) or (((j + 1) - C['numIncreasesDecreases'][0]) <= 5):
+              tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
 
         if is_binary:
             sp2= altSequence2(s, 0.5)
         else:
             sp2= altSequence2(s, median)
-        tp['numRunsMedian'] = numRunsMedian(sp2)
-        tp['lenRunsMedian'] = lenRunsMedian(sp2)
+        if ((C['numRunsMedian'][0]+C['numRunsMedian'][1]) <= 5) or (((j + 1) - C['numRunsMedian'][0]) <= 5):
+          tp['numRunsMedian'] = numRunsMedian(sp2)
+        if ((C['lenRunsMedian'][0]+C['lenRunsMedian'][1]) <= 5) or (((j + 1) - C['lenRunsMedian'][0]) <= 5):
+          tp['lenRunsMedian'] = lenRunsMedian(sp2)
 
         if is_binary:
             # conversion 2 required for collision statistics on binary data
-            collision_list = findCollisions(cs2)
+            if (((C['avgCollision'][0]+C['avgCollision'][1]) <= 5) or (((j + 1) - C['avgCollision'][0]) <= 5)
+              or ((C['maxCollision'][0]+C['maxCollision'][1]) <= 5) or (((j + 1) - C['maxCollision'][0]) <= 5)):
+              collision_list = findCollisions(cs2)
         else:
-            collision_list = findCollisions(s)
-        tp['avgCollision'] = avgCollision(collision_list)
-        tp['maxCollision'] = maxCollision(collision_list)
+            if (((C['avgCollision'][0]+C['avgCollision'][1]) <= 5) or (((j + 1) - C['avgCollision'][0]) <= 5)
+              or ((C['maxCollision'][0]+C['maxCollision'][1]) <= 5) or (((j + 1) - C['maxCollision'][0]) <= 5)):
+              collision_list = findCollisions(s)
+        if ((C['avgCollision'][0]+C['avgCollision'][1]) <= 5) or (((j + 1) - C['avgCollision'][0]) <= 5):
+          tp['avgCollision'] = avgCollision(collision_list)
+        if ((C['maxCollision'][0]+C['maxCollision'][1]) <= 5) or (((j + 1) - C['maxCollision'][0]) <= 5):
+          tp['maxCollision'] = maxCollision(collision_list)
 
         if is_binary:
             # conversion 1 required for periodicity statistics on binary data
-            tp['periodicity(1)'] = periodicity(cs1,1)
-            tp['periodicity(2)'] = periodicity(cs1,2)
-            tp['periodicity(8)'] = periodicity(cs1,8)
-            tp['periodicity(16)'] = periodicity(cs1,16)
-            tp['periodicity(32)'] = periodicity(cs1,32)
+            if ((C['periodicity(1)'][0]+C['periodicity(1)'][1]) <= 5) or (((j + 1) - C['periodicity(1)'][0]) <= 5):
+              tp['periodicity(1)'] = periodicity(cs1,1)
+            if ((C['periodicity(2)'][0]+C['periodicity(2)'][1]) <= 5) or (((j + 1) - C['periodicity(2)'][0]) <= 5):
+              tp['periodicity(2)'] = periodicity(cs1,2)
+            if ((C['periodicity(8)'][0]+C['periodicity(8)'][1]) <= 5) or (((j + 1) - C['periodicity(8)'][0]) <= 5):
+              tp['periodicity(8)'] = periodicity(cs1,8)
+            if ((C['periodicity(16)'][0]+C['periodicity(16)'][1]) <= 5) or (((j + 1) - C['periodicity(16)'][0]) <= 5):
+              tp['periodicity(16)'] = periodicity(cs1,16)
+            if ((C['periodicity(32)'][0]+C['periodicity(32)'][1]) <= 5) or (((j + 1) - C['periodicity(32)'][0]) <= 5):
+              tp['periodicity(32)'] = periodicity(cs1,32)
         else:
-            tp['periodicity(1)'] = periodicity(s,1)
-            tp['periodicity(2)'] = periodicity(s,2)
-            tp['periodicity(8)'] = periodicity(s,8)
-            tp['periodicity(16)'] = periodicity(s,16)
-            tp['periodicity(32)'] = periodicity(s,32)
+            if ((C['periodicity(1)'][0]+C['periodicity(1)'][1]) <= 5) or (((j + 1) - C['periodicity(1)'][0]) <= 5):
+              tp['periodicity(1)'] = periodicity(s,1)
+            if ((C['periodicity(2)'][0]+C['periodicity(2)'][1]) <= 5) or (((j + 1) - C['periodicity(2)'][0]) <= 5):
+              tp['periodicity(2)'] = periodicity(s,2)
+            if ((C['periodicity(8)'][0]+C['periodicity(8)'][1]) <= 5) or (((j + 1) - C['periodicity(8)'][0]) <= 5):
+              tp['periodicity(8)'] = periodicity(s,8)
+            if ((C['periodicity(16)'][0]+C['periodicity(16)'][1]) <= 5) or (((j + 1) - C['periodicity(16)'][0]) <= 5):
+              tp['periodicity(16)'] = periodicity(s,16)
+            if ((C['periodicity(32)'][0]+C['periodicity(32)'][1]) <= 5) or (((j + 1) - C['periodicity(32)'][0]) <= 5):
+              tp['periodicity(32)'] = periodicity(s,32)
             
         if is_binary:
             # conversion 1 required for covariance statistics on binary data
-            tp['covariance(1)'] = covariance(cs1,1)
-            tp['covariance(2)'] = covariance(cs1,2)
-            tp['covariance(8)'] = covariance(cs1,8)
-            tp['covariance(16)'] = covariance(cs1,16)
-            tp['covariance(32)'] = covariance(cs1,32)
+            if ((C['covariance(1)'][0]+C['covariance(1)'][1]) <= 5) or (((j + 1) - C['covariance(1)'][0]) <= 5):
+              tp['covariance(1)'] = covariance(cs1,1)
+            if ((C['covariance(2)'][0]+C['covariance(2)'][1]) <= 5) or (((j + 1) - C['covariance(2)'][0]) <= 5):
+              tp['covariance(2)'] = covariance(cs1,2)
+            if ((C['covariance(8)'][0]+C['covariance(8)'][1]) <= 5) or (((j + 1) - C['covariance(8)'][0]) <= 5):
+              tp['covariance(8)'] = covariance(cs1,8)
+            if ((C['covariance(16)'][0]+C['covariance(16)'][1]) <= 5) or (((j + 1) - C['covariance(16)'][0]) <= 5):
+              tp['covariance(16)'] = covariance(cs1,16)
+            if ((C['covariance(32)'][0]+C['covariance(32)'][1]) <= 5) or (((j + 1) - C['covariance(32)'][0]) <= 5):
+              tp['covariance(32)'] = covariance(cs1,32)
         else:
-            tp['covariance(1)'] = covariance(s,1)
-            tp['covariance(2)'] = covariance(s,2)
-            tp['covariance(8)'] = covariance(s,8)
-            tp['covariance(16)'] = covariance(s,16)
-            tp['covariance(32)'] = covariance(s,32)
+            if ((C['covariance(1)'][0]+C['covariance(1)'][1]) <= 5) or (((j + 1) - C['covariance(1)'][0]) <= 5):
+              tp['covariance(1)'] = covariance(s,1)
+            if ((C['covariance(2)'][0]+C['covariance(2)'][1]) <= 5) or (((j + 1) - C['covariance(2)'][0]) <= 5):
+              tp['covariance(2)'] = covariance(s,2)
+            if ((C['covariance(8)'][0]+C['covariance(8)'][1]) <= 5) or (((j + 1) - C['covariance(8)'][0]) <= 5):
+              tp['covariance(8)'] = covariance(s,8)
+            if ((C['covariance(16)'][0]+C['covariance(16)'][1]) <= 5) or (((j + 1) - C['covariance(16)'][0]) <= 5):
+              tp['covariance(16)'] = covariance(s,16)
+            if ((C['covariance(32)'][0]+C['covariance(32)'][1]) <= 5) or (((j + 1) - C['covariance(32)'][0]) <= 5):
+              tp['covariance(32)'] = covariance(s,32)
             
-        tp['compression'] = compression(s)
+        if ((C['compression'][0]+C['compression'][1]) <= 5) or (((j + 1) - C['compression'][0]) <= 5):
+          tp['compression'] = compression(s)
         
         # 2.2.2 If (tp[i] > t[i]), increment C[i,0]. If (tp[i] = t[i]), increment C[i,1].
+        pass_flag = True
         for i in get_test_names():
-            if tp[i] > t[i]:
-                C[i][0] += 1
-            elif tp[i] == t[i]:
-                C[i][1] += 1
+            if ((C[i][0]+C[i][1]) <= 5) or (((j + 1) - C[i][0]) <= 5):
+              if tp[i] > t[i]:
+                  C[i][0] += 1
+              elif tp[i] == t[i]:
+                  C[i][1] += 1
+              pass_flag = False
+        if verbose:
+          if ((C['excursion'][0]+C['excursion'][1]) <= 5) or (((j + 1) - C['excursion'][0]) <= 5):
+            print ("t tp ['excursion'] %d  %d  %d" % (t['excursion'], tp['excursion'], t['excursion'] - tp['excursion']))
+          if ((C['numDirectionalRuns'][0]+C['numDirectionalRuns'][1]) <= 5) or (((j + 1) - C['numDirectionalRuns'][0]) <= 5):
+            print ("t tp ['numDirectionalRuns'] %d  %d  %d" % (t['numDirectionalRuns'], tp['numDirectionalRuns'],
+              t['numDirectionalRuns'] - tp['numDirectionalRuns']))
+          if ((C['lenDirectionalRuns'][0]+C['lenDirectionalRuns'][1]) <= 5) or (((j + 1) - C['lenDirectionalRuns'][0]) <= 5):
+            print ("t tp ['lenDirectionalRuns'] %d  %d  %d" % (t['lenDirectionalRuns'], tp['lenDirectionalRuns'],
+              t['lenDirectionalRuns'] - tp['lenDirectionalRuns']))
+          if ((C['numIncreasesDecreases'][0]+C['numIncreasesDecreases'][1]) <= 5) or (((j + 1) - C['numIncreasesDecreases'][0]) <= 5):
+            print ("t tp ['numIncreasesDecreases'] %d  %d  %d" % (t['numIncreasesDecreases'], tp['numIncreasesDecreases'],
+              t['numIncreasesDecreases'] - tp['numIncreasesDecreases']))
+          if ((C['numRunsMedian'][0]+C['numRunsMedian'][1]) <= 5) or (((j + 1) - C['numRunsMedian'][0]) <= 5):
+            print ("t tp ['numRunsMedian'] %d  %d  %d" % (t['numRunsMedian'], tp['numRunsMedian'], t['numRunsMedian'] - tp['numRunsMedian']))
+          if ((C['lenRunsMedian'][0]+C['lenRunsMedian'][1]) <= 5) or (((j + 1) - C['lenRunsMedian'][0]) <= 5):
+            print ("t tp ['lenRunsMedian'] %d  %d  %d" % (t['lenRunsMedian'], tp['lenRunsMedian'], t['lenRunsMedian'] - tp['lenRunsMedian']))
+          if ((C['avgCollision'][0]+C['avgCollision'][1]) <= 5) or (((j + 1) - C['avgCollision'][0]) <= 5):
+            print ("t tp ['avgCollision'] %8.5e  %8.5e  %8.5e" % (t['avgCollision'], tp['avgCollision'], t['avgCollision'] - tp['avgCollision']))
+          if ((C['maxCollision'][0]+C['maxCollision'][1]) <= 5) or (((j + 1) - C['maxCollision'][0]) <= 5):
+            print ("t tp ['maxCollision'] %d  %d  %d" % (t['maxCollision'], tp['maxCollision'], t['maxCollision'] - tp['maxCollision']))
+          if ((C['periodicity(1)'][0]+C['periodicity(1)'][1]) <= 5) or (((j + 1) - C['periodicity(1)'][0]) <= 5):
+            print ("t tp ['periodicity(1)'] %d  %d  %d" % (t['periodicity(1)'], tp['periodicity(1)'], t['periodicity(1)'] - tp['periodicity(1)']))
+          if ((C['periodicity(2)'][0]+C['periodicity(2)'][1]) <= 5) or (((j + 1) - C['periodicity(2)'][0]) <= 5):
+            print ("t tp ['periodicity(2)'] %d  %d  %d" % (t['periodicity(2)'], tp['periodicity(2)'], t['periodicity(2)'] - tp['periodicity(2)']))
+          if ((C['periodicity(8)'][0]+C['periodicity(8)'][1]) <= 5) or (((j + 1) - C['periodicity(8)'][0]) <= 5):
+            print ("t tp ['periodicity(8)'] %d  %d  %d" % (t['periodicity(8)'], tp['periodicity(8)'], t['periodicity(8)'] - tp['periodicity(8)']))
+          if ((C['periodicity(16)'][0]+C['periodicity(16)'][1]) <= 5) or (((j + 1) - C['periodicity(16)'][0]) <= 5):
+            print ("t tp ['periodicity(16)'] %d  %d  %d" % (t['periodicity(16)'], tp['periodicity(16)'], 
+              t['periodicity(16)'] - tp['periodicity(16)']))
+          if ((C['periodicity(32)'][0]+C['periodicity(32)'][1]) <= 5) or (((j + 1) - C['periodicity(32)'][0]) <= 5):
+            print ("t tp ['periodicity(32)'] %d  %d  %d" % (t['periodicity(32)'], tp['periodicity(32)'], 
+              t['periodicity(32)'] - tp['periodicity(32)']))
+          if ((C['covariance(1)'][0]+C['covariance(1)'][1]) <= 5) or (((j + 1) - C['covariance(1)'][0]) <= 5):
+            print ("t tp ['covariance(1)'] %d  %d  %d" % (t['covariance(1)'], tp['covariance(1)'], t['covariance(1)'] - tp['covariance(1)']))
+          if ((C['covariance(2)'][0]+C['covariance(2)'][1]) <= 5) or (((j + 1) - C['covariance(2)'][0]) <= 5):
+            print ("t tp ['covariance(2)'] %d  %d  %d" % (t['covariance(2)'], tp['covariance(2)'], t['covariance(2)'] - tp['covariance(2)']))
+          if ((C['covariance(8)'][0]+C['covariance(8)'][1]) <= 5) or (((j + 1) - C['covariance(8)'][0]) <= 5):
+            print ("t tp ['covariance(8)'] %d  %d  %d" % (t['covariance(8)'], tp['covariance(8)'], t['covariance(8)'] - tp['covariance(8)']))
+          if ((C['covariance(16)'][0]+C['covariance(16)'][1]) <= 5) or (((j + 1) - C['covariance(16)'][0]) <= 5):
+            print ("t tp ['covariance(16)'] %d  %d  %d" % (t['covariance(16)'], tp['covariance(16)'], t['covariance(16)'] - tp['covariance(16)']))
+          if ((C['covariance(32)'][0]+C['covariance(32)'][1]) <= 5) or (((j + 1) - C['covariance(32)'][0]) <= 5):
+            print ("t tp ['covariance(32)'] %d  %d  %d" % (t['covariance(32)'], tp['covariance(32)'], t['covariance(32)'] - tp['covariance(32)']))
+          if ((C['compression'][0]+C['compression'][1]) <= 5) or (((j + 1) - C['compression'][0]) <= 5):
+            print ("t tp ['compression'] %d  %d  %d" % (t['compression'][0], tp['compression'][0], t['compression'][0] - tp['compression'][0]))
+          for i in get_test_names():
+            print ("%25s %8d %8d" % (i, C[i][0], C[i][1]))
+          print ("\n")
+          print("permutation tests:\t%.2f percent complete\n" % (float(j + 1)/100))
+          print ("\n")
+        if pass_flag:  # the permutation criteria have already been met
+          return True
 
     if verbose:
         print("\n                statistic  C[i][0]  C[i][1]")
