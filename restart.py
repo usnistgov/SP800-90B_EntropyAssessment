@@ -9,6 +9,7 @@
 # Kerry McKay
 # March 3, 2016
 
+import os
 import sys
 import time
 import math
@@ -37,7 +38,7 @@ if __name__ == '__main__':
 
     with open(datafile, 'rb') as file:
         # Read in raw bytes and convert to list of output symbols
-        bytes_in = bytearray(file.read(start_position))
+        file.seek(start_position, os.SEEK_SET)
         bytes_in = bytearray(file.read(read_amount))
         dataset = to_dataset(bytes_in, bits_per_symbol)
         k = len(set(dataset))
