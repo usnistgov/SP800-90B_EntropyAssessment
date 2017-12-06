@@ -24,18 +24,18 @@ def get_parser(test):
     descr = 'Run the Draft NIST SP 800-90B (January 2016) %s Tests' % test
     parser = argparse.ArgumentParser(description=descr)
     parser.add_argument(dest='datafile', metavar='datafile', help='dataset on which to run tests')
-    parser.add_argument(dest='bits_per_symbol',metavar='bits_per_symbol', help='number of bits used to represent sample output values')
+    parser.add_argument('-b', '--bits', dest='bits_per_symbol', type=int, action='store', metavar='bits_per_symbol', default='8', help='number of bits used to represent sample output values')
 
     if test == 'non-IID':
-        parser.add_argument('-u', '--usebits', dest='use_bits', metavar='use_bits', help='use only the N lowest order bits per sample')
+        parser.add_argument('-u', '--usebits', dest='use_bits', type=int, action='store', metavar='use_bits', default='0', help='use only the N lowest order bits per sample')
     elif test == 'restart':
-        parser.add_argument(dest='H_I', metavar='H_I', help='initial entropy estimate')
+        parser.add_argument('-e', '--entropy', dest='H_I', type=float, action='store', metavar='H_I', required=True,  help='initial entropy estimate')
         
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='verbose mode: show detailed test results')
 
-    parser.add_argument('-s', '--start', dest='start_position', metavar='start_position', help='start byte position in file')
+    parser.add_argument('-s', '--start', dest='start_position', type=int, action='store', metavar='start_position', default='0', help='start byte position in file')
 
-    parser.add_argument('-r', '--read', dest='read_amount', metavar='read_amount', help='bytes to read from file')
+    parser.add_argument('-r', '--read', dest='read_amount', type=int, action='store', metavar='read_amount', default='1000000', help='bytes to read from file')
 
     return parser
 
@@ -54,10 +54,7 @@ def to_dataset(bytes, bits_per_symbol):
     converted_bytes = []
     work_bin = ''
     for byte in bytes:
-      byte_bin = bin (int (byte))
-      byte_bin = byte_bin [2:]
-      while len (byte_bin) < 8:
-        byte_bin = '0' + byte_bin
+      byte_bin = format (byte, '08b')
       work_bin += byte_bin
       while len (work_bin) >= bits_per_symbol:
         new_int = int (work_bin [:bits_per_symbol], 2)
