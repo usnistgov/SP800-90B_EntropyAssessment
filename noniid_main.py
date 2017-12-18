@@ -17,7 +17,7 @@ import sys
 import time
 import math
 
-from util90b import get_parser, to_dataset, mapData
+from util90b import get_parser, to_dataset_packed, to_dataset_unpacked, mapData
 from mostCommonValue import most_common
 from noniid_collision import collision_test
 from markov import markov_test
@@ -43,12 +43,16 @@ if __name__ == '__main__':
     verbose = bool(args.verbose)
     start_position = int (args.start_position)
     read_amount = int (args.read_amount)
+    packed = bool (args.packed)
 
     with open(datafile, 'rb') as file:
         # Read in raw bytes and convert to list of output symbols
         file.seek(start_position, os.SEEK_SET)
         bytes_in = bytearray(file.read(read_amount))
-        dataset = to_dataset(bytes_in, bits_per_symbol)
+        if packed:
+          dataset = to_dataset_packed (bytes_in, bits_per_symbol)
+        else:
+          dataset = to_dataset_unpacked (bytes_in, bits_per_symbol)
         k = len(set(dataset))
         if verbose:
             # print file and dataset details

@@ -37,6 +37,8 @@ def get_parser(test):
 
     parser.add_argument('-r', '--read', dest='read_amount', type=int, action='store', metavar='read_amount', default='1000000', help='bytes to read from file')
 
+    parser.add_argument('-p', '--packed', dest='packed', action='store_true', default='False', help='treat input data as packed')
+
     return parser
 
 # Convert a bytearray of raw bytes to a list containing the dataset
@@ -46,7 +48,7 @@ def get_parser(test):
 # not packed (i.e., 8 1-bit output samples are not packed into 1 byte)
 #
 # Does not handle > 8 bits per symbol.
-def to_dataset(bytes, bits_per_symbol):
+def to_dataset_packed (bytes, bits_per_symbol):
     assert bits_per_symbol > 0
     assert bits_per_symbol <= 8
 
@@ -61,6 +63,28 @@ def to_dataset(bytes, bits_per_symbol):
         work_bin = work_bin [bits_per_symbol:]
         converted_bytes.append (new_int)
     return converted_bytes
+
+# Convert a bytearray of raw bytes to a list containing the dataset
+# Use bits-per-symbol to do the mapping
+#
+# Note that 1 bit per symbol assumes that 1 bit per byte is used, the data is
+# not packed (i.e., 8 1-bit output samples are not packed into 1 byte)
+#
+# Does not handle > 8 bits per symbol.
+def to_dataset_unpacked (bytes, bits_per_symbol):
+    assert bits_per_symbol > 0
+    assert bits_per_symbol <= 8
+
+    # mask for relevant bits
+    mask = 2**bits_per_symbol - 1
+
+    N = len(bytes)
+    print ("reading %d bytes of data" % N)
+
+    if bits_per_symbol <= 8: # includes 1-bit per symbol
+        return [b & mask for b in bytes]
+    else:
+        return list()
 
 
 
