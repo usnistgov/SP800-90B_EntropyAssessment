@@ -118,6 +118,7 @@ def LRS_estimate(s, verbose=False):
                 numerator += math.factorial(c)/2/math.factorial(c-2)
         denom = (L-W+1)*(L-W) / 2 
         P.append(math.pow(float(numerator)/denom, 1.0/W))
+        
 
     # The entropy estimate is calculated as -log_2 max(Pmax)
     return max(P), -math.log(max(P),2)

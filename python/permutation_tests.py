@@ -25,7 +25,7 @@ try:
 except:
     import random
     shuffle = random.shuffle
-
+   
 
 # Calculate the mean and median and identify if binary or not
 def calc_stats(dataset):
@@ -60,13 +60,12 @@ def conversion1(s):
     # handle incomplete block
     if len(s)%8 > 0:
         sp.append(s[len(sp)*8:].count(1))
-
+    
     return sp
 
 # conversion II
-# partitions the sequences into 8-bit non-overlapping blocks, and calculates the integer value of each block.
+# partitions the sequences into 8-bit non-overlapping blocks, and calculates the integer value of each block. 
 def conversion2(s):
-
     sp = str(s)[1:-1]
     sp = sp.replace(', ','')
     
@@ -104,10 +103,10 @@ def excursion(s, mean):
             maximum = di
         elif -di > maximum:
             maximum = -di
-
+       
     return maximum
 
-# Section 5.1.2 - Number of Directional Runs
+# Section 5.1.2 - Number of Directional Runs        
 def numDirectionalRuns(s):
     L = len(s)
 
@@ -122,7 +121,7 @@ def numDirectionalRuns(s):
     for i in range(1,L):
         if s[i] != s[i-1]:
             numruns += 1
-
+            
     return numruns
 
 #Section 5.1.3 - Length of Directional Runs
@@ -134,7 +133,7 @@ def lenDirectionalRuns(s):
     if not set(s).issubset(set([1, -1])):#set(s) > set([1, -1]):
         print ("error - input string is not sequence of 1's and -1's")
         quit()
-
+    
     # 2. The test statistic T is the length of the longest run in s'
     maxrun = 0
     run = 1
@@ -149,7 +148,7 @@ def lenDirectionalRuns(s):
     # handle the last observed run
     if run > maxrun:
         maxrun  = run
-
+    
     return maxrun
 
 #Section 5.1.4 - Number of Increases and Decreases
@@ -162,10 +161,10 @@ def numIncreasesDecreases(s):
         print ("error - input string is not sequence of 1's and -1's")
         quit()
 
-
+        
     #2. calculate the number of +1 and -1 in s'; the test statisitic T is
     #   the maximum of these two numbers
-    pos = s.count(1)
+    pos = s.count(1) 
     return max(pos, L-pos)
 
 #Section 5.1.5 - Number of Runs Based on the Median
@@ -178,12 +177,12 @@ def numRunsMedian(sp):
     for i in range(1,len(sp)):
         if sp[i] != sp[i-1]:
             numruns += 1
-
+            
     return numruns
 
 # Section 5.1.6 - Length of Runs Based on Median
 def lenRunsMedian(sp):
-
+    
     # Steps 1 and 2 found in function altSequence2
 
     # 3. The test statistic is the length of the longest run in s'
@@ -196,28 +195,28 @@ def lenRunsMedian(sp):
             if run > maxrun:
                 maxrun  = run
             run = 1
-
+            
     # handle the last observed run
     if run > maxrun:
         maxrun  = run
-
+    
     return maxrun
 
 
 # Section 5.1.7 - Average Collision Test Statistic
-# takes list of collisions, C, as input
+# takes list of collisions, C, as input 
 def avgCollision(C):
     #Steps 1 through 3 found in function findCollisions
 
-     #4. The test statistic T is the average of all values in the list C.
+     #4. The test statistic T is the average of all values in the list C.       
     return sum(C)/float(len(C))
 
 
 # Section 5.1.8 - Maximum Collision Test Statistic
-# takes list of collisions, C, as input
+# takes list of collisions, C, as input 
 def maxCollision(C):
     #Steps 1 through 3 found in function findCollisions
-
+        
     #4. The test statistic T is the maximum value in the list C.
     return max(C)
 
@@ -235,8 +234,8 @@ def periodicity(s, p):
     while i < (L-p):
         if s[i] == s[i+p]:
             T += 1
-        i += 1
-
+        i += 1    
+        
     return T
 
 
@@ -253,7 +252,7 @@ def covariance(s,p):
     while i < (L-p):
         T = T+(s[i]*s[i+p])
         i += 1
-
+        
     return T
 
 
@@ -272,7 +271,7 @@ def compression(s):
 
 
 def get_test_names():
-
+    
     test_names = ('excursion', 'numDirectionalRuns', 'lenDirectionalRuns', 'numIncreasesDecreases', \
                   'numRunsMedian','lenRunsMedian','avgCollision','maxCollision','periodicity(1)',\
                   'periodicity(2)','periodicity(8)','periodicity(16)','periodicity(32)',\
@@ -301,7 +300,7 @@ def altSequence2(s, X):
     #1. Find the median X of S (argument into function)
     #2. construct a temporary sequence s'
     sp = []
-    for i in range(L-1):
+    for i in range(L):
         if s[i] < X:
             sp.append(-1)
         else:
@@ -328,12 +327,12 @@ def findCollisions(s):
     for ell, index in enumerate(s):
         if index in s[i:ell]:
             C.append(ell - i + 1) # j = ell-i+1
-            i = ell + 1
-
+            i = ell + 1 
+    
     return C
 
-# Permutation testing
-def permutation_test(s, max_processes, verbose=False):
+# Permutation testing 
+def permutation_test(s, verbose=False):
 
     mean, median, is_binary = calc_stats(s)
 
@@ -355,7 +354,7 @@ def permutation_test(s, max_processes, verbose=False):
         cs2 = conversion2(s)
 
     t['excursion'] = excursion(s, mean)
-
+    
     if is_binary:
         # conversion 1 required for binary data for directional run and
         # increases/decreases statistics
@@ -370,7 +369,7 @@ def permutation_test(s, max_processes, verbose=False):
         t['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
 
     if is_binary:
-        sp2= altSequence2(cs2, 0.5)
+        sp2= altSequence2(s, 0.5)
     else:
         sp2= altSequence2(s, median)
     t['numRunsMedian'] = numRunsMedian(sp2)
@@ -397,7 +396,7 @@ def permutation_test(s, max_processes, verbose=False):
         t['periodicity(8)'] = periodicity(s,8)
         t['periodicity(16)'] = periodicity(s,16)
         t['periodicity(32)'] = periodicity(s,32)
-
+        
     if is_binary:
         # conversion 1 required for covariance statistics on binary data
         t['covariance(1)'] = covariance(cs1,1)
@@ -411,12 +410,12 @@ def permutation_test(s, max_processes, verbose=False):
         t['covariance(8)'] = covariance(s,8)
         t['covariance(16)'] = covariance(s,16)
         t['covariance(32)'] = covariance(s,32)
-
+        
     t['compression'] = compression(s)
 
     # 2. For j=1 to 10000
         # 2.1 Permute the input data using Fisher-Yates
-
+    
     if verbose:
         print ("Calculating statistics on permuted sequences")
     for j in range(10000):
@@ -435,7 +434,7 @@ def permutation_test(s, max_processes, verbose=False):
             cs2 = conversion2(s)
 
         tp['excursion'] = excursion(s, mean)
-
+        
         if is_binary:
             # conversion 1 required for binary data for directional run and
             # increases/decreases statistics
@@ -450,7 +449,7 @@ def permutation_test(s, max_processes, verbose=False):
             tp['numIncreasesDecreases'] = numIncreasesDecreases(sp1)
 
         if is_binary:
-            sp2= altSequence2(cs2, 0.5)
+            sp2= altSequence2(s, 0.5)
         else:
             sp2= altSequence2(s, median)
         tp['numRunsMedian'] = numRunsMedian(sp2)
@@ -477,7 +476,7 @@ def permutation_test(s, max_processes, verbose=False):
             tp['periodicity(8)'] = periodicity(s,8)
             tp['periodicity(16)'] = periodicity(s,16)
             tp['periodicity(32)'] = periodicity(s,32)
-
+            
         if is_binary:
             # conversion 1 required for covariance statistics on binary data
             tp['covariance(1)'] = covariance(cs1,1)
@@ -491,9 +490,9 @@ def permutation_test(s, max_processes, verbose=False):
             tp['covariance(8)'] = covariance(s,8)
             tp['covariance(16)'] = covariance(s,16)
             tp['covariance(32)'] = covariance(s,32)
-
+            
         tp['compression'] = compression(s)
-
+        
         # 2.2.2 If (tp[i] > t[i]), increment C[i,0]. If (tp[i] = t[i]), increment C[i,1].
         for i in get_test_names():
             if tp[i] > t[i]:

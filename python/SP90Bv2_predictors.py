@@ -243,7 +243,7 @@ def Lag(S, verbose=False):
     Pavg = calcPavg(C, N)
 
     #step 6
-    Prun = calcRun(correct)
+    Prun = calcRun(correct)\
 
     #step 7
     minH = -math.log(max(Pavg, Prun),2)
@@ -326,7 +326,6 @@ def MultiMMC(S, verbose=False):
 
     #step 5
     C = sum(correct)
-    print("Correct: %d" % C)
 
     #step 6
     Pavg = calcPavg(C, N)
@@ -386,7 +385,7 @@ def LZ78Y(S, verbose=False):
         predict = None
         for j in range(B,0,-1):
             prev = tuple(S[i-j-1:i-1])
-            if D.get(prev,0) > 0:
+            if prev in D:
                 for y in sorted(D[prev].keys(),reverse=True):
                     if D[prev][y] > maxcount:
                         predict = y
@@ -397,7 +396,6 @@ def LZ78Y(S, verbose=False):
         
     #step 4
     C = sum(correct)
-    print("\n Correct: %d\n" % C)
     Pavg = calcPavg(C, N)
 
     #step 5

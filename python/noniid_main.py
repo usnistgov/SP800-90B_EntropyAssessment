@@ -101,6 +101,7 @@ if __name__ == '__main__':
             print("- Compression Estimate: p(max) = %g, min-entropy = %g" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
+
         # Section 6.3.5 The t-Tuple Estimate
         pmax, minH = t_tuple(dataset)
         if verbose:
@@ -129,11 +130,13 @@ if __name__ == '__main__':
             print("Lag Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
 
+
         # Section 6.3.9 MultiMMC prediction estimate
         pmax, minH = MultiMMC(dataset, verbose)
         if verbose:
             print("MultiMMC Prediction Estimate: p(max) = %g, min-entropy = %g\n" % (pmax, minH))
         minEntropy = min(minH, minEntropy)
+        
 
         # Section 6.3.10 LZ78Y prediction estimate
         pmax, minH = LZ78Y(dataset, verbose)

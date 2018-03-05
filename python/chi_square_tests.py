@@ -17,6 +17,7 @@ import math
 from collections import OrderedDict, Counter
 from operator import itemgetter
 import itertools
+import sys
 
 # does the dataset pass the chi-square tests?
 def pass_chi_square_tests(dataset, verbose=False):
@@ -94,7 +95,10 @@ def chi_square_independence(s):
     more = True
     while more:
         try:
-            pair = pair_iterator.next()
+            if sys.version_info >= (3,0):
+                pair = pair_iterator.__next__()
+            else:
+                pair = pair_iterator.next()
             e[pair] = p[pair[0]]*p[pair[1]]*(L-1)
         except:
             more = False
@@ -123,7 +127,7 @@ def chi_square_independence(s):
         bins[q][0] = bins[q][0] + str(pair)
         bins[q][1] = bins[q][1] + pair_counts.get(pair,0)
         bins[q][2] = bins[q][2] + e[pair]
-
+        
         if e[pair] >= 5:
             q += 1
             bins.append(['',0,0])
@@ -140,9 +144,10 @@ def chi_square_independence(s):
         bins.pop()
         q -= 1
 
+
     # caclulate the test statistic, T
     T = 0
-    for i in range(q):
+    for i in range(q+1):
         T += float((bins[i][1] - bins[i][2])**2)/bins[i][2]
 
     # return statistic with q-1 df (since our indices start at 0, df is q)
