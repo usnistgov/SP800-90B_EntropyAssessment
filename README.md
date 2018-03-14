@@ -3,8 +3,11 @@
 Cryptographic random bit generators (RBGs), also known as random number generators (RNGs), require a noise source that produces digital outputs with some level of unpredictability, expressed as min-entropy. 
 
 ## Disclaimer
+=======
+Please note that this code package was published to assist in the evaluation of the entropy estimation methods provided in the draft publication. As such, it is written to resemble the pseudocode in the draft, and is not optimized for performance. After SP 800-90B is finalized, the code will be ported to another language and performance improvements will be made.
 
-This project is not currently associated with NIST, it is merely a C++ port form the provided Python code. 
+## Disclaimer
+NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may copy and distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.
 
 ## Requirements
 
@@ -14,7 +17,6 @@ This code package requires a C++11 compiler. GCC is preferred (and the only plat
 
 * `bin/` has a bunch of binary files for testing
 * `cpp/` holds the new codebase
-* `entropy_scraper/` holds a python script used to gather some binary files from the [NIST Beacon](http://www.nist.gov/itl/csd/ct/nist_beacon.cfm)
 * `python/` is the original codebase which is much more readable than the `c++` port
 
 ## Notes for running
@@ -30,10 +32,11 @@ The project is divided into two sections, IID tests and non-IID tests. They are 
 
 For IID tests use the following command to compile the program:
 
+## Basic Usage
+
     g++ -std=c++11 iid_main.cpp -lbz2 -pthread
 
 Then you can run the program with
-
 	./a.out <binary_file> <bits_per_word> <number_threads> [-v verbose]
 
 an example of this command looks like
@@ -44,11 +47,15 @@ All provided binaries are stored in the `bin/` folder, but if you have one you w
 
 To run the non-IID tests, use the following command to compile:
 
+### Example
+Non-IID estimators applied to same data as above:
+
     g++ -std=c++11 non_iid_main.cpp
 
 Running works the same way but without the threading flag. This looks like
 
-	./a.out <binary_file> <bits_per_word> [-v]
+    ./a.out <binary_file> <bits_per_word> [-v]
+
 
 ## Make
 
