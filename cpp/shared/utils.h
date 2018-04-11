@@ -4,6 +4,7 @@
 #include <string>		// std::string
 #include <map>			// std::map
 #include <set>			// std::set
+#include <mutex>                // std::mutex
 #include <string.h>		// strlen
 #include <iomanip>		// setw / setfill
 #include <stdio.h>
@@ -43,10 +44,16 @@ bool read_file(const char* file_path, byte data[], const int word_size){
 	return true;
 }
 
+/* Provide a seed for the pseudo random number generator */
+void seed(void){
+	srand(time(NULL));
+}
+
 // Fisher-Yates Fast (in place) shuffle algorithm
 void shuffle(byte arr[]){
-	srand(time(NULL));
 	long int r;
+        static mutex shuffle_mutex;
+        unique_lock<mutex> lock(shuffle_mutex);
 
 	for(long int i = SIZE-1; i > 0; --i){
 		r = (rand() / (float)RAND_MAX) * (i+1); 	// Proven faster than using % to cast random values

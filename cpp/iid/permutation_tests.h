@@ -438,6 +438,9 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 		tp[test_names[i]] = -1;
 	}
 
+        // Seed the random number generator
+        seed();
+
 	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
 	run_tests(data, mean, median, is_binary, t);
