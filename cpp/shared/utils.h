@@ -49,7 +49,12 @@ void shuffle(byte arr[]){
 	long int r;
 
 	for(long int i = SIZE-1; i > 0; --i){
-		r = (rand() / (float)RAND_MAX) * (i+1); 	// Proven faster than using % to cast random values
+		/* Generate an unbiassed integer in the interval [0, i] */
+        	const long int mx = (RAND_MAX / (i+1)) * (i+1);
+		do
+			r = rand();
+		while (r >= mx);
+		r %= i+1;
 		SWAP(arr[r], arr[i]);
 	}
 }
