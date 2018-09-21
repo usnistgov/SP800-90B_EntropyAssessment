@@ -1,79 +1,77 @@
+#pragma once
 #include "../shared/utils.h"
 
-double markov_test(const byte data[], const int k, double alpha){
-	
-	// Step 1
-	//   Re-define the confidence level to alpha
-	int d = 128;
-	int alpha_exp = max((int)pow(k, 2), d);
-	alpha = pow(alpha, alpha_exp);
+// Section 6.3.3 - Markov Estimate
+// data is assumed to be binary (e.g., bit string)
+double markov_test(byte* data, long len){
+	long i, C_0, C_1, C_00, C_01, C_10, C_11;
+	double H_min, tmp_min_entropy, P_0, P_1, P_00, P_01, P_10, P_11;
 
-	// Step 2
-	//   Estimate the initial state probability distribution P
-	int occurance[k] = {0};
-	for(int i = 0; i < SIZE; i++){
-		occurance[data[i]]++;
-	}
+	C_0 = 0.0;
+	C_00 = 0.0;
+	C_10 = 0.0;
 
-	double epsilon_term = log2(1.0 / (1.0-alpha));
-	double epsilon = sqrt(epsilon_term / (2*SIZE));
-
-	double P[k];
-	for(int i = 0; i < k; i++){
-		P[i] = min(1.0, divide(occurance[i], SIZE) + epsilon);
-	}
-
-	// Step 3
-	//   Remove 1 from the last occurance
-	occurance[k-1]--;
-
-	// Step 4
-	//   Estimate probabilities of the transition matrix T
-	int trans_occurance[k][k] = {0};
-	int o_i = data[0];
-	for(int i = 1; i < SIZE; i++){
-		int o_j = data[i];
-		trans_occurance[o_i][o_j]++;
-		o_i = o_j;
-	}
-
-	double epsilon_i[k];
-	for(int i = 0; i < k; i++){
-		if(occurance[i] == 0){
-			epsilon_i[i] = 0.0;
-		}else{
-			epsilon_i[i] = sqrt(epsilon_term / (2*occurance[i]));
+	// get counts for unconditional and transition probabilities
+	for(i = 0; i < len-1; i++){
+		if(data[i] == 0){
+			C_0++;
+			if(data[i+1] == 0) C_00++;
 		}
+		else if(data[i+1] == 0) C_10++;
 	}
 
-	double T[k][k] = {0.0};
-	for(int i = 0; i < k; i++){
-		for(int j = 0; j < k; j++){
-			if(occurance[i] == 0){
-				T[i][j] = 1.0;
-			}else{
-				T[i][j] = min(1.0, divide(trans_occurance[i][j], occurance[i]) + epsilon_i[i]);
-			}
-		}
+	C_1 = len - 1 - C_0;
+	C_01 = C_0 - C_00;
+	C_11 = C_1 - C_10;
+
+	P_00 = C_00 / (double)(C_00 + C_01);
+	P_10 = C_10 / (double)(C_10 + C_11);
+	P_01 = 1.0 - P_00;
+	P_11 = 1.0 - P_10;
+
+	// account for last symbol
+	if(data[len-1] == 0) C_0++;
+
+	P_0 = C_0 / (double)len;
+	P_1 = 1.0 - P_0;
+
+	H_min = 128.0;
+
+	// Sequence 00...0
+	if(P_00 > 0){
+		tmp_min_entropy = -log2(P_0) - 127*log2(P_00); 
+		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
 	}
 
-	// Step 5
-	//   Using transition matrix T to find p_max
-	for(int j = 1; j < d; j++){
-		double h[k];
-		for(int c = 0; c < k; c++){
-			double Pp[k];
-			for(int i = 0; i < k; i++){
-				Pp[i] = P[i]*T[i][c];
-			}
-			h[c] = max_arr(Pp, k);
-		}
-		copy(h, h+k, P);
+	// Sequence 0101...01
+	if((P_01 > 0) && (P_10 > 0)){
+		tmp_min_entropy = -log2(P_0) - 64*log2(P_01) - 63*log2(P_10);
+		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
 	}
 
-	double p_max = max_arr(P, k);
-	
-	// Step 6
-	//   Return min entropy estimate
-	return -log2(p_max) / d;
+        // Sequence 011...1
+	if((P_01 > 0) && (P_11 > 0)){
+        	tmp_min_entropy = -log2(P_0) - log2(P_01) - 126*log2(P_11);
+       		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;	
+	}
+
+        // Sequence 100...0
+	if((P_10 > 0) && (P_00 > 0)){
+        	tmp_min_entropy = -log2(P_1) - log2(P_10) - 126*log2(P_00);
+       		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
+	}
+
+        // Sequence 1010...10
+	if((P_10 > 0) && (P_01 > 0)){
+       		tmp_min_entropy = -log2(P_1) - 64*log2(P_10) - 63*log2(P_01);
+        	if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
+	}
+
+        // Sequence 11...1
+	if(P_11 > 0){
+        	tmp_min_entropy = -log2(P_1) - 127*log2(P_11);
+       		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
+	}
+
+	return H_min/128.0;
 }

@@ -3,3 +3,10 @@
 *.out
 tmp.cpp
 test/
+ea_iid
+ea_non_iid
+chi_test
+lrs_test
+most_common_test
+permutation_test
+.vscode

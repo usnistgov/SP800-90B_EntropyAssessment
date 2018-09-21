@@ -1,87 +1,93 @@
+#pragma once
 #include "../shared/utils.h"
 
-byte most_common_recent(const byte data[], const int pos, const int length){
+#define NUM_WINS 4
 
-	byte current_mode = 0;
-	int mode_frequency = -1;
-	array<int, 256> freq = {0};
+// Section 6.3.7 - Multi Most Common in Window (MCW) Prediction Estimate
+double multi_mcw_test(byte *data, long len, int alph_size){
+	int winner;
+	int W[NUM_WINS] = {63, 255, 1023, 4095};
+	long i, j, k, N, C, run_len, max_run_len, max_pos; 
+	long scoreboard[NUM_WINS] = {0};
+	long max_cnts[NUM_WINS] = {0};
+	long win_cnts[NUM_WINS][alph_size], win_poses[NUM_WINS][alph_size]; 
+	byte frequent[NUM_WINS];
+	double p_global, p_local;
+	
+	if(len < W[NUM_WINS-1]+1){	
+		printf("\t*** Warning: not enough samples to run multiMCW test (need more than %d) ***\n", W[NUM_WINS-1]+1);
+		return -1.0;
+	}
 
-	for(int i = 0; i < length; i++){
-		byte cur_val = data[pos+i];
-		freq[cur_val]++;
-
-		if(freq[cur_val] >= mode_frequency){
-			current_mode = cur_val;
-			mode_frequency = freq[cur_val];
+	N = len-W[0];
+	winner = 0;
+	C = 0;
+	run_len = 0;
+	max_run_len = 0;
+	for(i = 0; i < NUM_WINS; i++){
+		for(j = 0; j < alph_size; j++){
+			win_cnts[i][j] = 0;
+			win_poses[i][j] = 0;
 		}
 	}
 
-	return current_mode;
-}
+	// compute initial window counts
+	for(i = 0; i < W[NUM_WINS-1]; i++){
+		for(j = 0; j < NUM_WINS; j++){
+			if(i < W[j]){
+				if(max_cnts[j] <= ++win_cnts[j][data[i]]){
+					max_cnts[j] = win_cnts[j][data[i]];
+					frequent[j] = data[i];
+				}
+				win_poses[j][data[i]] = i;
+			}
+		}
+	}
 
-double multi_mcw_test(const byte data[], const bool verbose){
+	// perform predictions
+	for (i = W[0]; i < len; i++){
+		// test prediction of winner
+		if(frequent[winner] == data[i]){
+			C++;
+			if(++run_len > max_run_len) max_run_len = run_len;
+		}
+		else run_len = 0;
+
+		// update scoreboard and select new winner
+		for(j = 0; j < NUM_WINS; j++){
+			if((i >= W[j]) && (frequent[j] == data[i])){
+				if(++scoreboard[j] >= scoreboard[winner]) winner = j;
+			}
+		}
 	
-	// Step 1
-	array<int, 4> w = {63, 255, 1023, 4095};
-	int N = SIZE - w[0];
-	vector<int> correct(N, false);
-
-	// Step 2
-	array<int, 4> scoreboard = {0};
-	array<int, 4> frequent = {-1, -1, -1, -1};
-	int winner = 0;
-
-	// Step 3
-	for(int i = w[0]+1; i < SIZE+1; i++){
-
-		if(verbose){
-			if(i % 10000 == 0){
-				cout << "\rMulti Most Common in Window (MultiMCW) Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
-			}
-		}
-
-		// Step 3a
-		for(int j = 0; j < 4; j++){
-			if(i > w[j]+1){
-				frequent[j] = most_common_recent(data, i-w[j]-1, w[j]);
-			}else{
-				frequent[j] = -1;
-			}
-		}
-
-		// Step 3b-c
-		correct[i-w[0]-1] = (frequent[winner] == data[i-1]);
-
-		// Step 3d
-		for(int j = 0; j < 4; j++){
-			if(frequent[j] == data[i-1]){
-				scoreboard[j]++;
-				if(scoreboard[j] >= scoreboard[winner]){
-					winner = j;
+		// update window counts and select new frequents
+		for(j = 0; j < NUM_WINS; j++){
+			if(i >= W[j]){
+				win_cnts[j][data[i-W[j]]]--;
+				win_cnts[j][data[i]]++;
+				win_poses[j][data[i]] = i;
+				if((data[i-W[j]] != frequent[j]) && (max_cnts[j] <= win_cnts[j][data[i]])){
+					max_cnts[j] = win_cnts[j][data[i]];
+					frequent[j] = data[i];
+				}
+				else if(data[i-W[j]] == frequent[j]){
+					max_cnts[j]--;
+					// search for possible new frequent
+					max_pos = i-W[j];
+					for(k = 0; k < alph_size; k++){
+						if((max_cnts[j] < win_cnts[j][k]) || ((max_cnts[j] == win_cnts[j][k]) && (max_pos <= win_poses[j][k]))){
+							max_cnts[j] = win_cnts[j][k];
+							frequent[j] = k;
+							max_pos = win_poses[j][k];
+						}
+					}
 				}
 			}
 		}
 	}
 
-	if(verbose){
-		cout << endl;
-	}
-
-	// Step 4
-	int C = sum(correct);
-
-	// Step 5
-	double p_avg = calc_p_avg(C, N);
-
-	// Step 6
-	double p_run = calc_run(correct);
-
-	if(verbose){
-		cout << "\tCorrect: " << C << endl;
-		cout << "\tP_avg (global): " << p_avg << endl;
-		cout << "\tP_run (local): " << p_run << endl;
-	}
-
-	// Step 7
-	return -log2(max(p_avg, p_run));
+	p_global = calc_p_global(C, N);
+	p_local = calc_p_local(max_run_len, N);
+	
+	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
 }

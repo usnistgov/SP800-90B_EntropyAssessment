@@ -1,109 +1,88 @@
+#pragma once
 #include "../shared/utils.h"
 
-int d = 1000;
-int v = SIZE - d;
+double G(double z, long v, int d, long num_blocks){
+	long u, t;
+	double ret, inner_sum;
 
-double G(const double p){
+	// precompute inner sum
+	inner_sum = 0.0;
+	for(u = 2; u <= d; u++) inner_sum += log2(u) * z*z*pow(1.0-z, u-1);
 	
-	double G_sum = 0.0;
-	double in_sum = 0.0;
-	for(int i = 1; i < d+1; i++){
-		in_sum += log2(i) * pow(1.0-p, i-1);
+	// compute full sum
+	ret = 0.0;
+	for(t = d+1; t <= num_blocks; t++){
+		ret += log2(t) * z*pow(1.0-z, t-1) + inner_sum;
+		inner_sum += log2(t) * z*z*pow(1.0-z, t-1);
 	}
-
-	G_sum = pow(p, 2) * in_sum * v;
-
-	vector<double> st;
-	for(int i = d+1; i < SIZE+1; i++){
-		st.push_back(log2(i) * pow(1.0-p, i-1));
-	}
-
-	in_sum = 0;
-	for(unsigned int i = 0; i < st.size(); i++){
-		in_sum += ((SIZE-i-(d+1)) * st[i]);
-	}
-
-	G_sum += (pow(p, 2) * in_sum);
-
-	G_sum += (p * sum(st));
-
-	return (G_sum / (double)v);
-}
-
-double EppM(const double p, const int k){
-	double q = (1.0 - p) / (k - 1.0);
-	return (G(p) + ((k - 1) * G(q)));
-}
-
-bool solve_for_p(const double mu_bar, const int k, double &p){
-
-	double min_p = 1.0 / (double)k;
-	p = (1 - min_p) / 2.0 + min_p;
-	double adj = 1 - min_p;
-
-	double E_p_maxvalid = EppM(1.0 / (double)k, k);
-	if(mu_bar > E_p_maxvalid){
-		return false;
-	}
-
-	double Ep = EppM(p, k);
-	while(abs(mu_bar - Ep) > 0.00001){
-		adj /= 2.0;
-		
-		if(mu_bar > Ep){
-			p -= adj;
-		}else{
-			p += adj;
-		}
-
-		Ep = EppM(p, k);
-	}
-
-	return true;
-}
-
-double compression_test(const byte data[]){
 	
-	// Step 1-3
-	//   Partition dataset into two disjoint groups of size d and v
-	//   Create a dictionary from the first d observations
-	//   Initialize as 0, then have each byte correspond to the last occurance
-	//   If dict is nonzero, then assign D and update the dictionary
-	//   Otherwise, add value to dictionary and assign D
-	vector<int> dict(256, 0);
-	vector<double> D;
-	for(int i = 0; i < SIZE; i++){
-		if(i >= d){
-			D.push_back(log2(i-dict[data[i]]));
-		}
+	return ret/v;
+}
 
-		dict[data[i]] = i;
+double com_exp(double p, double q, unsigned int alph_size, long v, int d, long num_blocks){
+        return G(p, v, d, num_blocks) + alph_size * G(q, v, d, num_blocks);
+}
+
+// Section 6.3.4 - Compression Estimate
+// data is assumed to be binary (e.g., bit string)
+double compression_test(byte* data, long len){
+	int j, d, b = 6;
+	long i, num_blocks, v;
+	unsigned int block, alph_size = 1 << b; 
+	unsigned int dict[alph_size];
+	double X, sigma, p, p_lo, p_hi, eps, exp;
+
+	d = 1000;
+	num_blocks = len/b;
+	X = 0;
+	sigma = 0;
+
+	if(num_blocks <= d){
+		printf("\t*** Warning: not enough samples to run compression test (need more than %d) ***\n", d);
+		return -1.0;
 	}
 
-	// Step 4
-	//   Let b be the number of bits needed to represent the largest possible character
-	//   Calculate the mean and standard deviation
-	double b = floor(log2(256-1)) + 1;
-	double mu = sum(D) / (double)D.size();
-	double c = 0.7 - (0.8/b) + ((4 + (32/b) * pow(v, -3.0/b)) / 15);
-	double sigma = 0.0;
-
-	for(unsigned int i = 0; i < D.size(); i++){
-		sigma += pow(D[i], 2);
+	// create dictionary
+	for(i = 0; i < alph_size; i++) dict[i] = 0;
+	for(i = 0; i < d; i++){
+		block = 0;
+		for(j = 0; j < b; j++) block |= (data[i*b + j] & 0x1) << (b-j-1);
+		dict[block] = i+1;
 	}
 
-	sigma = c * sqrt((sigma / (double)v) - pow(mu, 2));
+	// test data against dictionary
+	v = num_blocks - d;
+	for(i = d; i < num_blocks; i++){
+		block = 0;
+		for(j = 0; j < b; j++) block |= (data[i*b + j] & 0x1) << (b-j-1);
+		X += log2(i+1-dict[block]);
+		sigma += log2(i+1-dict[block])*log2(i+1-dict[block]);
+		dict[block] = i+1;
+	}
 
-	// Step 5
-	//   Compute lower-bound based on normal distribution
-	double mu_bar = mu - (2.576*sigma)/sqrt(v);
+	// compute mean and stdev
+	X /= v;
+	sigma = 0.5907 * sqrt(sigma/(v-1.0) - X*X);
 
-	// Step 6
-	//   Using a binary search solve for p
-	double p = 0.0;
-	bool valid = solve_for_p(mu_bar, 256, p);
+        // binary search for p
+	X -= 2.576 * sigma/sqrt(v);
+        eps = 1.0 / (1 << 20); // 2^-20
+        p_lo = 1.0 / alph_size;
+        p_hi = 1.0 - eps; // avoid division by zero
+        do{
+                p = (p_lo + p_hi) / 2.0;
+                exp = com_exp(p, (1.0-p)/alph_size, alph_size, v, d, num_blocks);
 
-	// Step 7
-	//   Return based on if the search was successful
-	return (valid ? -log2(p) : log2(256));
+                if(X < exp) p_lo = p;
+                else p_hi = p;
+
+                if((com_exp(p_lo, (1.0-p_lo)/alph_size, alph_size, v, d, num_blocks) < X) || (com_exp(p_hi, (1.0-p_hi)/alph_size, alph_size, v, d, num_blocks) > X)){
+                        // binary search failed, settle for one bit of entropy
+			printf("\t *** WARNING: binary search for compression test failed ***\n");
+                        p = 1.0/alph_size; 
+                        break;
+                }
+        }while(fabs(p_hi - p_lo) > eps);
+
+        return -log2(p)/b;
 }

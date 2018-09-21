@@ -1,107 +1,82 @@
+#pragma once
 #include "../shared/utils.h"
 
-double multi_mmc_test(const byte data[], const bool verbose){
+#define D_MMC 16
+#define MAX_ENTRIES 100000
 
-	// Step 1
-	int D = 16;
-	const int N = SIZE - 2;
-	array<int, 16> subpredict;
-	vector<int> correct(N, false);
+// Section 6.3.9 - MultiMMC Prediction Estimate
+double multi_mmc_test(byte *data, long len, int alph_size){
+	int winner, cur_winner;
+	int entries[D_MMC];
+	long i, d, N, C, run_len, max_run_len;
+	long scoreboard[D_MMC] = {0};
+	array<byte, D_MMC> x;
+	double p_global, p_local;
+	bool found_x;
+	// d             x                 y          M_d[x,y]
+	array<map<array<byte, D_MMC>, map<byte, long>>, D_MMC> M;
 
-	// Step 2
-	//  d        x                    y     M_d[x, y]
-	map<int, map<array<byte, 16>, map<byte, int>>> M;
+	if(len < 3){	
+		printf("\t*** Warning: not enough samples to run multiMMC test (need more than %d) ***\n", 3);
+		return -1.0;
+	}
 
-	// Step 3
-	array<int, 16> scoreboard = {0};
-	int winner = 0;
+	N = len-2;
+	winner = 0;
+	C = 0;
+	run_len = 0;
+	max_run_len = 0;
 
-	// Step 4
-	for(int i = 3; i < SIZE+1; i++){
-
-		array<byte, 16> substring;
-
-		if(verbose){
-			if(i % 10000 == 0){
-				cout << "\rMultiMMC Test: " << (i/(double)SIZE)*100 << "% complete" << flush;
-			}
+	// initialize MMC counts
+	memset(x.data(), 0, D_MMC);
+	for(d = 0; d < D_MMC; d++){
+		if(d < N){
+			memcpy(x.data(), data, d+1);
+			M[d][x][data[d+1]] = 1;
 		}
+		entries[d] = 1;
+	}
 
-		// Step 4a
-		for(int d = 0; d < D; d++){
-			if(d+1 < i-1){
-				substring = fast_substr(data, i-d-1, d);
-				if(M[d].find(substring) == M[d].end()){
-					M[d][substring][data[i-1]] = 0;
+	// perform predictions
+	for (i = 2; i < len; i++){
+		cur_winner = winner;
+		memset(x.data(), 0, D_MMC);
+		for(d = 0; d < D_MMC; d++){
+			if(i-2 >= d){
+				// check if x has been previously seen. If (x,y) has not occurred, 
+				// then do not make a prediction for current d and larger d's 
+				// as well, since it will not occur for them either. In other words,
+				// prediction is NULL, so do not update the scoreboard.
+				if((d == 0) || found_x){
+					memcpy(x.data(), data+i-d-1, d+1);
+					if(M[d].find(x) == M[d].end()) found_x = false;
+					else found_x = true;
 				}
 
-				M[d][substring][data[i-1]]++;
-			}
-		}
-
-		// Step 4b
-		for(int d = 0; d < D; d++){
-			int ymax = 0;
-
-			if(i-d < 0){
-				substring = fast_substr(data, 0, d);
-			}else{
-				substring = fast_substr(data, i-d, d);
-			}
-
-			if(M[d].find(substring) != M[d].end()){
-
-				byte key = max_map(M[d][substring]);
-				ymax = M[d][substring][key];
-
-				if(M[d][substring][ymax] > 0){
-					subpredict[d] = ymax;
+				if(found_x){
+					// x has occurred, find max (x,y) pair across all y's
+					if(max_map(M[d][x]) == data[i]){
+						// prediction is correct, udpate scoreboard and winner
+						if(++scoreboard[d] >= scoreboard[winner]) winner = d;
+						if(d == cur_winner){
+							C++;
+							if(++run_len > max_run_len) max_run_len = run_len;
+						}
+					}
+					else if(d == cur_winner) run_len = 0;
+					M[d][x][data[i]]++;
 				}
-			}else{
-				subpredict[d] = -1;
-			}
-		}
-
-		// Step 4c
-		byte predict = subpredict[winner];
-
-		// Step 4d
-		if(predict == data[i-1]){
-			correct[i-3] = true;
-		}
-
-		// Step 4e
-		for(int d = 0; d < D; d++){
-			if(subpredict[d] == data[i-1]){
-				scoreboard[d]++;
-
-				if(scoreboard[d] >= scoreboard[winner]){
-					winner = d;
+				else if(entries[d] < MAX_ENTRIES){
+					memcpy(x.data(), data+i-d-1, d+1);
+					M[d][x][data[i]] = 1;
+					entries[d]++;
 				}
 			}
 		}
 	}
+	
+	p_global = calc_p_global(C, N);
+	p_local = calc_p_local(max_run_len, N);
 
-	// Offsets from flush printing to place carrige on next line
-	if(verbose){
-		cout << endl;
-	}
-
-	// Step 5
-	int C = sum(correct);
-
-	// Step 6
-	double p_avg = calc_p_avg(C, N);
-
-	// Step 7
-	double p_run = calc_run(correct);
-
-	if(verbose){
-		cout << "\tCorrect: " << C << endl;
-		cout << "\tP_avg (global): " << p_avg << endl;
-		cout << "\tP_run (local): " << p_run << endl;		
-	}
-
-	// Step 8
-	return -log2(max(p_avg, p_run));
+	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
 }

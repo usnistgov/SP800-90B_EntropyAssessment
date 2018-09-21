@@ -8,14 +8,14 @@
 * ---------------------------------------------
 */
 
-void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector<int>> &indexes){
+void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector<int>> &indexes, const int sample_size){
 
 	// First iteration
 	if(substr_len == 2){
 
 		// Store all 2-tuples that appear in the text
-		for(int i = 0; i < SIZE-1; i++){
-			indexes[substr(text, i, substr_len)].push_back(i);
+		for(int i = 0; i < sample_size-1; i++){
+			indexes[substr(text, i, substr_len, sample_size)].push_back(i);
 		}
 
 	// All other iterations, don't just find all n-tuples naively like 2-tuples
@@ -37,7 +37,7 @@ void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector
 
 		// Extend the n-tuples to (n+1)-tuples and store like before
 		for(unsigned int i = 0; i < good_indexes.size(); i++){
-			indexes[substr(text, good_indexes[i], substr_len)].push_back(good_indexes[i]);
+			indexes[substr(text, good_indexes[i], substr_len, sample_size)].push_back(good_indexes[i]);
 		}
 	}
 }
@@ -55,7 +55,7 @@ void erase_substrings(map<vector<byte>, vector<int>> &indexes){
 	}
 }
 
-int len_LRS(const byte text[], const int remaining = 1, const int substr_len = 1){
+int len_LRS(const byte text[], const int remaining, const int substr_len, const int sample_size){
 
 	// String is the substring we are looking at, vector stores the indexes those substrings begin at
 	map<vector<byte>, vector<int>> indexes;
@@ -65,7 +65,7 @@ int len_LRS(const byte text[], const int remaining = 1, const int substr_len = 1
 	// Progressively grow the length of the n-tuples to look for
 	while(index_size >= remaining){
 		len++;
-		find_substrings(text, len, indexes);
+		find_substrings(text, len, indexes, sample_size);
 		erase_substrings(indexes);
 		index_size = indexes.size();
 	}
@@ -76,10 +76,10 @@ int len_LRS(const byte text[], const int remaining = 1, const int substr_len = 1
 	return len;
 }
 
-void count_tuples(const byte data[], const int length, map<vector<byte>, int> &tuples){
+void count_tuples(const byte data[], const int length, map<vector<byte>, int> &tuples, const int sample_size){
 
-	for(int i = 0; i < SIZE-length; i++){
-		vector<byte> substring = substr(data, i, length);
+	for(int i = 0; i < sample_size-length; i++){
+		vector<byte> substring = substr(data, i, length, sample_size);
 		if(tuples.find(substring) == tuples.end()){
 			tuples[substring] = 1;
 		}else{
@@ -107,35 +107,35 @@ void calc_collision_proportion(const vector<double> &p, double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[], const bool verbose){
+bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_size, const bool verbose){
 
-	vector<double> p(256, 0.0);
-	calc_proportions(data, p);
+	vector<double> p(alphabet_size, 0.0);
+	calc_proportions(data, p, sample_size);
 
 	double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
 
 	// Calculate the number of overlapping substrings of the same length as the longest repeated substring
-	int lrs = len_LRS(data);
-	int n = SIZE - lrs;
+	int lrs = len_LRS(data, 1, 1, sample_size);
+	int n = sample_size - lrs + 1;
 	long int overlap = n_choose_2(n);
 
-	double pr_e = 1 - pow(1 - pow(p_col, lrs), overlap);
+	double pr_x = 1 - pow(1 - pow(p_col, lrs), overlap);
 
 	if(verbose){
 		cout << "Longest Repeated Substring results" << endl;
 		cout << "\tP_col: " << p_col << endl;
 		cout << "\tLength of LRS: " << lrs << endl;
-		cout << "\tPr(E >= 1): " << pr_e << endl;
+		cout << "\tPr(X >= 1): " << pr_x << endl;
 	}
 
-	return (pr_e >= 0.001);
+	return (pr_x >= 0.001);
 }
 
-double LRS_test_noniid(const byte data[]){
+double LRS_test_noniid(const byte data[], const int sample_size, const int alphabet_size, const long u){
 
-	int u = len_LRS(data, 20);
-	int v = len_LRS(data, 1, u);
+	// int u = len_LRS(data, 20, 1, sample_size);
+	int v = len_LRS(data, 1, u, sample_size);
 
 	if(v < u){
 		cout << "Error in LRS. Aborting." << endl;
@@ -143,9 +143,9 @@ double LRS_test_noniid(const byte data[]){
 	}
 
 	vector<double> p;
-	for(int i = u; i <= v; i++){
+	for(int i = (int)u; i <= v; i++){
 		map<vector<byte>, int> tuples;
-		count_tuples(data, i, tuples);
+		count_tuples(data, i, tuples, sample_size);
 
 		map<vector<byte>, int>::iterator itr;
 		int numer = 0;
@@ -155,7 +155,7 @@ double LRS_test_noniid(const byte data[]){
 			}
 		}
 
-		long int denom = n_choose_2(SIZE-i+1);
+		long int denom = n_choose_2(sample_size-i+1);
 		p.push_back(pow(numer/(double)denom, 1.0/i));
 	}
 

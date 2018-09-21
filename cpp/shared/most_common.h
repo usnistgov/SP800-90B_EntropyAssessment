@@ -1,25 +1,23 @@
-#include "utils.h"
+#pragma once
+#include "../shared/utils.h"
 
-double most_common(byte data[]){
+// Section 6.3.1 - Most Common Value Estimate
+double most_common(byte* data, const long len, const int alph_size){
 
-	map<byte, int> p;
-	map_init(p);
+	long counts[alph_size];
+	long i, mode;
+	double pmax, ubound;
 
-	for(int i = 0; i < SIZE; i++){
-		p[data[i]]++;
+	for(i = 0; i < alph_size; i++) counts[i] = 0;
+	for (i = 0; i < len; i++) counts[data[i]]++;
+
+	mode = 0;
+	for(i = 0; i < alph_size; i++){
+		if(counts[i] > mode) mode = counts[i];
 	}
 
-	int mode = 0;
-	map<byte, int>::iterator itr;
-	for(itr = p.begin(); itr != p.end(); ++itr){
-		if(itr->second > mode){
-			mode = itr->second;
-		}
-	}
+	pmax = mode/(double)len;
+	ubound = pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0));
 
-	double pmax = mode / (double)SIZE;
-	double ubound = pmax + 2.576 * sqrt(pmax * (1.0 - pmax) / (double)SIZE);
-	double pu = min(1.0, ubound);
-
-	return -log2(pu);
+	return -log2(min(1.0, ubound));
 }
