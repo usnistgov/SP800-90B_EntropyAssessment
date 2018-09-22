@@ -20,7 +20,7 @@ double G(double z, long v, int d, long num_blocks){
 }
 
 double com_exp(double p, double q, unsigned int alph_size, long v, int d, long num_blocks){
-        return G(p, v, d, num_blocks) + alph_size * G(q, v, d, num_blocks);
+        return G(p, v, d, num_blocks) + (alph_size - 1) * G(q, v, d, num_blocks);
 }
 
 // Section 6.3.4 - Compression Estimate
@@ -71,12 +71,12 @@ double compression_test(byte* data, long len){
         p_hi = 1.0 - eps; // avoid division by zero
         do{
                 p = (p_lo + p_hi) / 2.0;
-                exp = com_exp(p, (1.0-p)/alph_size, alph_size, v, d, num_blocks);
+                exp = com_exp(p, (1.0-p)/(alph_size-1), alph_size, v, d, num_blocks);
 
                 if(X < exp) p_lo = p;
                 else p_hi = p;
 
-                if((com_exp(p_lo, (1.0-p_lo)/alph_size, alph_size, v, d, num_blocks) < X) || (com_exp(p_hi, (1.0-p_hi)/alph_size, alph_size, v, d, num_blocks) > X)){
+                if((com_exp(p_lo, (1.0-p_lo)/(alph_size-1), alph_size, v, d, num_blocks) < X) || (com_exp(p_hi, (1.0-p_hi)/(alph_size-1), alph_size, v, d, num_blocks) > X)){
                         // binary search failed, settle for one bit of entropy
 			printf("\t *** WARNING: binary search for compression test failed ***\n");
                         p = 1.0/alph_size; 
