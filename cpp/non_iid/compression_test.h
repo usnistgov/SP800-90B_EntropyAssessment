@@ -106,13 +106,15 @@ double compression_test(byte* data, long len){
 
                 //invariant. If this isn't true, then we can't evaluate here.
                 if(!(INCLOSEDINTERVAL(lbound, ldomain, hdomain) && INCLOSEDINTERVAL(hbound,  ldomain, hdomain))) {
-                        p = hdomain;
+			//This is a search failure. We need to return "full entropy"  (as directed in step #8).
+			p = ldomain;
                         break;
                 }
 
                 //invariant. If this isn't true, then seeking the value within this interval doesn't make sense.
                 if(!INCLOSEDINTERVAL(X, lvalue, hvalue)) {
-                        p = hdomain;
+			//This is a search failure. We need to return "full entropy"  (as directed in step #8).
+			p = ldomain;
                         break;
                 }
 
