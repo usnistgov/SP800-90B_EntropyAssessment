@@ -49,7 +49,7 @@ double t_tuple_test(byte *data, long len, int alph_size, long *u_p){
 	*u_p = tup_size; // set start tuple size 'u' for LRS test
 
 	pmax = pow(2.0, -t_tuple_min_entropy);
-	return -log2(min(1.0, pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0))));
+	return -log2(min(1.0, pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0))));
 }
 
 // Section 6.3.6 - Longest Repeated Substring (LRS) Estimate
@@ -108,5 +108,5 @@ double lrs_test(byte *data, long len, int alph_size, long u){
 	}
 
 	pmax = pow(2.0, -lrs_min_entropy);
-	return -log2(min(1.0, pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0))));
+	return -log2(min(1.0, pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0))));
 }

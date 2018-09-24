@@ -16,11 +16,22 @@
 #include <omp.h>		// openmp 4.0 with gcc 4.9
 #include <bitset>
 #include <mutex>		// std::mutex
+#include <assert.h>
+#include <cfloat>
+#include <math.h>
 
 #define SWAP(x, y) do { int s = x; x = y; y = s; } while(0)
+#define INOPENINTERVAL(x, a, b) (((a)>(b))?(((x)>(b))&&((x)<(a))):(((x)>(a))&&((x)<(b))))
+#define INCLOSEDINTERVAL(x, a, b) (((a)>(b))?(((x)>=(b))&&((x)<=(a))):(((x)>=(a))&&((x)<=(b))))
 
 #define MIN_SIZE 1000000
 #define PERMS 10000
+
+#define RELEPSILON 4.0*DBL_EPSILON
+#define ABSEPSILON 4.0*DBL_EPSILON
+#define DBL_INFINITY __builtin_inf ()
+#define ITERMAX 1076
+#define ZALPHA 2.5758293035489008
 
 typedef unsigned char byte;
 
@@ -36,6 +47,88 @@ struct data_t{
 };
 
 using namespace std;
+
+//This generally performs a check for relative closeness, but (if that check would be nonsense)
+//it can check for an absolute separation, using either the distance between the numbers, or
+//the number of ULPs that separate the two numbers.
+//See the following for details and discussion of this approach:
+//See https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+//https://floating-point-gui.de/errors/comparison/
+bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFactor, uint32_t maxULP)
+{
+   double diff;
+   double absA, absB;
+   uint64_t Aint;
+   uint64_t Bint;
+
+   assert(sizeof(uint64_t) == sizeof(double));
+
+   ///NaN is by definition not equal to anything (including itself)
+   if(std::isnan(A) || std::isnan(B)) {
+      return false;
+   }
+
+   //We now know that absB>absA
+   //Deals with equal infinities, and the corner case where they are actually copies
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+   if(A==B) {
+      return true;
+   }
+#pragma GCC diagnostic pop
+
+   //If either is infinity, but they are not equal, then they aren't close.
+   if(std::isinf(A) || std::isinf(B)) {
+      return false;
+   }
+
+   absA = fabs(A);
+   absB = fabs(B);
+   //Make sure that A is the closest to 0.
+   if(absA > absB) {
+      double tmp;
+
+      tmp = B;
+      B=A;
+      A=tmp;
+
+      tmp = absA;
+      absA = absB;
+      absB = tmp;
+   }
+
+   diff=fabs(B-A);
+
+   //Is absA or diff subnormal?
+   if((absA <= DBL_MIN) || (diff < DBL_MIN)) {
+      //Yes. relitive closeness is going to be nonsense
+      return diff < maxAbsFactor;
+   } else if(diff <= absB * maxRelFactor) {
+      return true;
+   }
+   //They aren't close in the normal sense, but perhaps that's just due to IEEE representation.
+   //Check to see if the value is within maxULP ULPs
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+   //Can't meaningfully compare non-zero values with 0.0 in this way.
+   if(A==0.0) {
+      return false;
+   }
+#pragma GCC diagnostic pop
+
+   //if they aren't the same sign, they can't be equal
+   if(signbit(A) !=  signbit(B)) {
+      return false;
+   }
+
+   memcpy(&Aint, &absA, sizeof(double));
+   memcpy(&Bint, &absB, sizeof(double));
+   assert(Bint > Aint);
+
+   return (Bint - Aint <= maxULP);
+}
+
 
 void free_data(data_t *dp){
 	if(dp->symbols != NULL) free(dp->symbols);
@@ -320,32 +413,106 @@ double divide(const int a, const int b) {
 double calc_p_global(long C, long N){
 	double p = C/(double)N;
 
-	if(p > 0) p = min(1.0, p + 2.576*sqrt((p*(1.0-p))/(N-1.0)));
+	if(p > 0) p = min(1.0, p + ZALPHA*sqrt((p*(1.0-p))/(N-1.0)));
 	else p = 1 - pow(0.01, 1.0/(double)N);
 	return p;
 }
 
 double calc_p_local(long max_run_len, long N){
-	int i;
-	double p, q, r, x, p_lo, p_hi, log_alpha, exp, eps;
+	int i, j;
+	double p, q, r, log_alpha, exp, eps;
+	long double x;
+	double lastP, pVal;
+	double lvalue, hvalue;
+	double hbound, lbound;
+	double hdomain, ldomain;
 
 	// binary search for p_local
 	r = (double)max_run_len+1;
 	log_alpha = log(0.99);
-	eps = 1.0 / (1 << 20); // 2^-20
-	p_lo = 0.0 + eps; // avoid division by zero
-	p_hi = 1.0 - eps; // avoid division by zero
-	do{
-		p = (p_lo + p_hi) / 2.0;
+	
+	ldomain = 0.0;
+	hdomain = 1.0;
+
+	lbound = ldomain;
+	hbound = hdomain;
+
+	lvalue = DBL_INFINITY;
+	hvalue = -DBL_INFINITY;
+
+	//Note that the bounds are in [0,1], so overflows aren't an issue
+	//But underflows are.
+	p = (lbound + hbound) / 2.0;
+
+	q = 1.0-p;
+	x = 1.0;
+	for(i = 0; i < 10; i++) x = 1.0 + q*pow(p, r)*powl(x, r+1.0);
+	pVal = (double)(logl(1.0-p*x) - logl((r+1.0-r*x)*q) - (N+1.0)*logl(x));
+
+	//We don't need the initial pVal invariant, as our initial bounds are infinite.
+	//We don't need the initial bounds, as they are set to the domain bounds
+	for(j=0; j<ITERMAX; j++) {
+		//Have we reached "equality"?
+		if(relEpsilonEqual(pVal, log_alpha, ABSEPSILON, RELEPSILON, 4)) break;
+
+		//Now update based on the found pVal
+		if(log_alpha < pVal) {
+			lbound = p;
+			lvalue = pVal;
+		} else {
+			hbound = p;
+			hvalue = pVal;
+		}
+
+		//We now verify that ldomain <= lbound < p < hbound <= hdomain
+		//and that target in [ lvalue, hvalue ]
+		if(lbound >= hbound) {
+			p = fmin(fmax(lbound, hbound),hdomain);
+			break;
+		}
+
+		//invariant. If this isn't true, then we can't evaluate here.
+		if(!(INCLOSEDINTERVAL(lbound, ldomain, hdomain) && INCLOSEDINTERVAL(hbound,  ldomain, hdomain))) {
+			p = hdomain;
+			break;
+		}
+
+		//invariant. If this isn't true, then seeking the value within this interval doesn't make sense.
+		if(!INCLOSEDINTERVAL(log_alpha, lvalue, hvalue)) {
+			p = hdomain;
+			break;
+		}
+
+		//Update p
+		lastP = p;
+		p = (lbound + hbound) / 2.0;
+
+		//invariant. If this isn't true, then further calculation isn't really meaningful.
+		if(!INOPENINTERVAL(p,  lbound, hbound)) {
+			p = hbound;
+			break;
+		}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+		//Look for a cycle
+		if(lastP == p) {
+			p = hbound;
+			break;
+		}
+#pragma GCC diagnostic pop
+
 		q = 1.0-p;
-		
 		x = 1.0;
 		for(i = 0; i < 10; i++) x = 1.0 + q*pow(p, r)*pow(x, r+1.0);
-		exp = log(1.0-p*x) - log((r+1.0-r*x)*q) - (N+1.0)*log(x);
+		pVal = log(1.0-p*x) - log((r+1.0-r*x)*q) - (N+1.0)*log(x);
 
-		if(log_alpha < exp) p_lo = p;
-		else p_hi = p;
-	}while(fabs(p_hi - p_lo) > eps);
+		//invariant: If this isn't true, then this isn't loosly monotonic
+		if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
+			p = hbound;
+			break;
+		}
+	}//for loop
 
 	return p;
 }
