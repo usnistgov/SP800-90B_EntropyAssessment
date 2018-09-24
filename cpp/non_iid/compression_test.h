@@ -1,19 +1,28 @@
 #pragma once
 #include "../shared/utils.h"
 
+inline void kahan_add(double &sum, double &comp, double in){
+	double y, t; 
+
+	y = in - comp;
+	t = sum + y;
+	comp = (t - sum) - y;
+	sum = t;
+}
+
 double G(double z, long v, int d, long num_blocks){
 	long u, t;
-	double ret, inner_sum;
+	double ret=0.0, ret_comp=0.0;
+	double inner_sum=0.0, inner_sum_comp=0.0;
 
 	// precompute inner sum
-	inner_sum = 0.0;
-	for(u = 2; u <= d; u++) inner_sum += log2(u) * z*z*pow(1.0-z, u-1);
+	for(u = 2; u <= d; u++) kahan_add(inner_sum, inner_sum_comp, log2(u) * z*z*pow(1.0-z, u-1));
 	
 	// compute full sum
 	ret = 0.0;
 	for(t = d+1; t <= num_blocks; t++){
-		ret += log2(t) * z*pow(1.0-z, t-1) + inner_sum;
-		inner_sum += log2(t) * z*z*pow(1.0-z, t-1);
+		kahan_add(ret, ret_comp, log2(t) * z*pow(1.0-z, t-1) + inner_sum);
+		kahan_add(inner_sum, inner_sum_comp, log2(t) * z*z*pow(1.0-z, t-1));
 	}
 	
 	return ret/v;
@@ -30,13 +39,13 @@ double compression_test(byte* data, long len){
 	long i, num_blocks, v;
 	unsigned int block, alph_size = 1 << b; 
 	unsigned int dict[alph_size];
-	double X, sigma, p, p_lo, p_hi, eps, exp;
+	double X=0.0, X_comp=0.0;
+	double sigma=0.0, sigma_comp=0.0;
+	double p, p_lo, p_hi, eps, exp;
 	double ldomain, hdomain, lbound, hbound, lvalue, hvalue, pVal, lastP;
 
 	d = 1000;
 	num_blocks = len/b;
-	X = 0;
-	sigma = 0;
 
 	if(num_blocks <= d){
 		printf("\t*** Warning: not enough samples to run compression test (need more than %d) ***\n", d);
@@ -56,8 +65,8 @@ double compression_test(byte* data, long len){
 	for(i = d; i < num_blocks; i++){
 		block = 0;
 		for(j = 0; j < b; j++) block |= (data[i*b + j] & 0x1) << (b-j-1);
-		X += log2(i+1-dict[block]);
-		sigma += log2(i+1-dict[block])*log2(i+1-dict[block]);
+		kahan_add(X, X_comp, log2(i+1-dict[block]));
+		kahan_add(sigma, sigma_comp, log2(i+1-dict[block])*log2(i+1-dict[block]));
 		dict[block] = i+1;
 	}
 
