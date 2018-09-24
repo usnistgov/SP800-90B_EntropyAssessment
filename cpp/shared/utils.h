@@ -446,7 +446,7 @@ double calc_p_local(long max_run_len, long N){
 
 	q = 1.0-p;
 	x = 1.0;
-	for(i = 0; i < 10; i++) x = 1.0 + q*pow(p, r)*powl(x, r+1.0);
+	for(i = 0; i < 10; i++) x = 1.0 + q*powl(p, r)*powl(x, r+1.0);
 	pVal = (double)(logl(1.0-p*x) - logl((r+1.0-r*x)*q) - (N+1.0)*logl(x));
 
 	//We don't need the initial pVal invariant, as our initial bounds are infinite.
@@ -504,7 +504,7 @@ double calc_p_local(long max_run_len, long N){
 
 		q = 1.0-p;
 		x = 1.0;
-		for(i = 0; i < 10; i++) x = 1.0 + q*pow(p, r)*pow(x, r+1.0);
+		for(i = 0; i < 10; i++) x = 1.0 + q*powl(p, r)*powl(x, r+1.0);
 		pVal = log(1.0-p*x) - log((r+1.0-r*x)*q) - (N+1.0)*log(x);
 
 		//invariant: If this isn't true, then this isn't loosly monotonic
