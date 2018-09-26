@@ -2,9 +2,9 @@
 #include "../shared/utils.h"
 
 // Section 6.3.5 - t-Tuple Estimate
-double t_tuple_test(byte *data, long len, int alph_size, long *u_p){
+double t_tuple_test(byte *data, long len, int alph_size, long *u_p, const bool verbose){
 	long i, pos, c, tup_size, Q, thresh = 35;
-	double t_tuple_min_entropy, min_entropy, pmax;
+	double t_tuple_min_entropy, min_entropy, pmax, pu;
 	vector<byte> tuple;
 	map<vector<byte>, vector<long>> tuples, prev_tuples;
 	map<vector<byte>, vector<long>>::iterator itr;
@@ -46,16 +46,20 @@ double t_tuple_test(byte *data, long len, int alph_size, long *u_p){
 		prev_tuples.clear(); // destroy previous tuples
 	}
 
+	if(verbose) printf("t-Tuple Estimate: u = %ld, ", tup_size);
 	*u_p = tup_size; // set start tuple size 'u' for LRS test
 
 	pmax = pow(2.0, -t_tuple_min_entropy);
-	return -log2(min(1.0, pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0))));
+	if(verbose) printf("p_max = %.17g, ", pmax);
+	pu = min(1.0, pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0)));
+	if(verbose) printf("p_u = %.17g\n", pu);
+	return -log2(pu);
 }
 
 // Section 6.3.6 - Longest Repeated Substring (LRS) Estimate
-double lrs_test(byte *data, long len, int alph_size, long u){
+double lrs_test(byte *data, long len, int alph_size, long u, const bool verbose){
 	long i, pos, c, tup_size, Q;
-	double lrs_min_entropy, min_entropy, pmax, sum;
+	double lrs_min_entropy, min_entropy, pmax, sum, pu;
 	vector<byte> tuple;
 	map<vector<byte>, vector<long>> tuples, prev_tuples;
 	map<vector<byte>, vector<long>>::iterator itr;
@@ -63,6 +67,8 @@ double lrs_test(byte *data, long len, int alph_size, long u){
 	// Since 1/(n*n) < sum(C(C-1))/[n(n-1)], 
 	// it follows that LRS min-entropy < 2*log2(n)
 	lrs_min_entropy = 2*log2(alph_size);
+
+	if(verbose) printf("LRS Estimate: u = %ld, ", u);
 
 	// find smallest tuple occurrences
 	Q = 0;
@@ -107,6 +113,10 @@ double lrs_test(byte *data, long len, int alph_size, long u){
 		prev_tuples.clear(); // destroy previous tuples
 	}
 
+	if(verbose) printf("v = %ld, ", tup_size);
+
 	pmax = pow(2.0, -lrs_min_entropy);
-	return -log2(min(1.0, pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0))));
+	pu = min(1.0, pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0)));
+	if(verbose) printf("pmax = %.17g, p_u = %.17g\n", pmax, pu);
+	return -log2(pu);
 }

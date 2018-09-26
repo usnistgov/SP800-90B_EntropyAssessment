@@ -2,7 +2,7 @@
 #include "../shared/utils.h"
 
 // Section 6.3.1 - Most Common Value Estimate
-double most_common(byte* data, const long len, const int alph_size){
+double most_common(byte* data, const long len, const int alph_size, const bool verbose){
 
 	long counts[alph_size];
 	long i, mode;
@@ -17,7 +17,9 @@ double most_common(byte* data, const long len, const int alph_size){
 	}
 
 	pmax = mode/(double)len;
-	ubound = pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0));
+	
+	ubound = min(1.0,pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0)));
+	if(verbose) printf("MCV Estimate: mode = %ld, p-hat = %.17g, p_u = %.17g\n", mode, pmax, ubound);
 
-	return -log2(min(1.0, ubound));
+	return -log2(ubound);
 }

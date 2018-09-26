@@ -136,7 +136,7 @@ int main(int argc, char* argv[]){
 	double start_time = omp_get_wtime();
 
 	// Compute the min-entropy of the dataset
-	double H_min = most_common(data.symbols, sample_size, alphabet_size);
+	double H_min = most_common(data.symbols, sample_size, alphabet_size, verbose);
 	printf("min-entropy = %f\n\n", H_min);
 
 	// Compute chi square stats

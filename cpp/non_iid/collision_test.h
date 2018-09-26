@@ -12,7 +12,7 @@ double col_exp(double p, double q){
 
 // Section 6.3.2 - Collision Estimate
 // data is assumed to be binary (e.g., bit string)
-double collision_test(byte* data, long len){
+double collision_test(byte* data, long len, const bool verbose){
 	long v, i, j;
 	int t_v;
 	double X, s, p, lastP, pVal;
@@ -39,7 +39,9 @@ double collision_test(byte* data, long len){
 	// X is mean of t_v's, s is sample stdev, where
 	// s^2 = (sum(t_v^2) - sum(t_v)^2/v) / (v-1)
 	X = i / (double)v;
+	if(verbose) printf("Collision Estimate: X-bar = %.17g, ", X);
 	s = sqrt((s - (i*X)) / (v-1));
+	if(verbose) printf("sigma-hat = %.17g, ", s);
 
 	// binary search for p
 	X -= ZALPHA * s/sqrt(v);
@@ -123,5 +125,6 @@ double collision_test(byte* data, long len){
                 }
         }//for loop
 
+	if(verbose > 0) printf("p = %.17g\n", p);
 	return -log2(p);
 }

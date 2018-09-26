@@ -4,7 +4,7 @@
 #define D_LAG 128
 
 // Section 6.3.8 - Lag Prediction Estimate
-double lag_test(byte *data, long len, int alph_size){
+double lag_test(byte *data, long len, int alph_size, const bool verbose){
 	int winner; 
 	long i, d, N, C, run_len, max_run_len;
 	long scoreboard[D_LAG] = {0};
@@ -40,6 +40,8 @@ double lag_test(byte *data, long len, int alph_size){
 
 	p_global = calc_p_global(C, N);
 	p_local = calc_p_local(max_run_len, N);
+
+	if(verbose) printf("Lag Prediction Estimate: N = %ld, Pglobal = %.17g (C = %ld) Plocal' = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len);
 
 	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
 }

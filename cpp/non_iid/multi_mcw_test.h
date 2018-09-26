@@ -4,7 +4,7 @@
 #define NUM_WINS 4
 
 // Section 6.3.7 - Multi Most Common in Window (MCW) Prediction Estimate
-double multi_mcw_test(byte *data, long len, int alph_size){
+double multi_mcw_test(byte *data, long len, int alph_size, const bool verbose){
 	int winner;
 	int W[NUM_WINS] = {63, 255, 1023, 4095};
 	long i, j, k, N, C, run_len, max_run_len, max_pos; 
@@ -88,6 +88,8 @@ double multi_mcw_test(byte *data, long len, int alph_size){
 
 	p_global = calc_p_global(C, N);
 	p_local = calc_p_local(max_run_len, N);
+
+	if(verbose) printf("MultiMCW Prediction Estimate: N = %ld, Pglobal = %.17g (C = %ld) Plocal' = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len);
 	
 	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
 }
