@@ -459,6 +459,8 @@ void print_results(map<int, array<int, 2>> &C){
 
 bool permutation_tests(const byte ds[], const double mean, const double median, const int alphabet_size, const int sample_size, const int num_threads, const bool verbose){
 
+	uint64_t xoshiro256starstarSeed[4];
+
 	// We need a copy because the tests take in by reference and modify it
 	byte data[sample_size];
 	for(int i = 0; i < sample_size; ++i){
@@ -481,7 +483,7 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 
 	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
-	seed();
+	seed(xoshiro256starstarSeed);
 	run_tests(data, mean, median, alphabet_size, sample_size, t);
 
 	if(verbose){
@@ -500,7 +502,7 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
 		}
 
-		shuffle(data, sample_size);
+		shuffle(data, sample_size, xoshiro256starstarSeed);
 		run_tests(data, mean, median, alphabet_size, sample_size, tp);
 
 		// Aggregate results into the counters

@@ -135,19 +135,101 @@ bool read_file(const char *file_path, data_t *dp){
 	return true;
 }
 
-void seed(){
-	srand(time(NULL));
+/* This is xoshiro256** 1.0*/
+/*This implementation is derived from David Blackman and Sebastiano Vigna, which they placed into
+the public domain. See http://xoshiro.di.unimi.it/xoshiro256starstar.c
+*/
+static inline uint64_t rotl(const uint64_t x, int k) {
+	return (x << k) | (x >> (64 - k));
+}
+
+static inline uint64_t xoshiro256starstar(uint64_t *xoshiro256starstarState)
+{
+	const uint64_t result_starstar = rotl(xoshiro256starstarState[1] * 5, 7) * 9;
+	const uint64_t t = xoshiro256starstarState[1] << 17;
+
+	xoshiro256starstarState[2] ^= xoshiro256starstarState[0];
+	xoshiro256starstarState[3] ^= xoshiro256starstarState[1];
+	xoshiro256starstarState[1] ^= xoshiro256starstarState[2];
+	xoshiro256starstarState[0] ^= xoshiro256starstarState[3];
+
+	xoshiro256starstarState[2] ^= t;
+
+	xoshiro256starstarState[3] = rotl(xoshiro256starstarState[3], 45);
+
+   return result_starstar;
+}
+
+
+void seed(uint64_t *xoshiro256starstarState){
+	FILE *infp;
+
+	if((infp=fopen("/dev/urandom", "rb"))==NULL) {
+		perror("Can't open random source. Reverting to a deterministic seed.");
+		exit(-1);
+	} 
+
+	if(fread(xoshiro256starstarState, sizeof(uint64_t), 4, infp)!=4) {
+		perror("Can't read random seed");
+		exit(-1);
+	}
+
+	if(fclose(infp)!=0) {
+		perror("Couldn't close random source");
+		exit(-1);
+	}
+}
+
+/*Return an integer in the range [0, high], without modular bias*/
+/*This is a slight modification of Lemire's approach (as we want [0,s] rather than [0,s)*/
+/*See "Fast Random Integer Generation in an Interval" by Lemire (2018) (https://arxiv.org/abs/1805.10941) */
+ /* The relevant text explaining the central factor underlying this opaque approach is:
+  * "Given an integer x ∈ [0, 2^L), we have that (x × s) ÷ 2^L ∈ [0, s). By multiplying by s, we take
+  * integer values in the range [0, 2^L) and map them to multiples of s in [0, s × 2^L). By dividing by 2^L,
+  * we map all multiples of s in [0, 2^L) to 0, all multiples of s in [2^L, 2 × 2^L) to one, and so forth. The
+  * (i + 1)th interval is [i × 2^L, (i + 1) × 2^L). By Lemma 2.1, there are exactly floor(2^L/s) multiples of s in
+  * intervals [i × 2^L + (2^L mod s), (i + 1) × 2^L) since s divides the size of the interval (2^L − (2^L mod s)).
+  * Thus if we reject the multiples of s that appear in [i × 2^L, i × 2^L + (2^L mod s)), we get that all
+  * intervals have exactly floor(2^L/s) multiples of s."
+  *
+  * This approach allows us to avoid _any_ modular reductions with high probability, and at worst case one
+  * reduction. It's an opaque approach, but lovely.
+  */
+uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
+	uint64_t x;
+	__uint128_t m;
+	uint64_t l;
+
+	x = xoshiro256starstar(xoshiro256starstarState);
+
+	if(UINT64_MAX == s) {
+		return x;
+	} else {
+		s++; // We want an integer in the range [0,s], not [0,s)
+		m = (__uint128_t)x * (__uint128_t)s;
+		l = (uint64_t)m; //This is m mod 2^64
+
+		if(l<s) {
+			uint64_t t = ((uint64_t)(-s)) % s; //t = (2^64 - s) mod s (by definition of unsigned arithmetic in C)
+			while(l < t) {
+				x = xoshiro256starstar(xoshiro256starstarState);
+				m = (__uint128_t)x * (__uint128_t)s;
+				l = (uint64_t)m; //This is m mod 2^64
+			}
+		}
+
+		return (uint64_t)(m >> 64U); //return floor(m/2^64)
+	}
 }
 
 // Fisher-Yates Fast (in place) shuffle algorithm
-void shuffle(byte arr[], const int sample_size) {
+void shuffle(byte arr[], const int sample_size, uint64_t *xoshiro256starstarState){
 	long int r;
 	static mutex shuffle_mutex;
 	unique_lock<mutex> lock(shuffle_mutex);
 
 	for (long int i = sample_size - 1; i > 0; --i) {
-
-		r = (rand() / (float)RAND_MAX) * (i + 1); 	// Proven faster than using % to cast random values
+		r = (long int)randomRange64((uint64_t)i, xoshiro256starstarState);
 		SWAP(arr[r], arr[i]);
 	}
 }
