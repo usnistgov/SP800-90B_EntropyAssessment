@@ -20,7 +20,7 @@ non_iid: non_iid_main.o
 non_iid_main.o: non_iid_main.cpp
 	$(CXX) $(CXXFLAGS) $(LIB) $(INC) non_iid_main.cpp -o ea_non_iid
 
-restart: restart_main.o	
+restart: restart_main.o
 restart_main.o: restart_main.cpp
 	$(CXX) $(CXXFLAGS) $(LIB) $(INC) restart_main.cpp -o ea_restart
 
