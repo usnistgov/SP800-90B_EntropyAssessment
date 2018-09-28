@@ -102,10 +102,10 @@ int main(int argc, char* argv[]){
                 exit(-1);
         }
 
-	if(data.len > SIZE) data.len = SIZE;
+	if(data.len > MIN_SIZE) data.len = MIN_SIZE;
 	if(verbose) printf("Number of Symbols: %ld\n", data.len);
-	if(data.len < SIZE){ 
-		printf("\n*** Error: data contains less than %d samples ***\n\n", SIZE);
+	if(data.len < MIN_SIZE){ 
+		printf("\n*** Error: data contains less than %d samples ***\n\n", MIN_SIZE);
 		exit(-1);
 	}
 	if(verbose){
