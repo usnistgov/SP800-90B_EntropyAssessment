@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
-#include "bzlib.h" // sudo apt-get install libbz2-dev
+#include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
 
 // The tests used
@@ -115,6 +115,9 @@ vector<int> alt_sequence2(const byte data[], const double median, const int samp
 // Requires data from alt_sequence2
 unsigned int num_directional_runs(const vector<int> &alt_seq){
 	unsigned int num_runs = 0;
+
+	//Account for the first run (which always exists for non-empty strings)
+	if(alt_seq.size() > 0) num_runs ++;
 
 	// openmp optimization
 	#pragma omp parallel for reduction(+:num_runs)
@@ -289,8 +292,7 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 unsigned int compression(const byte data[], const int sample_size){
 	
 	// Build string of bytes
-	string msg = "";
-	msg.resize(sample_size * 2);	// no more copying string internally again and again after capacity is hit. It still happens but less frequently early on
+	string msg;
 	char buffer[8];
 
 	for(unsigned int i = 0; i < sample_size; ++i){
@@ -303,7 +305,7 @@ unsigned int compression(const byte data[], const int sample_size){
 
 	// Set up structures for compression
 	char* source = (char*)msg.c_str();
-	unsigned int dest_len = 2*sample_size;
+	unsigned int dest_len = ceil(1.01*strlen(source)) + 600;
 	char* dest = new char[dest_len];
 
 	// Compress and capture the size of the compressed data
