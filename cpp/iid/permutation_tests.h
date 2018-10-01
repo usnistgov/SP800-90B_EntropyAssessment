@@ -295,6 +295,9 @@ unsigned int compression(const byte data[], const int sample_size){
 	string msg;
 	char buffer[8];
 
+	//Reserve the necessary size sample_size*(floor(log10(2^8))+1)
+	msg.reserve(4*sample_size);
+
 	for(unsigned int i = 0; i < sample_size; ++i){
 		sprintf(buffer, "%u ", data[i]);
 		msg += buffer;
