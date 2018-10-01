@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
 
 	bool initial_entropy, all_bits, verbose = false;
 	const char verbose_flag = 'v';
-	double mean, median;
+	double rawmean, median;
 	char* file_path;
 	int num_threads = 4;
 	data_t data;
@@ -125,10 +125,10 @@ int main(int argc, char* argv[]){
 	int sample_size = data.len;
 
 	printf("Calculating baseline statistics...\n");
-	calc_stats(data.symbols, mean, median, sample_size, alphabet_size);
+	calc_stats(&data, rawmean, median);
 
 	if(verbose){
-		printf("\tMean: %f\n", mean);
+		printf("\tRaw Mean: %f\n", rawmean);
 		printf("\tMedian: %f\n", median);
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
 	}
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
 	printf("min-entropy = %f\n\n", H_min);
 
 	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(data.symbols, mean, median, sample_size, alphabet_size, verbose);
+	bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
 
 	if(chi_square_test_pass){
 		printf("** Passed chi square tests\n\n");
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]){
 	}
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(data.symbols, mean, median, alphabet_size, sample_size, num_threads, verbose);
+	bool perm_test_pass = permutation_tests(&data, rawmean, median, num_threads, verbose);
 
 	if(perm_test_pass){
 		printf("** Passed IID permutation tests\n\n");

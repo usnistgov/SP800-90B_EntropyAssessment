@@ -479,7 +479,7 @@ void goodness_of_fit(byte** subset_data, double &score, int &df, const int sampl
 	df = 9*(bins.size()-1);
 }
 
-bool chi_square_tests(const byte data[], const double mean, const double median, const int sample_size, const int alphabet_size, const bool verbose){
+bool chi_square_tests(const byte data[], const int sample_size, const int alphabet_size, const bool verbose){
 
 	double score = 0.0;
 	int df = 0;

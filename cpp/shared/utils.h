@@ -40,10 +40,12 @@ typedef struct data_t data_t;
 struct data_t{
 	int word_size; 		// bits per symbol
 	int alph_size; 		// symbol alphabet size
+	byte maxsymbol; 	// the largest symbol present in the raw data stream
+	byte *rawsymbols; 	// raw data words
 	byte *symbols; 		// data words
 	byte *bsymbols; 	// data words as binary string
-	long len; 			// number of words in data
-	long blen; 			// number of bits in data
+	long len; 		// number of words in data
+	long blen; 		// number of bits in data
 };
 
 using namespace std;
@@ -132,6 +134,7 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
 
 void free_data(data_t *dp){
 	if(dp->symbols != NULL) free(dp->symbols);
+	if(dp->rawsymbols != NULL) free(dp->rawsymbols);
 	if((dp->word_size > 1) && (dp->bsymbols != NULL)) free(dp->bsymbols);
 } 
 
@@ -170,14 +173,15 @@ bool read_file(const char *file_path, data_t *dp){
 		return false;
 	}
 
-	dp->symbols = (byte*)malloc(dp->len);
+	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
+	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
 	if(dp->symbols == NULL){
 		printf("Error: failure to initialize memory for symbols\n");
 		fclose(file);
 		return false;
 	}
 
-    rc = fread(dp->symbols, sizeof(byte), dp->len, file);
+	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
 	if(rc != dp->len){
 		printf("Error: file read failure\n");
 		fclose(file);
@@ -185,8 +189,10 @@ bool read_file(const char *file_path, data_t *dp){
 		dp->symbols = NULL;
 		return false;
 	}
-
 	fclose(file);
+
+	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
+	dp->maxsymbol = 0;
 
 	// create symbols (samples) and check if they need to be mapped down
 	dp->alph_size = 0;
@@ -194,6 +200,7 @@ bool read_file(const char *file_path, data_t *dp){
 	mask = max_symbols-1;
 	for(i = 0; i < dp->len; i++){ 
 		dp->symbols[i] &= mask;
+		if(dp->symbols[i] > dp->maxsymbol) dp->maxsymbol = dp->symbols[i];
 		if(symbol_map_down_table[dp->symbols[i]] == 0) symbol_map_down_table[dp->symbols[i]] = 1;
 	}
 
@@ -316,14 +323,15 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 }
 
 // Fisher-Yates Fast (in place) shuffle algorithm
-void shuffle(byte arr[], const int sample_size, uint64_t *xoshiro256starstarState){
+void FYshuffle(byte data[], byte rawdata[], const int sample_size) {
 	long int r;
 	static mutex shuffle_mutex;
 	unique_lock<mutex> lock(shuffle_mutex);
 
 	for (long int i = sample_size - 1; i > 0; --i) {
 		r = (long int)randomRange64((uint64_t)i, xoshiro256starstarState);
-		SWAP(arr[r], arr[i]);
+		SWAP(data[r], data[i]);
+		SWAP(rawdata[r], rawdata[i]);
 	}
 }
 
@@ -361,17 +369,29 @@ T sum(const vector<T> &v) {
 
 // Calculate baseline statistics
 // Finds mean, median, and whether or not the data is binary
-void calc_stats(const byte data[], double &mean, double &median, const int sample_size, const int alphabet_size) {
+void calc_stats(const data_t *dp, double &rawmean, double &median) {
 
 	// Calculate mean
-	mean = sum(data, sample_size) / (double)sample_size;
+	rawmean = sum(dp->rawsymbols, dp->len) / (double)dp->len;
 
 	// Sort in a vector for median/min/max
-	vector<byte> v(data, data + sample_size);
+	vector<byte> v(dp->symbols, dp->symbols + dp->len);
 	sort(v.begin(), v.end());
 
-	long int half = sample_size / 2;
-	median = (v[half] + v[half - 1]) / 2.0;
+	long int half = dp->len / 2;
+	if(dp->alph_size == 2) {
+		//This isn't necessarily true, but we are supposed to set it this way.
+		//See 5.1.5, 5.1.6.
+		median = 0.5;
+	} else {
+		if((dp->len & 1) == 1) {
+			//the length is odd
+			median = v[half];
+		} else {
+			//the length is even
+			median = (v[half] + v[half - 1]) / 2.0;
+		}
+	}
 }
 
 

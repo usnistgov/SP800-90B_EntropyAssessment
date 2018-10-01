@@ -12,10 +12,10 @@ const string test_names[] = {"excursion","numDirectionalRuns","lenDirectionalRun
 using namespace std;
 
 /*
-* ---------------------------------------------
-* 	  TASKS FOR PERMUTATION TESTS
-* ---------------------------------------------
-*/
+ * ---------------------------------------------
+ * 	  TASKS FOR PERMUTATION TESTS
+ * ---------------------------------------------
+ */
 
 // 5.1 Conversion I
 // Takes a binary sequence and partitions it into 8-bit blocks
@@ -52,14 +52,14 @@ vector<byte> conversion2(const byte data[], const int sample_size){
 // average value at each point in the set
 //
 // Requires binary or non-binary data
-double excursion(const byte data[], const double mean, const int sample_size){
+double excursion(const byte data[], const double rawmean, const int sample_size){
 	double d_i = 0;
 	double max = 0;
 	double running_sum = 0;
 
 	for(unsigned int i = 0; i < sample_size; ++i){
 		running_sum += data[i];
-		d_i = abs(running_sum - ((i+1) * mean));
+		d_i = abs(running_sum - ((i+1) * rawmean));
 
 		if(d_i > max){
 			max = d_i;
@@ -121,7 +121,7 @@ unsigned int num_directional_runs(const vector<int> &alt_seq){
 	if(alt_seq.size() > 0) num_runs ++;
 
 	// openmp optimization
-	#pragma omp parallel for reduction(+:num_runs)
+#pragma omp parallel for reduction(+:num_runs)
 	for(unsigned int i = 1; i < alt_seq.size(); ++i){
 		if(alt_seq[i] != alt_seq[i-1]){
 			++num_runs;
@@ -147,7 +147,7 @@ unsigned int len_directional_runs(const vector<int> &alt_seq){
 	unsigned int run = 1;
 
 	for(unsigned int i = 1; i < alt_seq.size(); ++i){
-		
+
 		// Use if-else because if the length of the run increases, then it could still go on
 		if(alt_seq[i] == alt_seq[i-1]){
 			++run;
@@ -176,7 +176,7 @@ unsigned int num_increases_decreases(const vector<int> &alt_seq){
 	unsigned int pos = 0;
 
 	// openmp optimization
-	#pragma omp parallel for reduction(+:pos)
+#pragma omp parallel for reduction(+:pos)
 	for(unsigned int i = 0; i < alt_seq.size(); ++i){
 		if(alt_seq[i] == 1)
 			++pos;
@@ -259,7 +259,7 @@ unsigned int max_collision(const vector<unsigned int> &col_seq){
 unsigned int periodicity(const byte data[], const unsigned int p, const unsigned int n){
 	unsigned int T = 0;
 
-	#pragma omp parallel for reduction(+:T)
+#pragma omp parallel for reduction(+:T)
 	for(unsigned int i = 0; i < n-p; ++i){
 		if(data[i] == data[i+p]){
 			++T;
@@ -277,7 +277,7 @@ unsigned int periodicity(const byte data[], const unsigned int p, const unsigned
 unsigned long int covariance(const byte data[], const unsigned int p, const unsigned int n){
 	unsigned long int T = 0;
 
-	#pragma omp parallel for reduction(+:T)
+#pragma omp parallel for reduction(+:T)
 	for(unsigned int i = 0; i < n-p; ++i){
 		T += data[i] * data[i+p];
 	}
@@ -291,7 +291,7 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 //
 // Can handle binary and non-binary data
 unsigned int compression(const byte data[], const int sample_size, const byte max_symbol){
-	
+
 	// Build string of bytes
 	string msg;
 	char buffer[8];
@@ -330,14 +330,14 @@ unsigned int compression(const byte data[], const int sample_size, const byte ma
 }
 
 /*
-* ---------------------------------------------
-* 	  HELPERS FOR PERMUTATION TEST ITERATION
-* ---------------------------------------------
-*/
+ * ---------------------------------------------
+ * 	  HELPERS FOR PERMUTATION TEST ITERATION
+ * ---------------------------------------------
+ */
 
-void excursion_test(const byte data[], const double mean, const int sample_size, map<string, long double> &stats){
+void excursion_test(const byte data[], const double rawmean, const int sample_size, map<string, long double> &stats){
 
-	stats["excursion"] = excursion(data, mean, sample_size);
+	stats["excursion"] = excursion(data, rawmean, sample_size);
 }
 
 void directional_tests(const byte data[], const int alphabet_size, const int sample_size, map<string, long double> &stats){
@@ -427,27 +427,33 @@ void compression_test(const byte data[], const int sample_size, map<string, long
 	stats["compression"] = compression(data, sample_size, max_symbol);
 }
 
-void run_tests(const byte data[], const double mean, const double median, const int alphabet_size, const int sample_size, map<string, long double> &stats){
+
+void run_tests(const data_t *dp, const byte data[], const byte rawdata[], const double rawmean, const double median, map<string, long double> &stats){
 
 	// Perform tests
 	//double start_time = omp_get_wtime();
 
-	excursion_test(data, mean, sample_size, stats);
-	directional_tests(data, alphabet_size, sample_size, stats);
-	consecutive_runs_tests(data, median, alphabet_size, sample_size, stats);
-	collision_tests(data, alphabet_size, sample_size, stats);
-	periodicity_tests(data, alphabet_size, sample_size, stats);
-	covariance_tests(data, alphabet_size, sample_size, stats);
-	compression_test(data, sample_size, stats, alphabet_size-1);
+	excursion_test(rawdata, rawmean, dp->len, stats);
+	directional_tests(data, dp->alph_size, dp->len, stats);
+	consecutive_runs_tests(data, median, dp->alph_size, dp->len, stats);
+	collision_tests(data, dp->alph_size, dp->len, stats);
+	periodicity_tests(data, dp->alph_size, dp->len, stats);
+	if(dp->alph_size == 2) {
+		//The two conversions only make sense if the two symbols are 0 and 1.
+		covariance_tests(data, dp->alph_size, dp->len, stats);
+	} else {
+		covariance_tests(rawdata, dp->alph_size, dp->len, stats);
+	}
+	compression_test(rawdata, dp->len, stats, dp->maxsymbol);
 
 	//cout << endl << "Iteration time elapsed: " << omp_get_wtime() - start_time << endl;
 }
 
 /*
-* ---------------------------------------------
-* 			  PERMUTATION TEST
-* ---------------------------------------------
-*/
+ * ---------------------------------------------
+ * 			  PERMUTATION TEST
+ * ---------------------------------------------
+ */
 
 void print_results(map<int, array<int, 2>> &C){
 	cout << endl << endl;
@@ -466,14 +472,16 @@ void print_results(map<int, array<int, 2>> &C){
 	cout << endl;
 }
 
-bool permutation_tests(const byte ds[], const double mean, const double median, const int alphabet_size, const int sample_size, const int num_threads, const bool verbose){
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int num_threads, const bool verbose){
 
 	uint64_t xoshiro256starstarSeed[4];
 
 	// We need a copy because the tests take in by reference and modify it
-	byte data[sample_size];
-	for(int i = 0; i < sample_size; ++i){
-		data[i] = ds[i];
+	byte data[dp->len];
+	byte rawdata[dp->len];
+	for(int i = 0; i < dp->len; ++i){
+		data[i] = dp->symbols[i];
+		rawdata[i] = dp->rawsymbols[i];
 	}
 
 	// Counters for the pass/fail of each statistic
@@ -493,7 +501,7 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 	// Run initial tests
 	cout << "Beginning initial tests..." << endl;
 	seed(xoshiro256starstarSeed);
-	run_tests(data, mean, median, alphabet_size, sample_size, t);
+	run_tests(dp, data, rawdata, rawmean, median, t);
 
 	if(verbose){
 		cout << endl << "Initial test results" << endl;
@@ -511,8 +519,8 @@ bool permutation_tests(const byte ds[], const double mean, const double median, 
 			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
 		}
 
-		shuffle(data, sample_size, xoshiro256starstarSeed);
-		run_tests(data, mean, median, alphabet_size, sample_size, tp);
+		FYshuffle(data, rawdata, dp->len);
+		run_tests(dp, data, rawdata, rawmean, median, tp);
 
 		// Aggregate results into the counters
 		for(unsigned int j = 0; j < num_tests; ++j){
