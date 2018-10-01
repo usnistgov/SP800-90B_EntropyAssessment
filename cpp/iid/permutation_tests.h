@@ -473,7 +473,6 @@ void print_results(map<int, array<int, 2>> &C){
 }
 
 bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int num_threads, const bool verbose){
-
 	uint64_t xoshiro256starstarSeed[4];
 
 	// We need a copy because the tests take in by reference and modify it
