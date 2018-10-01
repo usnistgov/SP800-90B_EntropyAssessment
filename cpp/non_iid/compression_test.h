@@ -41,7 +41,7 @@ double compression_test(byte* data, long len, const bool verbose){
 	unsigned int dict[alph_size];
 	double X=0.0, X_comp=0.0;
 	double sigma=0.0, sigma_comp=0.0;
-	double p, p_lo, p_hi, eps, exp;
+	double p;
 	double ldomain, hdomain, lbound, hbound, lvalue, hvalue, pVal, lastP;
 
 	d = 1000;

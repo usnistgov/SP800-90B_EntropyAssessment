@@ -133,7 +133,7 @@ int main(int argc, char* argv[]){
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
 	}
 
-	double start_time = omp_get_wtime();
+	//double start_time = omp_get_wtime();
 
 	// Compute the min-entropy of the dataset
 	double H_min = most_common(data.symbols, sample_size, alphabet_size, verbose);
@@ -169,8 +169,8 @@ int main(int argc, char* argv[]){
 		//return -1;
 	}
 
-	double run_time = omp_get_wtime() - start_time;
-	printf("Total Time elapsed: %f\n", run_time);
+	//double run_time = omp_get_wtime() - start_time;
+	//printf("Total Time elapsed: %f\n", run_time);
 
 	free_data(&data);
 	return 0;

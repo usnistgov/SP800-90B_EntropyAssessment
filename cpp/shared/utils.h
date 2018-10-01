@@ -522,7 +522,7 @@ double calc_p_global(long C, long N){
 
 double calc_p_local(long max_run_len, long N){
 	int i, j;
-	double p, q, r, log_alpha, exp, eps;
+	double p, q, r, log_alpha;
 	long double x;
 	double lastP, pVal;
 	double lvalue, hvalue;

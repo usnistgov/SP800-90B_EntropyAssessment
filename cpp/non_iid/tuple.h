@@ -1,9 +1,11 @@
 #pragma once
 #include "../shared/utils.h"
+#include <assert.h>
 
 // Section 6.3.5 - t-Tuple Estimate
 double t_tuple_test(byte *data, long len, int alph_size, long *u_p, const bool verbose){
-	long i, pos, c, tup_size, Q, thresh = 35;
+	long pos, tup_size;
+	unsigned long Q, thresh = 35, c, i;
 	double t_tuple_min_entropy, min_entropy, pmax, pu;
 	vector<byte> tuple;
 	map<vector<byte>, vector<long>> tuples, prev_tuples;
@@ -58,11 +60,13 @@ double t_tuple_test(byte *data, long len, int alph_size, long *u_p, const bool v
 
 // Section 6.3.6 - Longest Repeated Substring (LRS) Estimate
 double lrs_test(byte *data, long len, int alph_size, long u, const bool verbose){
-	long i, pos, c, tup_size, Q;
+	long pos;
+	unsigned long Q, c, i, tup_size;
 	double lrs_min_entropy, min_entropy, pmax, sum, pu;
 	vector<byte> tuple;
 	map<vector<byte>, vector<long>> tuples, prev_tuples;
 	map<vector<byte>, vector<long>>::iterator itr;
+	assert(len >= 0);
 
 	// Since 1/(n*n) < sum(C(C-1))/[n(n-1)], 
 	// it follows that LRS min-entropy < 2*log2(n)
@@ -76,7 +80,7 @@ double lrs_test(byte *data, long len, int alph_size, long u, const bool verbose)
 	else tup_size = 1;
 	for(i = 0; i < tup_size; i++) tuple.push_back(0); // allocate space for tuple
 	for(pos = 0; pos < len; pos++){ 
-		if(pos+tup_size-1 < len){
+		if(pos+tup_size-1 < (unsigned long)len){
 			memcpy(tuple.data(), data+pos, tup_size);
 			tuples[tuple].push_back(pos);
 			if(tuples[tuple].size() > Q) Q = tuples[tuple].size();
@@ -102,7 +106,7 @@ double lrs_test(byte *data, long len, int alph_size, long u, const bool verbose)
 			if(c >= 2){
 				for(i = 0; i < c; i++){
 					pos = (itr->second)[i];
-					if(pos+tup_size-1 < len){
+					if(pos+tup_size-1 < (unsigned long)len){
 						memcpy(tuple.data(), data+pos, tup_size);
 						tuples[tuple].push_back(pos);
 						if(tuples[tuple].size() > Q) Q = tuples[tuple].size();

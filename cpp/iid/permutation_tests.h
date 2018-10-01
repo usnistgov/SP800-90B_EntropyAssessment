@@ -25,7 +25,7 @@ using namespace std;
 vector<byte> conversion1(const byte data[], const int sample_size){
 	vector<byte> ret((sample_size / 8) + 1, 0);
 
-	for(unsigned int i = 0; i < sample_size; ++i){
+	for(int i = 0; i < sample_size; ++i){
 		ret[i/8] += data[i];	// integer division to ensure the size of ret is sample_size / 8
 	}
 
@@ -40,7 +40,7 @@ vector<byte> conversion1(const byte data[], const int sample_size){
 vector<byte> conversion2(const byte data[], const int sample_size){
 	vector<byte> ret((sample_size / 8) + 1, 0);
 
-	for(unsigned int i = 0; i < sample_size; ++i){
+	for(int i = 0; i < sample_size; ++i){
 		ret[i/8] += data[i] << (8 - ((i+1)%8));
 	}
 
@@ -57,7 +57,7 @@ double excursion(const byte data[], const double rawmean, const int sample_size)
 	double max = 0;
 	double running_sum = 0;
 
-	for(unsigned int i = 0; i < sample_size; ++i){
+	for(int i = 0; i < sample_size; ++i){
 		running_sum += data[i];
 		d_i = abs(running_sum - ((i+1) * rawmean));
 
@@ -78,7 +78,7 @@ double excursion(const byte data[], const double rawmean, const int sample_size)
 vector<int> alt_sequence1(const byte data[], const int sample_size){
 	vector<int> ret(sample_size-1, 0);
 
-	for(unsigned int i = 0; i < sample_size-1; ++i){
+	for(int i = 0; i < sample_size-1; ++i){
 		ret[i] = ((data[i] > data[i+1]) ? -1 : 1);
 	}
 
@@ -92,7 +92,7 @@ vector<int> alt_sequence1(const byte data[], const int sample_size){
 vector<int> alt_sequence2(const byte data[], const double median, const int sample_size){
 	vector<int> ret(sample_size, 0);
 
-	for(unsigned int i = 0; i < sample_size; ++i){
+	for(int i = 0; i < sample_size; ++i){
 		ret[i] = ((data[i] < median) ? -1 : 1);
 	}
 
@@ -302,7 +302,7 @@ unsigned int compression(const byte data[], const int sample_size, const byte ma
 	//This is "worst case" and accounts for the space at the end of the number, as well.
 	msg.reserve((floor(log10(max_symbol))+2.0)*sample_size);
 
-	for(unsigned int i = 0; i < sample_size; ++i){
+	for(int i = 0; i < sample_size; ++i){
 		sprintf(buffer, "%u ", data[i]);
 		msg += buffer;
 	}
@@ -505,7 +505,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 
 	if(verbose){
 		cout << endl << "Initial test results" << endl;
-		for(int i = 0; i < num_tests; i++){
+		for(unsigned int i = 0; i < num_tests; i++){
 			cout << setw(23) << test_names[i] << ": ";
 			cout << t[test_names[i]] << endl;
 		}

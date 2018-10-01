@@ -37,8 +37,8 @@ double chi_square_cutoff(const int df){
 */
 
 void calc_expectations(const vector<double> &p, vector<pair<double, pair<byte, byte>>> &e, const int sample_size){
-	for(int i = 0; i < p.size(); i++){
-		for(int j = 0; j < p.size(); j++){
+	for(unsigned long i = 0; i < p.size(); i++){
+		for(unsigned long j = 0; j < p.size(); j++){
 			double exp = p[i] * p[j] * sample_size * 0.5;
 			e.push_back(pair<double, pair<byte, byte>>(exp, pair<byte, byte>(i, j)));
 		}
@@ -130,10 +130,10 @@ void calc_observed(const byte data[], const vector<vector<pair<byte, byte>>> &bi
 	for(int j = 0; j < sample_size-1; j+=2){
 
 		// Search each bin for (data_i, data_i+1)
-		for(int i = 0; i < bins.size(); i++){
+		for(unsigned long i = 0; i < bins.size(); i++){
 
 			// If the pair exists in the bin, increment occurances by 1
-			for(int k = 0; k < bins[i].size(); k++){
+			for(unsigned long k = 0; k < bins[i].size(); k++){
 
 				if (bins[i][k].first == data[j] && bins[i][k].second == data[j+1]){
 					o[i]++;
@@ -332,7 +332,7 @@ void binary_chi_square_independence(const byte data[], double &score, int &df, c
 
 	// Count occurances of m-bit tuples by converting to decimal and using as index in a vector
 	vector<int> occ(pow(2, m), 0);
-	for(int i = 0; i < occ.size(); i++){
+	for(unsigned long i = 0; i < occ.size(); i++){
 
 		int decimal = 0;
 		for(int j = 0; j < m; j++){
