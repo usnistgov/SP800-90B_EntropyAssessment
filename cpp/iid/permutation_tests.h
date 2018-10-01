@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
+#include <assert.h>
 
 // The tests used
 const unsigned int num_tests = 19;
@@ -289,14 +290,17 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 // of the resulting compressed data
 //
 // Can handle binary and non-binary data
-unsigned int compression(const byte data[], const int sample_size){
+unsigned int compression(const byte data[], const int sample_size, const byte max_symbol){
 	
 	// Build string of bytes
 	string msg;
 	char buffer[8];
 
-	//Reserve the necessary size sample_size*(floor(log10(2^8))+1)
-	msg.reserve(4*sample_size);
+	assert(max_symbol > 0);
+
+	//Reserve the necessary size sample_size*(floor(log10(max_symbol))+2)
+	//This is "worst case" and accounts for the space at the end of the number, as well.
+	msg.reserve((floor(log10(max_symbol))+2.0)*sample_size);
 
 	for(unsigned int i = 0; i < sample_size; ++i){
 		sprintf(buffer, "%u ", data[i]);
@@ -308,11 +312,11 @@ unsigned int compression(const byte data[], const int sample_size){
 
 	// Set up structures for compression
 	char* source = (char*)msg.c_str();
-	unsigned int dest_len = ceil(1.01*strlen(source)) + 600;
+	unsigned int dest_len = ceil(1.01*msg.length()) + 600;
 	char* dest = new char[dest_len];
 
 	// Compress and capture the size of the compressed data
-	int rc = BZ2_bzBuffToBuffCompress(dest, &dest_len, source, strlen(source), 5, 0, 0);
+	int rc = BZ2_bzBuffToBuffCompress(dest, &dest_len, source, msg.length(), 5, 0, 0);
 
 	// Free memory
 	delete[](dest);
@@ -418,9 +422,9 @@ void covariance_tests(const byte data[], const int alphabet_size, const int samp
 	}
 }
 
-void compression_test(const byte data[], const int sample_size, map<string, long double> &stats){
+void compression_test(const byte data[], const int sample_size, map<string, long double> &stats, const byte max_symbol){
 
-	stats["compression"] = compression(data, sample_size);
+	stats["compression"] = compression(data, sample_size, max_symbol);
 }
 
 void run_tests(const byte data[], const double mean, const double median, const int alphabet_size, const int sample_size, map<string, long double> &stats){
@@ -434,7 +438,7 @@ void run_tests(const byte data[], const double mean, const double median, const 
 	collision_tests(data, alphabet_size, sample_size, stats);
 	periodicity_tests(data, alphabet_size, sample_size, stats);
 	covariance_tests(data, alphabet_size, sample_size, stats);
-	compression_test(data, sample_size, stats);
+	compression_test(data, sample_size, stats, alphabet_size-1);
 
 	//cout << endl << "Iteration time elapsed: " << omp_get_wtime() - start_time << endl;
 }
