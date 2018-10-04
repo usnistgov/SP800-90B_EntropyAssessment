@@ -260,6 +260,36 @@ static inline uint64_t xoshiro256starstar(uint64_t *xoshiro256starstarState)
    return result_starstar;
 }
 
+/* This is the jump function for the generator. It is equivalent
+   to 2^128 calls to next(); it can be used to generate 2^128
+   non-overlapping subsequences for parallel computations. */
+void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
+	static const uint64_t JUMP[] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
+	uint64_t s0 = 0;
+	uint64_t s1 = 0;
+	uint64_t s2 = 0;
+	uint64_t s3 = 0;
+
+	for(int j=0; j < jump_count; j++) {
+		for(int i = 0; i < sizeof JUMP / sizeof *JUMP; i++)
+			for(int b = 0; b < 64; b++) {
+				if (JUMP[i] & ((uint64_t)1) << b) {
+					s0 ^= xoshiro256starstarState[0];
+					s1 ^= xoshiro256starstarState[1];
+					s2 ^= xoshiro256starstarState[2];
+					s3 ^= xoshiro256starstarState[3];
+				}
+				xoshiro256starstar(xoshiro256starstarState);	
+			}
+			
+		xoshiro256starstarState[0] = s0;
+		xoshiro256starstarState[1] = s1;
+		xoshiro256starstarState[2] = s2;
+		xoshiro256starstarState[3] = s3;
+	}
+}
+
+
 
 void seed(uint64_t *xoshiro256starstarState){
 	FILE *infp;

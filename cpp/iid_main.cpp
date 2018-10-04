@@ -3,6 +3,7 @@
 #include "shared/lrs_test.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
+#include <omp.h>
 
 void print_usage(){
 	printf("Usage is: ea_iid <file_name> <bits_per_word> <-i|-c> <-a|-t> [-v]\n\n");
@@ -95,8 +96,6 @@ int main(int argc, char* argv[]){
 		printf("Opening file: '%s'\n", file_path);
 	}
 
-	//byte* dataset = new byte[sample_size];
-	//if(!read_file(file_path, dataset, word_size, sample_size)){
 	if(!read_file(file_path, &data)){
 		printf("Error reading file.\n");
 		print_usage();
@@ -119,6 +118,10 @@ int main(int argc, char* argv[]){
 		else printf("\nSymbol alphabet consists of %d unique symbols\n", data.alph_size);
 	}
 
+	/*if(!omp_get_cancellation()) {
+		printf("OMP cancellations are not enabled.\n");
+	}*/
+
 	// Calculate baseline statistics
 	//alphabet_size = pow(2, word_size);
 	int alphabet_size = data.alph_size;
@@ -140,7 +143,7 @@ int main(int argc, char* argv[]){
 	printf("min-entropy = %f\n\n", H_min);
 
 	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
+	/*bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
 
 	if(chi_square_test_pass){
 		printf("** Passed chi square tests\n\n");
@@ -157,7 +160,7 @@ int main(int argc, char* argv[]){
 	}else{
 		printf("** Failed length of longest repeated substring test\n\n");
 		//return -1;
-	}
+	}*/
 
 	// Compute permutation stats
 	bool perm_test_pass = permutation_tests(&data, rawmean, median, num_threads, verbose);
