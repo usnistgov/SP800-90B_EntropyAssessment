@@ -259,6 +259,8 @@ unsigned int max_collision(const vector<unsigned int> &col_seq){
 unsigned int periodicity(const byte data[], const unsigned int p, const unsigned int n){
 	unsigned int T = 0;
 
+	assert(n>=p);
+
 #pragma omp parallel for reduction(+:T)
 	for(unsigned int i = 0; i < n-p; ++i){
 		if(data[i] == data[i+p]){
@@ -541,7 +543,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 
 		#pragma omp for
 		for(int i = 0; i < PERMS; ++i) {
-			if(verbose){
+			if(verbose && (passed_count != 19)){
 				cout << "\rPermutation Test (core " << omp_get_thread_num() << "): " << divide(i, PERMS)*100 << "% complete (" << passed_count <<  " tests passed)" << endl;
 			}
 

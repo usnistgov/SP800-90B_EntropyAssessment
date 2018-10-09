@@ -455,6 +455,13 @@ void calc_proportions(const byte data[], vector<double> &p, const int sample_siz
 	}
 }
 
+// Calculates proportions of each value as an index
+void calc_counts(const byte data[], vector<int> &c, const int sample_size) {
+	for (int i = 0; i < sample_size; i++) {
+		c[data[i]] ++;
+	}
+}
+
 // Determines the standard deviation of a dataset
 double std_dev(const vector<int> x, const double x_mean) {
 	double sum = 0.0;
