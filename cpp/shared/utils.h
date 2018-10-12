@@ -289,8 +289,6 @@ void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
 	}
 }
 
-
-
 void seed(uint64_t *xoshiro256starstarState){
 	FILE *infp;
 
@@ -350,6 +348,10 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 
 		return (uint64_t)(m >> 64U); //return floor(m/2^64)
 	}
+}
+
+double randomUnit(uint64_t *xoshiro256starstarState) {
+	return((xoshiro256starstar(xoshiro256starstarState) >> 11) * 0x1.0p-53);
 }
 
 // Fisher-Yates Fast (in place) shuffle algorithm

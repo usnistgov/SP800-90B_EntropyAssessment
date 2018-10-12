@@ -10,6 +10,8 @@
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
 
+//Each test has a targeted chance of roughly 0.000005, and we need to witness at least 5 failures, so this should be no less than 1000000
+#define SIMULATION_ROUNDS 5000000
 
 void print_usage(){
 	printf("Usage is: ea_restart <file_name> <bits_per_word> <H_I> <-i|-n> [-v]\n\n");
@@ -39,14 +41,97 @@ void print_usage(){
 	printf("\n");
 }
 
+//Here, we simulate a sort of "worst case" for this test, where there are a maximal number of symbols with maximal probability,
+//and the rest is distributed to the other symbols
+long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
+	long int counts[256];
+	int current_symbol;
+	int k_max;
+	long int max_count=0;
+	double p, max_cutoff, p_min, cur_rand;
+
+	assert(k<=256);
+
+	p = pow(2.0, -H_I);
+
+	k_max = floor(1.0/p);
+
+	assert(k_max <= k);
+
+
+	if(k>k_max) {
+		max_cutoff = p * k_max;
+		p_min = (1.0-max_cutoff)/(k-k_max);
+	} else {
+		max_cutoff = 1.0;
+		p_min = 0.0;
+	}
+
+	for(int j=0; j<k; j++) counts[j] = 0;
+
+	for(int j=0; j<1000; j++) {
+		cur_rand = randomUnit(xoshiro256starstarState);
+		if(cur_rand < max_cutoff) {
+			current_symbol = floor(cur_rand / p);
+			assert((current_symbol >= 0) && (current_symbol < k_max));
+		} else {
+			current_symbol = floor((cur_rand-max_cutoff) / p_min) + k_max;
+			assert((current_symbol >= k_max) && (current_symbol < k));
+		}
+		counts[current_symbol]++;
+	}
+
+	for(int j=0; j<k; j++) {
+		if(max_count < counts[j]) max_count = counts[j];
+	}
+
+	return max_count;
+}
+
+//This returns the bound (cutoff) for the test. Counts equal to this value should pass.
+//Larger values should fail.
+long int simulateBound(double alpha, int k, double H_I){
+	uint64_t xoshiro256starstarMainSeed[4];
+	uint64_t xoshiro256starstarSeed[4];
+	vector<long int> results(SIMULATION_ROUNDS, -1);
+	long int returnIndex;
+
+	assert((k>1) && (k<=256));
+
+	seed(xoshiro256starstarMainSeed);
+
+        #pragma omp parallel private(xoshiro256starstarSeed)
+	{
+		memcpy(xoshiro256starstarSeed, xoshiro256starstarMainSeed, sizeof(xoshiro256starstarMainSeed));
+		//Cause the RNG to jump omp_get_thread_num() * 2^128 calls
+		xoshiro_jump(omp_get_thread_num(), xoshiro256starstarSeed);
+
+		#pragma omp for
+		for(int i = 0; i < SIMULATION_ROUNDS; i++){
+			results[i] = simulateCount(k, H_I, xoshiro256starstarSeed);
+		}
+	}
+
+	sort(results.begin(), results.end());
+	assert((results[0]>=(1000/k)) && (results[0] <= 1000));
+	assert((results[SIMULATION_ROUNDS-1]>=(1000/k)) && (results[SIMULATION_ROUNDS-1] <= 1000));
+	assert(results[0] <= results[SIMULATION_ROUNDS-1]);
+
+	returnIndex = ((size_t)floor((1.0 - alpha) * ((double)SIMULATION_ROUNDS))) - 1;
+	assert((returnIndex >= 0) && (returnIndex < SIMULATION_ROUNDS));
+
+	return(results[returnIndex]);
+}
+
 int main(int argc, char* argv[]){
 	bool iid, verbose = false;
 	const char verbose_flag = 'v';
 	char *file_path;
 	int r = 1000, c = 1000;
 	int counts[256];
+	long int X_cutoff;
 	long i, j, X_i, X_r, X_c, X_max, u_r, u_c;
-	double H_I, H_r, H_c, p, alpha, tail_prob, binom_cff, ret_min_entropy; 
+	double H_I, H_r, H_c, alpha, ret_min_entropy; 
 	byte *rdata, *cdata;
 	data_t data;
 
@@ -121,12 +206,18 @@ int main(int argc, char* argv[]){
 
 	printf("H_I: %f\n", H_I);
 
+	alpha = 1 - exp(log(0.99)/2000);
+	X_cutoff = simulateBound(alpha, data.alph_size, H_I);
+	printf("ALPHA: %.17g, X_cutoff: %ld\n", alpha, X_cutoff);
+
 	// get maximum row count
 	X_r = 0;
-	for(i = 0; i < r; i++){
+	for(i = 0; i < r; i++){ //row
 		memset(counts, 0, 256*sizeof(int));
 		X_i = 0;
-		for(j = 0; j < c; j++){
+		for(j = 0; j < c; j++){//column
+			//[i*r+j] is row i, column j
+			//So, we're fixing a row, and then iterate through various columns
 			if(++counts[rdata[i*r+j]] > X_i) X_i = counts[rdata[i*r+j]];
 		}
 		if(X_i > X_r) X_r = X_i;
@@ -134,10 +225,12 @@ int main(int argc, char* argv[]){
 
 	// construct column data from row data and get maximum column count
 	X_c = 0;
-	for(j = 0; j < c; j++){
+	for(j = 0; j < c; j++){ //columns
 		memset(counts, 0, 256*sizeof(int));
 		X_i = 0;
 		for(i = 0; i < r; i++){
+			//[i*r+j] is row i, column j
+			//So, we're fixing a column and iterating through various rows
 			cdata[j*c+i] = rdata[i*r+j];
 			if(++counts[cdata[j*c+i]] > X_i) X_i = counts[cdata[j*c+i]];
 		}
@@ -146,20 +239,9 @@ int main(int argc, char* argv[]){
 
 	// perform sanity check on rows and columns of restart data (Section 3.1.4.3)
 	X_max = max(X_r, X_c);
-	p = pow(2.0, -H_I);
-	alpha = 0.01/(double)(r+c);
-	tail_prob = 0.0;
-	binom_cff = 1.0;
-
-	// compute binomial tail probability P(X >= X_max)
-	for(i = 0; i < X_max-1; i++) binom_cff *= (r-i)/(double)(X_max-1-i);
-	for(j = X_max; j <= r; j++){
-		binom_cff *= (r-j+1)/(double)j;
-		tail_prob += binom_cff*pow(p, j)*pow(1.0-p, r-j);
-	}
-
-	if(tail_prob < alpha){
-		printf("\n*** Restart Sanity Check Failed; ALPHA: %f, TAIL PROB: %f ***\n", alpha, tail_prob);
+	printf("X_max: %ld\n", X_max);
+	if(X_max > X_cutoff){
+		printf("\n*** Restart Sanity Check Failed ***\n");
 		exit(-1);
 	}
 	else if(verbose) printf("\nRestart Sanity Check Passed...\n");
