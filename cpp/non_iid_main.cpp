@@ -6,7 +6,6 @@
 #include "non_iid/multi_mmc_test.h"
 #include "non_iid/lag_test.h"
 #include "non_iid/multi_mcw_test.h"
-#include "non_iid/tuple.h"
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
 
@@ -51,7 +50,6 @@ int main(int argc, char* argv[]){
 	bool initial_entropy, all_bits, verbose = false;
 	const char verbose_flag = 'v';
 	char *file_path;
-	long u, bu;
 	double H_original, H_bitstring, ret_min_entropy; 
 	data_t data;
 
@@ -162,23 +160,32 @@ int main(int argc, char* argv[]){
 	printf("\nRunning Tuple Estimates...\n");
 
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
-	ret_min_entropy = t_tuple_test(data.bsymbols, data.blen, 2, &bu, verbose);
-	if(verbose) printf("\tT-Tuple Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-	H_bitstring = min(ret_min_entropy, H_bitstring);
+	double bin_t_tuple_res, bin_lrs_res;
+	double t_tuple_res, lrs_res;
+	SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose);
+	if(bin_t_tuple_res >= 0.0) {
+		if(verbose) printf("\tT-Tuple Test Estimate (bit string) = %f / 1 bit(s)\n", bin_t_tuple_res);
+		H_bitstring = min(bin_t_tuple_res, H_bitstring);
+	}
 	if(initial_entropy && (data.word_size > 1)){
-		ret_min_entropy = t_tuple_test(data.symbols, data.len, data.alph_size, &u, verbose);
-		if(verbose) printf("\tT-Tuple Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-		H_original = min(ret_min_entropy, H_original);
+		SAalgs(data.symbols, data.len, data.alph_size, t_tuple_res, lrs_res, verbose);
+		if(t_tuple_res >= 0.0) {
+			if(verbose) printf("\tT-Tuple Test Estimate = %f / %d bit(s)\n", t_tuple_res, data.word_size);
+			H_original = min(t_tuple_res, H_original);
+		}
 	}
 
 	// Section 6.3.6 - Estimate entropy with LRS Test
-	ret_min_entropy = lrs_test(data.bsymbols, data.blen, 2, bu, verbose);
-	if(verbose) printf("\tLRS Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-	H_bitstring = min(ret_min_entropy, H_bitstring);
-	if(initial_entropy && (data.word_size > 1)){
-		ret_min_entropy = lrs_test(data.symbols, data.len, data.alph_size, u, verbose);
-		if(verbose) printf("\tLRS Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-		H_original = min(ret_min_entropy, H_original);
+	if(bin_lrs_res >= 0.0) {
+		if(verbose) printf("\tLRS Test Estimate (bit string) = %f / 1 bit(s)\n", bin_lrs_res);
+		H_bitstring = min(bin_lrs_res, H_bitstring);
+	}
+
+	if(lrs_res >= 0.0) {
+		if(initial_entropy && (data.word_size > 1)){
+			if(verbose) printf("\tLRS Test Estimate = %f / %d bit(s)\n", lrs_res, data.word_size);
+			H_original = min(lrs_res, H_original);
+		}
 	}
 
 	printf("\nRunning Predictor Estimates...\n");
