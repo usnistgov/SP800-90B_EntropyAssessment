@@ -362,7 +362,7 @@ double cephes_igamc(double a, double x)
  *                   | (a)    -
  *                             x
  */
-//In Wikipedia terms, this is Gamma(a,x) / Gamme(a) = Q(a,x).
+//In Wikipedia terms, this is Gamma(a,x) / Gamma(a) = Q(a,x).
 //Thus, the p-value associated with the test statistica T in a Pearson's chi-square test with k degrees of freedom is
 // igamc( k/2, x/2 )
 double chi_square_pvalue(double x, double k){

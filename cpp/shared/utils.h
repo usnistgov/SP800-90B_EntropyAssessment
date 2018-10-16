@@ -350,6 +350,15 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 	}
 }
 
+/*
+ * This function produces a double that is uniformly distributed in the interval [0, 1).
+ * Note that 2^53 is the largest integer that can be represented in a 64 bit IEEE 754 double, such that all 
+ * smaller positive integers can also be represented. Shifting the initial random 64-bit value right by 11 
+ * bits makes the result only in the lower 53 bits, so the resulting integer is in the range [0, 2^53 - 1].
+ * 0x1.0p-53 is 2^(-53). Multiplying by this value just effects the exponent of the resulting double, not the 
+ * significand. We get a double uniformly distributed in the range [0, 1).  
+ * The delta between adjacent values is 2^(-53).
+ */
 double randomUnit(uint64_t *xoshiro256starstarState) {
 	return((xoshiro256starstar(xoshiro256starstarState) >> 11) * 0x1.0p-53);
 }
