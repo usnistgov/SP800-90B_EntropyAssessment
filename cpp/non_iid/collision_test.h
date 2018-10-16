@@ -22,7 +22,6 @@ double collision_test(byte* data, long len, const bool verbose){
 
 	i = 0;
 	v = 0;
-	X = 0.0;
 	s = 0.0;
 
 	// compute wait times until collisions

@@ -47,7 +47,6 @@ int main(int argc, char* argv[]){
 	const char verbose_flag = 'v';
 	double rawmean, median;
 	char* file_path;
-	int num_threads = 4;
 	data_t data;
 
 	// Parse args
@@ -102,7 +101,7 @@ int main(int argc, char* argv[]){
 		exit(-1);
 	}
 
-	if(data.alph_size == 1){
+	if(data.alph_size <= 1){
 		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
 		free_data(&data);
 		exit(-1);
@@ -158,7 +157,7 @@ int main(int argc, char* argv[]){
 	}
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(&data, rawmean, median, num_threads, verbose);
+	bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose);
 
 	if(perm_test_pass){
 		printf("** Passed IID permutation tests\n\n");

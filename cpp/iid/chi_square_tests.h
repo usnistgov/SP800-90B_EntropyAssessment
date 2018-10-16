@@ -495,7 +495,7 @@ void binary_chi_square_independence(const byte data[], double &score, int &df, c
 	vector<int> occ(tuple_count, 0);
 	int block_count = sample_size / m;
 
-	for(unsigned long i = 0; i < block_count; i++){
+	for(int i = 0; i < block_count; i++){
 
 		int symbol = 0;
 		for(int j = 0; j < m; j++){
@@ -622,7 +622,7 @@ void goodness_of_fit(const byte data[], double &score, int &df, const int sample
 	vector<int> o(bin_expectations.size());
 
 	for(int j=0; j<10; j++) {
-		for(int i=0; i<o.size(); i++) o[i] = 0;
+		for(unsigned int i=0; i<o.size(); i++) o[i] = 0;
 		goodness_of_fit_calc_observed(data+j*block_size, e, o, block_size);
 		T += calc_T(bin_expectations, o);
 	}

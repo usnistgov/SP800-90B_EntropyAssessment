@@ -484,7 +484,7 @@ void print_results(int C[][3]){
 	cout << endl;
 }
 
-bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int num_threads, const bool verbose){
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const bool verbose){
 	uint64_t xoshiro256starstarMainSeed[4];
 	uint64_t xoshiro256starstarSeed[4];
 	int passed_count;
@@ -569,7 +569,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 						}
 					}
 					passed_count = 0;
-					for(int j=0; j < num_tests; j++) if(!test_status[j]) passed_count++;
+					for(unsigned int j=0; j < num_tests; j++) if(!test_status[j]) passed_count++;
 				}
 			}
 		}

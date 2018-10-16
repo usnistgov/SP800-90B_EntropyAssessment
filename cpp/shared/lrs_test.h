@@ -42,12 +42,13 @@ static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vec
 	}
 }
 
-void calcSALCP(const byte text[], long int n, int k, vector<saidx_t> &sa, vector<saidx_t> &lcp){
+void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp){
 	int32_t res;
 
 	assert(n < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
-	assert(sa.size() == n+1);
-	assert(sa.size() == n+1);
+	assert(n > 0); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
+	assert(sa.size() == (size_t)(n+1));
+	assert(sa.size() == (size_t)(n+1));
 
 	sa[0] = (saidx_t)n;
 
@@ -119,7 +120,7 @@ void SAalgs(const byte text[], long int L, int k, double &t_tuple_res, double &l
 	assert(k>0);
 	assert(L < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
 
-	calcSALCP(text, L, k, sa, lcp);
+	calcSALCP(text, L, sa, lcp);
 
 	//Find the length of the LRS, v
 	lrs_len = -1;
@@ -184,12 +185,12 @@ void SAalgs(const byte text[], long int L, int k, double &t_tuple_res, double &l
 	return;
 }
 
-int len_LRS(const byte text[], const int sample_size, int k){
+int len_LRS(const byte text[], const int sample_size){
 	vector <saidx_t> sa(sample_size+1, -1);
 	vector <saidx_t> lcp(sample_size+1, -1);
 	saidx_t lrs_len = -1;
 
-	calcSALCP(text, sample_size, k, sa, lcp);
+	calcSALCP(text, sample_size, sa, lcp);
 
 	for(saidx_t j = 0; j <= sample_size; j++) {
 		if(lcp[j] > lrs_len) lrs_len = lcp[j];
@@ -237,7 +238,7 @@ bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_s
 	double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
 
-	int lrs = len_LRS(data, sample_size, alphabet_size);
+	int lrs = len_LRS(data, sample_size);
 	int n = sample_size - lrs + 1;
 	long int overlap = n_choose_2(n);
 

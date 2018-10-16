@@ -270,9 +270,9 @@ void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
 	uint64_t s2 = 0;
 	uint64_t s3 = 0;
 
-	for(int j=0; j < jump_count; j++) {
-		for(int i = 0; i < sizeof JUMP / sizeof *JUMP; i++)
-			for(int b = 0; b < 64; b++) {
+	for(unsigned int j=0; j < jump_count; j++) {
+		for(unsigned int i = 0; i < sizeof JUMP / sizeof *JUMP; i++)
+			for(unsigned int b = 0; b < 64; b++) {
 				if (JUMP[i] & ((uint64_t)1) << b) {
 					s0 ^= xoshiro256starstarState[0];
 					s1 ^= xoshiro256starstarState[1];

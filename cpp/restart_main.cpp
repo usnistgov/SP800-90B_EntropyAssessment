@@ -180,7 +180,7 @@ int main(int argc, char* argv[]){
 		exit(-1);
 	}
 
-        if(data.alph_size == 1){
+        if(data.alph_size <= 1){
                 printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
                 free_data(&data);
                 exit(-1);

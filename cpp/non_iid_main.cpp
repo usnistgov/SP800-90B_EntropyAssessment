@@ -103,7 +103,7 @@ int main(int argc, char* argv[]){
 		exit(-1);
 	}
 
-	if(data.alph_size == 1){
+	if(data.alph_size <= 1){
 		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
 		free_data(&data);
 		exit(-1);
@@ -160,8 +160,8 @@ int main(int argc, char* argv[]){
 	printf("\nRunning Tuple Estimates...\n");
 
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
-	double bin_t_tuple_res, bin_lrs_res;
-	double t_tuple_res, lrs_res;
+	double bin_t_tuple_res = -1.0, bin_lrs_res = -1.0;
+	double t_tuple_res = -1.0, lrs_res = -1.0;
 	SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose);
 	if(bin_t_tuple_res >= 0.0) {
 		if(verbose) printf("\tT-Tuple Test Estimate (bit string) = %f / 1 bit(s)\n", bin_t_tuple_res);
