@@ -57,7 +57,9 @@ void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_
    	sa2lcp(text, n, sa, lcp);
 }
 
-
+//The logic underlying this is outlined in UL's implementation guidance
+//https://bit.ly/UL90BCOM
+//See the section titled "Algorithms for t-tuple and LRS Estimates", the last 3 pages of the PDF.
 static void countTuples(const vector<saidx_t> &sa, const vector<saidx_t> &lcp, long int L, long int tupleSize, double &Pmax, double &PWmax){
 	long int h;
 	long int Q=0;
@@ -80,7 +82,6 @@ static void countTuples(const vector<saidx_t> &sa, const vector<saidx_t> &lcp, l
 
 			//For the LRS test
 			//The numerator must necessarily be even, so we can divide by 2 without problems
-			//Check for overflows when adding to Psum element (unsigned 64 bit integers)
 			PWnum += (((uint64_t)h)*((uint64_t)h-1)) >> 1;
 		} 
 	}
@@ -148,6 +149,8 @@ void SAalgs(const byte text[], long int L, int k, double &t_tuple_res, double &l
 				if(curPmax > Pmax) Pmax = curPmax;
 			}
 		} else {
+			assert(curPWmax >= 0.0);
+			assert(curPmax < 0.0);
 			if(curPWmax > PWmax) PWmax = curPWmax;
 		}
 	}

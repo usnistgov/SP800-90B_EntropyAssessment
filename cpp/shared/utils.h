@@ -103,7 +103,7 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
 
    //Is absA or diff subnormal?
    if((absA <= DBL_MIN) || (diff < DBL_MIN)) {
-      //Yes. relitive closeness is going to be nonsense
+      //Yes. Relative closeness is going to be nonsense
       return diff < maxAbsFactor;
    } else if(diff <= absB * maxRelFactor) {
       return true;
@@ -111,19 +111,15 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
    //They aren't close in the normal sense, but perhaps that's just due to IEEE representation.
    //Check to see if the value is within maxULP ULPs
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-   //Can't meaningfully compare non-zero values with 0.0 in this way.
-   if(A==0.0) {
-      return false;
-   }
-#pragma GCC diagnostic pop
+   //Can't meaningfully compare non-zero values with 0.0 in this way,
+   //but A > DBL_MIN if we're here.
 
    //if they aren't the same sign, they can't be equal
    if(signbit(A) !=  signbit(B)) {
       return false;
    }
 
+   //Note, casting from one type to another is undefined behavior
    memcpy(&Aint, &absA, sizeof(double));
    memcpy(&Bint, &absB, sizeof(double));
    assert(Bint > Aint);
@@ -261,7 +257,7 @@ static inline uint64_t xoshiro256starstar(uint64_t *xoshiro256starstarState)
 }
 
 /* This is the jump function for the generator. It is equivalent
-   to 2^128 calls to next(); it can be used to generate 2^128
+   to 2^128 calls to xoshiro256starstar(); it can be used to generate 2^128
    non-overlapping subsequences for parallel computations. */
 void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
 	static const uint64_t JUMP[] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
@@ -289,6 +285,9 @@ void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
 	}
 }
 
+//This seeds using an external source
+//We use /dev/urandom here. 
+//We could alternately use the RdRand (or some other OS or HW source of pseudo-random numbers)
 void seed(uint64_t *xoshiro256starstarState){
 	FILE *infp;
 
@@ -657,7 +656,7 @@ double calc_p_local(long max_run_len, long N){
 		for(i = 0; i < 10; i++) x = 1.0 + q*powl(p, r)*powl(x, r+1.0);
 		pVal = log(1.0-p*x) - log((r+1.0-r*x)*q) - (N+1.0)*log(x);
 
-		//invariant: If this isn't true, then this isn't loosly monotonic
+		//invariant: If this isn't true, then this isn't loosely monotonic
 		if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
 			p = hbound;
 			break;
