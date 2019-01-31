@@ -201,12 +201,7 @@ bool read_file(const char *file_path, data_t *dp){
 		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (byte)dp->alph_size++;
 	}
 
-	// map down symbols if less than 2^bits_per_word unique symbols
-	if(dp->alph_size < max_symbols){
-		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
-	} 
-
-	// create bsymbols (bitstring)
+	// create bsymbols (bitstring) using the non-mapped data
 	dp->blen = dp->len * dp->word_size;
 	if(dp->word_size == 1) dp->bsymbols = dp->symbols;
 	else{
@@ -224,6 +219,11 @@ bool read_file(const char *file_path, data_t *dp){
 			}
 		}
 	}
+
+	// map down symbols if less than 2^bits_per_word unique symbols
+	if(dp->alph_size < max_symbols){
+		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
+	} 
 
 	return true;
 }
