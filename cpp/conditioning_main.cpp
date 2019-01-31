@@ -1,19 +1,11 @@
-#include "shared/utils.h"
-#include "shared/most_common.h"
-#include "shared/lrs_test.h"
-#include "non_iid/collision_test.h"
-#include "non_iid/lz78y_test.h"
-#include "non_iid/multi_mmc_test.h"
-#include "non_iid/lag_test.h"
-#include "non_iid/multi_mcw_test.h"
-#include "non_iid/tuple.h"
-#include "non_iid/compression_test.h"
-#include "non_iid/markov_test.h"
-
+#include <stdio.h>
+#include <cstdlib>
 #include <limits>
+#include <cmath>
+#include <algorithm>
 
 void print_usage(){
-	printf("Usage is: ./conditioning_main <n_in> <n_out> <nw> <h_in> <-v|-n> <h'>\n\n");
+	printf("Usage is: ea_conditioning <n_in> <n_out> <nw> <h_in> <-v|-n> <h'>\n\n");
 	printf("\t <n_in>: input number of bits to conditioning function.\n");
 	printf("\t <n_out>: output number of bits from conditioning function.\n");
 	printf("\t <nw>: narrowest internal width of conditioning function.\n");
@@ -31,11 +23,8 @@ void print_usage(){
 }
 
 int main(int argc, char* argv[]){
-	bool vetted, verbose = false;
-	const char verbose_flag = 'v';
-	char *file_path;
-	double h_p, h_in, h_out, n_in, n_out, nw, n, p_high, p_low, psi, omega, output_entropy;
-	data_t data;
+	bool vetted;
+	double h_p, h_in, h_out, n_in, n_out, nw, n, p_high, p_low, psi, omega, output_entropy, power_term;
 
 	// Parse args
 	if(argc != 6 && argc != 7){
@@ -103,19 +92,24 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+	if(nw > n_in) nw = n_in;
+
 	printf("n_in: %f\n", n_in);
 	printf("n_out: %f\n", n_out);
 	printf("nw: %f\n", nw);
 	printf("h_in: %f\n", h_in);
 	if(!vetted) printf("h': %f\n", h_p);
-	
+
 	// compute Output Entropy (Section 3.1.5.1.2)
 	p_high = pow(2.0, -h_in);
 	p_low = (1.0-p_high)/(pow(2.0, n_in)-1);
-	n = min(n_out, nw);
-	psi = pow(2.0, n_in-n)*p_low + p_high;
-	omega = (pow(2.0, n_in-n) + sqrt(2*n*(pow(2.0, n_in-n)*log(2))))*p_low;
-	output_entropy = -log2(max(psi, omega));
+	n = std::min(n_out, nw);
+	power_term = pow(2.0, n_in - n);
+	psi = power_term*p_low + p_high;
+	omega = (power_term + sqrt(2*n*power_term*log(2)))*p_low;
+	output_entropy = -log2(std::max(psi, omega));
+	if(output_entropy > n_out) output_entropy = n_out;
+	if(output_entropy < 0) output_entropy = 0;
 
 	if(vetted){
 		printf("\n(Vetted) ");
@@ -123,7 +117,7 @@ int main(int argc, char* argv[]){
 	}
 	else{
 		printf("\n(Non-vetted) ");
-		h_out = min(output_entropy, min(0.999*n_out, h_p*n_out));
+		h_out = std::min(output_entropy, std::min(0.999*n_out, h_p*n_out));
 	}
 
 	printf("h_out: %f\n", h_out);

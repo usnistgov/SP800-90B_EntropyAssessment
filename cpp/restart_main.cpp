@@ -12,7 +12,7 @@
 
 
 void print_usage(){
-	printf("Usage is: ./restart_main <file_name> <bits_per_word> <H_I> <-i|-n> [-v]\n\n");
+	printf("Usage is: ea_restart <file_name> <bits_per_word> <H_I> <-i|-n> [-v]\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
 	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
@@ -102,12 +102,11 @@ int main(int argc, char* argv[]){
                 exit(-1);
         }
 
-	if(data.len > SIZE) data.len = SIZE;
-	if(verbose) printf("Number of Symbols: %ld\n", data.len);
-	if(data.len < SIZE){ 
-		printf("\n*** Error: data contains less than %d samples ***\n\n", SIZE);
+	if(data.len != MIN_SIZE){ 
+		printf("\n*** Error: data does not contain %d samples ***\n\n", MIN_SIZE);
 		exit(-1);
 	}
+	if(verbose) printf("Number of Symbols: %ld\n", data.len);
 	if(verbose){
 		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been mapped down to an alphabet size of %d unique symbols\n\n", data.alph_size);
 		else printf("\nSymbol alphabet consists of %d unique symbols\n\n", data.alph_size);

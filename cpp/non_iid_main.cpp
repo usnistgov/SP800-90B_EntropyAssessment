@@ -12,7 +12,7 @@
 
 
 void print_usage(){
-	printf("Usage is: ./non_iid_main <file_name> <bits_per_word> <-i|-c> <-a|-t> [-v]\n\n");
+	printf("Usage is: ea_non_iid <file_name> <bits_per_word> <-i|-c> <-a|-t> [-v]\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
 	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
 	printf("\t <-i|-c>: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate.\n");
