@@ -17,7 +17,7 @@ double most_common(byte* data, const long len, const int alph_size){
 	}
 
 	pmax = mode/(double)len;
-	ubound = pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0));
+	ubound = pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0));
 
 	return -log2(min(1.0, ubound));
 }

@@ -3,19 +3,7 @@
 
 // Computed using efficient implementation in Appendix G.1.1
 double F(double q){
-	int i;	
-	double z, ret;
-	
-	i = 1000;
-	z = 1.0/q;
-	ret = z + (i-2.0)/(i+1.0);
-	
-	while(i > 0){
-		i--;
-		ret = z + (i-2.0) / (1.0 + ((i+1.0)/ret));
-	}
-
-	return  1.0/ret;
+   return q*(2.0*q*q+2.0*q+1.0);
 }
 
 double col_exp(double p, double q){
@@ -25,10 +13,13 @@ double col_exp(double p, double q){
 // Section 6.3.2 - Collision Estimate
 // data is assumed to be binary (e.g., bit string)
 double collision_test(byte* data, long len){
-	long v, i;
+	long v, i, j;
 	int t_v;
-	double X, s, p, p_hi, p_lo, eps, exp;
-	
+	double X, s, p, lastP, pVal;
+        double lvalue, hvalue;
+        double hbound, lbound;
+        double hdomain, ldomain;
+
 	i = 0;
 	v = 0;
 	X = 0.0;
@@ -51,24 +42,86 @@ double collision_test(byte* data, long len){
 	s = sqrt((s - (i*X)) / (v-1));
 
 	// binary search for p
-	X -= 2.576 * s/sqrt(v);
-	eps = 1.0 / (1 << 20); // 2^-20
-	p_lo = 0.5;
-	p_hi = 1.0 - eps; // avoid division by zero
-	do{
-		p = (p_lo + p_hi) / 2.0;
-		exp = col_exp(p, 1.0-p);
+	X -= ZALPHA * s/sqrt(v);
 
-		if(X < exp) p_lo = p;
-		else p_hi = p;
+	ldomain = 0.5;
+        hdomain = 1.0;
 
-		if((col_exp(p_lo, 1.0-p_lo) < X) || (col_exp(p_hi, 1.0-p_hi) > X)){
-			// binary search failed, settle for one bit of entropy
-			printf("\t *** WARNING: binary search for collision test failed ***\n");
-			p = 0.5; 
-			break;
-		}
-	}while(fabs(p_hi - p_lo) > eps);
+        lbound = ldomain;
+        hbound = hdomain;
+
+        lvalue = DBL_INFINITY;
+        hvalue = -DBL_INFINITY;
+
+        //Note that the bounds are in [0,1], so overflows aren't an issue
+        //But underflows are.
+        p = (lbound + hbound) / 2.0;
+	pVal = col_exp(p, 1.0-p);
+
+        //We don't need the initial pVal invariant, as our initial bounds are infinite.
+        //We don't need the initial bounds, as they are set to the domain bounds
+        for(j=0; j<ITERMAX; j++) {
+                //Have we reached "equality"?
+                if(relEpsilonEqual(pVal, X, ABSEPSILON, RELEPSILON, 4)) break;
+
+                //Now update based on the found pVal
+                if(X < pVal) {
+                        lbound = p;
+                        lvalue = pVal;
+                } else {
+                        hbound = p;
+                        hvalue = pVal;
+                }
+
+                //We now verify that ldomain <= lbound < p < hbound <= hdomain
+                //and that target in [ lvalue, hvalue ]
+                if(lbound >= hbound) {
+                        p = fmin(fmax(lbound, hbound),hdomain);
+                        break;
+                }
+
+                //invariant. If this isn't true, then we can't evaluate here.
+                if(!(INCLOSEDINTERVAL(lbound, ldomain, hdomain) && INCLOSEDINTERVAL(hbound,  ldomain, hdomain))) {
+			//This is a search failure. We need to return "full entropy"  (as directed in step #8).
+                        p = ldomain;
+                        break;
+                }
+
+                //invariant. If this isn't true, then seeking the value within this interval doesn't make sense.
+                if(!INCLOSEDINTERVAL(X, lvalue, hvalue)) {
+			//This is a search failure. We need to return "full entropy"  (as directed in step #8).
+                        p = ldomain;
+                        break;
+                }
+
+                //Update p
+                lastP = p;
+                p = (lbound + hbound) / 2.0;
+
+                //invariant. If this isn't true, then further calculation isn't really meaningful.
+                if(!INOPENINTERVAL(p,  lbound, hbound)) {
+                        p = hbound;
+                        break;
+                }
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+                //Look for a cycle
+                if(lastP == p) {
+                        p = hbound;
+                        break;
+                }
+#pragma GCC diagnostic pop
+
+		pVal = col_exp(p, 1.0-p);
+
+                //invariant: If this isn't true, then this isn't loosly monotonic
+                if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
+                        p = hbound;
+                        break;
+                }
+        }//for loop
 
 	return -log2(p);
 }
