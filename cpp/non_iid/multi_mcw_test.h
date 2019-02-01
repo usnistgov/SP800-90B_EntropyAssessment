@@ -89,7 +89,7 @@ double multi_mcw_test(byte *data, long len, int alph_size, const bool verbose){
 	p_global = calc_p_global(C, N);
 	p_local = calc_p_local(max_run_len, N);
 
-	if(verbose) printf("MultiMCW Prediction Estimate: N = %ld, Pglobal = %.17g (C = %ld) Plocal' = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len);
+	if(verbose) printf("MultiMCW Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len+1);
 	
 	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
 }

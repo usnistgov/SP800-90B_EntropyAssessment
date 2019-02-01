@@ -17,8 +17,8 @@ double most_common(byte* data, const long len, const int alph_size, const bool v
 	}
 
 	pmax = mode/(double)len;
-	
-	ubound = min(1.0,pmax + 2.576*sqrt(pmax*(1.0-pmax)/(len-1.0)));
+
+	ubound = min(1.0,pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0)));	
 	if(verbose) printf("MCV Estimate: mode = %ld, p-hat = %.17g, p_u = %.17g\n", mode, pmax, ubound);
 
 	return -log2(ubound);

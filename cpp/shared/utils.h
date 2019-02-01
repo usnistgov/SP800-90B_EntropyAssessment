@@ -224,7 +224,7 @@ bool read_file(const char *file_path, data_t *dp){
 	}
 
 	// map down symbols if less than 2^bits_per_word unique symbols
-	if(dp->alph_size < max_symbols){
+	if(dp->alph_size < dp->maxsymbol + 1){
 		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
 	} 
 
