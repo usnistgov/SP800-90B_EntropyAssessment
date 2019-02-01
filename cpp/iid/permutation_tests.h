@@ -519,7 +519,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 			cout << "\rPermutation Test: " << divide(i, PERMS)*100 << "% complete" << flush;
 		}
 
-		FYshuffle(data, rawdata, dp->len);
+		FYshuffle(data, rawdata, dp->len, xoshiro256starstarSeed);
 		run_tests(dp, data, rawdata, rawmean, median, tp);
 
 		// Aggregate results into the counters

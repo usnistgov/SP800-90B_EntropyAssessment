@@ -323,7 +323,7 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 }
 
 // Fisher-Yates Fast (in place) shuffle algorithm
-void FYshuffle(byte data[], byte rawdata[], const int sample_size) {
+void FYshuffle(byte data[], byte rawdata[], const int sample_size, uint64_t *xoshiro256starstarState) {
 	long int r;
 	static mutex shuffle_mutex;
 	unique_lock<mutex> lock(shuffle_mutex);
