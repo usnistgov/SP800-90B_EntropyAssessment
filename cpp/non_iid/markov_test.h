@@ -3,7 +3,7 @@
 
 // Section 6.3.3 - Markov Estimate
 // data is assumed to be binary (e.g., bit string)
-double markov_test(byte* data, long len){
+double markov_test(byte* data, long len, const bool verbose){
 	long i, C_0, C_1, C_00, C_01, C_10, C_11;
 	double H_min, tmp_min_entropy, P_0, P_1, P_00, P_01, P_10, P_11;
 
@@ -34,6 +34,8 @@ double markov_test(byte* data, long len){
 
 	P_0 = C_0 / (double)len;
 	P_1 = 1.0 - P_0;
+
+	if(verbose) printf("Markov Estimate: P_0 = %.17g, P_1 = %.17g, P_0,0 = %.17g, P_0,1 = %.17g, P_1,0 = %.17g, P_1,1 = %.17g, ", P_0, P_1, P_00, P_01, P_10, P_11);
 
 	H_min = 128.0;
 
@@ -72,6 +74,8 @@ double markov_test(byte* data, long len){
         	tmp_min_entropy = -log2(P_1) - 127*log2(P_11);
        		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
 	}
+
+	if(verbose) printf("p_max = %.17g\n", pow(2.0, -H_min));
 
 	return H_min/128.0;
 }

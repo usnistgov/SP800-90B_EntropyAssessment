@@ -1,79 +1,205 @@
 #pragma once
 
 #include "utils.h"
+#include <divsufsort.h>
 
-/*
-* ---------------------------------------------
-*		LONGEST REPEATED SUBSTRING HELPERS
-* ---------------------------------------------
-*/
+//Using the Kasai (et. al) O(n) time "13n space" algorithm.
+//"Linear-Time Longest-Common-Prefix Computation in Suffix Arrays and Its Applications", by Kasai, Lee, Arimura, Arikawa, and Park
+//https://doi.org/10.1007/3-540-48194-X_17
+//http://web.cs.iastate.edu/~cs548/references/linear_lcp.pdf
+//The default implementation uses 4 byte indexes
+//Note that indexes should be signed, so the next natural size is int64_t
+static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vector<saidx_t> &lcp){
+	saidx_t h;
+	vector<saidx_t> rank(n+1,-1);
 
-void find_substrings(const byte text[], int substr_len, map<vector<byte>, vector<int>> &indexes, const int sample_size){
+	assert(n>1);
 
-	// First iteration
-	if(substr_len == 2){
+	lcp[0] = -1;
+	lcp[1] = 0;
 
-		// Store all 2-tuples that appear in the text
-		for(int i = 0; i < sample_size-1; i++){
-			indexes[substr(text, i, substr_len, sample_size)].push_back(i);
-		}
+	// compute rank = sa^{-1}
+	for(saidx_t i=0; i<=(saidx_t)n; i++) {
+		rank[sa[i]] = i;
+	}
 
-	// All other iterations, don't just find all n-tuples naively like 2-tuples
-	// Any (n+1)-tuple must build upon an n-tuple, so just take the existing indexes and build on them
-	}else{
+	// traverse suffixes in rank order
+	h=0;
 
-		vector<int> good_indexes;
-		map<vector<byte>, vector<int>>::iterator itr;
-
-		// Store all the indexes of n-tuple substrings that occur more than once
-		for(itr = indexes.begin(); itr != indexes.end(); ++itr){
-			for(unsigned int i = 0; i < itr->second.size(); i++){
-				good_indexes.push_back(itr->second[i]);
+	for(saidx_t i=0; i<(saidx_t)n; i++) {
+		saidx_t k = rank[i]; // rank of s[i ... n-1]
+		if(k>1) {
+			saidx_t j = sa[k-1]; // predecessor of s[i ... n-1]
+			while((i+h<(saidx_t)n) && (j+h<(saidx_t)n) && (text[i+h]==text[j+h])) {
+				h++;
 			}
 
+			lcp[k] = h;
 		}
-
-		indexes.clear();
-
-		// Extend the n-tuples to (n+1)-tuples and store like before
-		for(unsigned int i = 0; i < good_indexes.size(); i++){
-			indexes[substr(text, good_indexes[i], substr_len, sample_size)].push_back(good_indexes[i]);
+		if(h>0) {
+			h--;
 		}
 	}
 }
 
-void erase_substrings(map<vector<byte>, vector<int>> &indexes){
+void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp){
+	int32_t res;
 
-	// Prune the map of any substrings that occur only once
-	map<vector<byte>, vector<int>>::iterator itr = indexes.begin();
-	while(itr != indexes.end()){
-		if(itr->second.size() < 2){
-			indexes.erase(itr++);
-		}else{
-			++itr;
-		}
+	assert(n < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
+	assert(n > 0); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
+	assert(sa.size() == (size_t)(n+1));
+	assert(sa.size() == (size_t)(n+1));
+
+	sa[0] = (saidx_t)n;
+
+	res=divsufsort((const sauchar_t *)text, (saidx_t *)(sa.data()+1), (saidx_t)n);
+	assert(res==0);
+   	sa2lcp(text, n, sa, lcp);
+}
+
+//The logic underlying this is outlined in UL's implementation guidance
+//https://bit.ly/UL90BCOM
+//See the section titled "Algorithms for t-tuple and LRS Estimates", the last 3 pages of the PDF.
+static void countTuples(const vector<saidx_t> &sa, const vector<saidx_t> &lcp, long int L, long int tupleSize, double &Pmax, double &PWmax){
+	long int h;
+	long int Q=0;
+	double PW;
+	double P;
+	uint64_t PWnum=0;
+
+	for(long int m=0; m<=L; m+=h) {
+		h=1;
+		if(sa[m] + tupleSize <= L) {
+			//This is a tuple to count
+			while((m+h <= L) && ((saidx_t)tupleSize <= lcp[m+h])) {
+				h++;
+			}
+			//h now contains the number of times this particular tuple occurred in the text
+
+			//Account for the tuple
+			//For t-tuple test
+			if(Q < h) Q=h;
+
+			//For the LRS test
+			//The numerator must necessarily be even, so we can divide by 2 without problems
+			PWnum += (((uint64_t)h)*((uint64_t)h-1)) >> 1;
+		} 
+	}
+
+	//Now we're done with this tuple size. Finalize the outputs
+	//t-tuple test
+	if(Q >= 35) {
+		//tupleSize <= t
+		P = ((double)Q)/((double)(L-tupleSize+1));
+		Pmax = pow(P, 1.0/(double)tupleSize);
+
+		//tupleSize < u; set this value to flag nonsense
+		PWmax = -1.0;
+	} else {
+		//Otherwise, tupleSize > t
+		//a.k.a. tupleSize >= u
+		PW = ((double)PWnum) / (double)(((L-tupleSize+1)*(L-tupleSize))>>1);
+		PWmax = pow(PW, 1.0/((double)tupleSize));
+		//tupleSize > t; set this value to flag nonsense
+		Pmax = -1.0;
 	}
 }
 
-int len_LRS(const byte text[], const int remaining, const int substr_len, const int sample_size){
+void SAalgs(const byte text[], long int L, int k, double &t_tuple_res, double &lrs_res, bool verbose){
+	vector <saidx_t> sa(L+1, -1);
+	vector <saidx_t> lcp(L+1, -1);
+   	long int u;
+   	long int v;
+   	long int lrs_len;
+	double curPmax;
+	double curPWmax;
+	double Pmax;
+	double PWmax;
+	double pu;
 
-	// String is the substring we are looking at, vector stores the indexes those substrings begin at
-	map<vector<byte>, vector<int>> indexes;
-	int len = substr_len;
-	int index_size = remaining + 1;
+	assert(L>0);
+	assert(k>0);
+	assert(L < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
 
-	// Progressively grow the length of the n-tuples to look for
-	while(index_size >= remaining){
-		len++;
-		find_substrings(text, len, indexes, sample_size);
-		erase_substrings(indexes);
-		index_size = indexes.size();
+	calcSALCP(text, L, sa, lcp);
+
+	//Find the length of the LRS, v
+	lrs_len = -1;
+	for(long int j=0; j<=L; j++) {
+		if(lcp[j]>lrs_len) lrs_len = lcp[j];
 	}
 
-	if(remaining != 1){ return len-2; }
+	assert(lrs_len>0);
+	//lrs_len is now set correctly
+   	v = lrs_len;
 
-	// We advance a bit further than we need to
-	return len;
+	//This is work factor on order O(L * v)
+	Pmax = -1.0;
+	PWmax = -1.0;
+	u = 0;
+	for(long int j=1; j<=v; j++) {
+		countTuples(sa, lcp, L, j, curPmax, curPWmax);
+		if(u == 0) {
+			if(curPmax < 0.0) {
+				u = j;
+            			PWmax = curPWmax;
+         		} else {
+				// curPmax >= 0
+				assert(curPWmax < 0.0);
+				if(curPmax > Pmax) Pmax = curPmax;
+			}
+		} else {
+			assert(curPWmax >= 0.0);
+			assert(curPmax < 0.0);
+			if(curPWmax > PWmax) PWmax = curPWmax;
+		}
+	}
+
+	//finalize the t-tuple estimate
+	if(Pmax > 0.0) {
+		//We encountered a valid t, so we can run the test
+		pu = Pmax + ZALPHA*sqrt(Pmax*(1.0 - Pmax)/((double)(L - 1)));
+		if(verbose) printf("t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", u-1, Pmax, pu);
+		if(pu > 1.0) {
+			pu = 1.0;
+		}
+
+		t_tuple_res = -log2(pu);
+	} else {
+		if(verbose) printf("t-Tuple Estimate: No strings are repeated 35 times. t-Tuple estimate failed.\n");
+		t_tuple_res = -1.0;
+	}
+
+	//finalize the LRS estimate
+	if(v>=u) {
+		pu = PWmax + ZALPHA*sqrt(PWmax*(1.0 - PWmax)/((double)(L - 1)));
+		if(pu > 1.0) {
+			pu = 1.0;
+		}
+		if(verbose) printf("LRS Estimate: u = %ld, v = %ld, P_{max,W} = %.17g, p_u = %.17g\n", u, v, PWmax, pu);
+
+		lrs_res = -log2(pu);
+	} else {
+		fprintf(stderr, "LRS Estimate: v<u. Can't Run LRS Test.\n");
+		lrs_res = -1.0;
+		return;
+	}
+
+	return;
+}
+
+int len_LRS(const byte text[], const int sample_size){
+	vector <saidx_t> sa(sample_size+1, -1);
+	vector <saidx_t> lcp(sample_size+1, -1);
+	saidx_t lrs_len = -1;
+
+	calcSALCP(text, sample_size, sa, lcp);
+
+	for(saidx_t j = 0; j <= sample_size; j++) {
+		if(lcp[j] > lrs_len) lrs_len = lcp[j];
+	}
+
+	return(lrs_len);
 }
 
 void count_tuples(const byte data[], const int length, map<vector<byte>, int> &tuples, const int sample_size){
@@ -115,8 +241,7 @@ bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_s
 	double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
 
-	// Calculate the number of overlapping substrings of the same length as the longest repeated substring
-	int lrs = len_LRS(data, 1, 1, sample_size);
+	int lrs = len_LRS(data, sample_size);
 	int n = sample_size - lrs + 1;
 	long int overlap = n_choose_2(n);
 
@@ -130,41 +255,4 @@ bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_s
 	}
 
 	return (pr_x >= 0.001);
-}
-
-double LRS_test_noniid(const byte data[], const int sample_size, const int alphabet_size, const long u){
-
-	// int u = len_LRS(data, 20, 1, sample_size);
-	int v = len_LRS(data, 1, u, sample_size);
-
-	if(v < u){
-		cout << "Error in LRS. Aborting." << endl;
-		return 0.0;
-	}
-
-	vector<double> p;
-	for(int i = (int)u; i <= v; i++){
-		map<vector<byte>, int> tuples;
-		count_tuples(data, i, tuples, sample_size);
-
-		map<vector<byte>, int>::iterator itr;
-		int numer = 0;
-		for(itr = tuples.begin(); itr != tuples.end(); ++itr){
-			if(itr->second != 1){
-				numer += n_choose_2(itr->second);
-			}
-		}
-
-		long int denom = n_choose_2(sample_size-i+1);
-		p.push_back(pow(numer/(double)denom, 1.0/i));
-	}
-
-	double p_max = 0.0;
-	for(unsigned int i = 0; i < p.size(); i++){
-		if(p[i] > p_max){
-			p_max = p[i];
-		}
-	}
-
-	return -log2(p_max);
 }

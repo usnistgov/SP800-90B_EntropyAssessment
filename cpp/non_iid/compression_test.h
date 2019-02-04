@@ -34,14 +34,14 @@ double com_exp(double p, double q, unsigned int alph_size, long v, int d, long n
 
 // Section 6.3.4 - Compression Estimate
 // data is assumed to be binary (e.g., bit string)
-double compression_test(byte* data, long len){
+double compression_test(byte* data, long len, const bool verbose){
 	int j, d, b = 6;
 	long i, num_blocks, v;
 	unsigned int block, alph_size = 1 << b; 
 	unsigned int dict[alph_size];
 	double X=0.0, X_comp=0.0;
 	double sigma=0.0, sigma_comp=0.0;
-	double p, p_lo, p_hi, eps, exp;
+	double p;
 	double ldomain, hdomain, lbound, hbound, lvalue, hvalue, pVal, lastP;
 
 	d = 1000;
@@ -72,7 +72,9 @@ double compression_test(byte* data, long len){
 
 	// compute mean and stdev
 	X /= v;
+	if(verbose) printf("Compression Estimate: X-bar = %.17g, ", X);
 	sigma = 0.5907 * sqrt(sigma/(v-1.0) - X*X);
+	if(verbose) printf("sigma-hat = %.17g, ", sigma);
 
         // binary search for p
 	X -= ZALPHA * sigma/sqrt(v);
@@ -154,6 +156,8 @@ double compression_test(byte* data, long len){
                         break;
                 }
         }//for loop
+
+	if(verbose) printf("p = %.17g\n", p);
 
         return -log2(p)/b;
 }

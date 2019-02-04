@@ -3,6 +3,7 @@
 #include "shared/lrs_test.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
+#include <omp.h>
 
 void print_usage(){
 	printf("Usage is: ea_iid <file_name> <bits_per_word> <-i|-c> <-a|-t> [-v]\n\n");
@@ -44,9 +45,8 @@ int main(int argc, char* argv[]){
 
 	bool initial_entropy, all_bits, verbose = false;
 	const char verbose_flag = 'v';
-	double mean, median;
+	double rawmean, median;
 	char* file_path;
-	int num_threads = 4;
 	data_t data;
 
 	// Parse args
@@ -95,15 +95,13 @@ int main(int argc, char* argv[]){
 		printf("Opening file: '%s'\n", file_path);
 	}
 
-	//byte* dataset = new byte[sample_size];
-	//if(!read_file(file_path, dataset, word_size, sample_size)){
 	if(!read_file(file_path, &data)){
 		printf("Error reading file.\n");
 		print_usage();
 		exit(-1);
 	}
 
-	if(data.alph_size == 1){
+	if(data.alph_size <= 1){
 		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
 		free_data(&data);
 		exit(-1);
@@ -125,28 +123,27 @@ int main(int argc, char* argv[]){
 	int sample_size = data.len;
 
 	printf("Calculating baseline statistics...\n");
-	calc_stats(data.symbols, mean, median, sample_size, alphabet_size);
+	calc_stats(&data, rawmean, median);
 
 	if(verbose){
-		printf("\tMean: %f\n", mean);
+		printf("\tRaw Mean: %f\n", rawmean);
 		printf("\tMedian: %f\n", median);
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
 	}
 
-	double start_time = omp_get_wtime();
+	//double start_time = omp_get_wtime();
 
 	// Compute the min-entropy of the dataset
-	double H_min = most_common(data.symbols, sample_size, alphabet_size);
+	double H_min = most_common(data.symbols, sample_size, alphabet_size, verbose);
 	printf("min-entropy = %f\n\n", H_min);
 
 	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(data.symbols, mean, median, sample_size, alphabet_size, verbose);
+	bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
 
 	if(chi_square_test_pass){
 		printf("** Passed chi square tests\n\n");
 	}else{
 		printf("** Failed chi square tests\n\n");
-		//return -1;
 	}
 
 	// Compute length of the longest repeated substring stats
@@ -160,7 +157,7 @@ int main(int argc, char* argv[]){
 	}
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(data.symbols, mean, median, alphabet_size, sample_size, num_threads, verbose);
+	bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose);
 
 	if(perm_test_pass){
 		printf("** Passed IID permutation tests\n\n");
@@ -169,8 +166,8 @@ int main(int argc, char* argv[]){
 		//return -1;
 	}
 
-	double run_time = omp_get_wtime() - start_time;
-	printf("Total Time elapsed: %f\n", run_time);
+	//double run_time = omp_get_wtime() - start_time;
+	//printf("Total Time elapsed: %f\n", run_time);
 
 	free_data(&data);
 	return 0;

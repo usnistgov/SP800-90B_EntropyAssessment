@@ -40,10 +40,12 @@ typedef struct data_t data_t;
 struct data_t{
 	int word_size; 		// bits per symbol
 	int alph_size; 		// symbol alphabet size
+	byte maxsymbol; 	// the largest symbol present in the raw data stream
+	byte *rawsymbols; 	// raw data words
 	byte *symbols; 		// data words
 	byte *bsymbols; 	// data words as binary string
-	long len; 			// number of words in data
-	long blen; 			// number of bits in data
+	long len; 		// number of words in data
+	long blen; 		// number of bits in data
 };
 
 using namespace std;
@@ -101,7 +103,7 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
 
    //Is absA or diff subnormal?
    if((absA <= DBL_MIN) || (diff < DBL_MIN)) {
-      //Yes. relitive closeness is going to be nonsense
+      //Yes. Relative closeness is going to be nonsense
       return diff < maxAbsFactor;
    } else if(diff <= absB * maxRelFactor) {
       return true;
@@ -109,19 +111,15 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
    //They aren't close in the normal sense, but perhaps that's just due to IEEE representation.
    //Check to see if the value is within maxULP ULPs
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-   //Can't meaningfully compare non-zero values with 0.0 in this way.
-   if(A==0.0) {
-      return false;
-   }
-#pragma GCC diagnostic pop
+   //Can't meaningfully compare non-zero values with 0.0 in this way,
+   //but A > DBL_MIN if we're here.
 
    //if they aren't the same sign, they can't be equal
    if(signbit(A) !=  signbit(B)) {
       return false;
    }
 
+   //Note, casting from one type to another is undefined behavior
    memcpy(&Aint, &absA, sizeof(double));
    memcpy(&Bint, &absB, sizeof(double));
    assert(Bint > Aint);
@@ -132,6 +130,7 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
 
 void free_data(data_t *dp){
 	if(dp->symbols != NULL) free(dp->symbols);
+	if(dp->rawsymbols != NULL) free(dp->rawsymbols);
 	if((dp->word_size > 1) && (dp->bsymbols != NULL)) free(dp->bsymbols);
 } 
 
@@ -170,14 +169,15 @@ bool read_file(const char *file_path, data_t *dp){
 		return false;
 	}
 
-	dp->symbols = (byte*)malloc(dp->len);
+	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
+	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
 	if(dp->symbols == NULL){
 		printf("Error: failure to initialize memory for symbols\n");
 		fclose(file);
 		return false;
 	}
 
-    rc = fread(dp->symbols, sizeof(byte), dp->len, file);
+	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
 	if(rc != dp->len){
 		printf("Error: file read failure\n");
 		fclose(file);
@@ -185,8 +185,10 @@ bool read_file(const char *file_path, data_t *dp){
 		dp->symbols = NULL;
 		return false;
 	}
-
 	fclose(file);
+
+	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
+	dp->maxsymbol = 0;
 
 	// create symbols (samples) and check if they need to be mapped down
 	dp->alph_size = 0;
@@ -194,6 +196,7 @@ bool read_file(const char *file_path, data_t *dp){
 	mask = max_symbols-1;
 	for(i = 0; i < dp->len; i++){ 
 		dp->symbols[i] &= mask;
+		if(dp->symbols[i] > dp->maxsymbol) dp->maxsymbol = dp->symbols[i];
 		if(symbol_map_down_table[dp->symbols[i]] == 0) symbol_map_down_table[dp->symbols[i]] = 1;
 	}
 
@@ -221,7 +224,7 @@ bool read_file(const char *file_path, data_t *dp){
 	}
 
 	// map down symbols if less than 2^bits_per_word unique symbols
-	if(dp->alph_size < max_symbols){
+	if(dp->alph_size < dp->maxsymbol + 1){
 		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
 	} 
 
@@ -253,7 +256,38 @@ static inline uint64_t xoshiro256starstar(uint64_t *xoshiro256starstarState)
    return result_starstar;
 }
 
+/* This is the jump function for the generator. It is equivalent
+   to 2^128 calls to xoshiro256starstar(); it can be used to generate 2^128
+   non-overlapping subsequences for parallel computations. */
+void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
+	static const uint64_t JUMP[] = { 0x180ec6d33cfd0aba, 0xd5a61266f0c9392c, 0xa9582618e03fc9aa, 0x39abdc4529b1661c };
+	uint64_t s0 = 0;
+	uint64_t s1 = 0;
+	uint64_t s2 = 0;
+	uint64_t s3 = 0;
 
+	for(unsigned int j=0; j < jump_count; j++) {
+		for(unsigned int i = 0; i < sizeof JUMP / sizeof *JUMP; i++)
+			for(unsigned int b = 0; b < 64; b++) {
+				if (JUMP[i] & ((uint64_t)1) << b) {
+					s0 ^= xoshiro256starstarState[0];
+					s1 ^= xoshiro256starstarState[1];
+					s2 ^= xoshiro256starstarState[2];
+					s3 ^= xoshiro256starstarState[3];
+				}
+				xoshiro256starstar(xoshiro256starstarState);	
+			}
+			
+		xoshiro256starstarState[0] = s0;
+		xoshiro256starstarState[1] = s1;
+		xoshiro256starstarState[2] = s2;
+		xoshiro256starstarState[3] = s3;
+	}
+}
+
+//This seeds using an external source
+//We use /dev/urandom here. 
+//We could alternately use the RdRand (or some other OS or HW source of pseudo-random numbers)
 void seed(uint64_t *xoshiro256starstarState){
 	FILE *infp;
 
@@ -315,15 +349,29 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 	}
 }
 
+/*
+ * This function produces a double that is uniformly distributed in the interval [0, 1).
+ * Note that 2^53 is the largest integer that can be represented in a 64 bit IEEE 754 double, such that all 
+ * smaller positive integers can also be represented. Shifting the initial random 64-bit value right by 11 
+ * bits makes the result only in the lower 53 bits, so the resulting integer is in the range [0, 2^53 - 1].
+ * 1.1102230246251565e-16 (0x1.0p-53) is 2^(-53). Multiplying by this value just effects the exponent of the 
+ * resulting double, not the significand. We get a double uniformly distributed in the range [0, 1).  
+ * The delta between adjacent values is 2^(-53).
+ */
+double randomUnit(uint64_t *xoshiro256starstarState) {
+	return((xoshiro256starstar(xoshiro256starstarState) >> 11) * 1.1102230246251565e-16);
+}
+
 // Fisher-Yates Fast (in place) shuffle algorithm
-void shuffle(byte arr[], const int sample_size, uint64_t *xoshiro256starstarState){
+void FYshuffle(byte data[], byte rawdata[], const int sample_size, uint64_t *xoshiro256starstarState) {
 	long int r;
 	static mutex shuffle_mutex;
 	unique_lock<mutex> lock(shuffle_mutex);
 
 	for (long int i = sample_size - 1; i > 0; --i) {
 		r = (long int)randomRange64((uint64_t)i, xoshiro256starstarState);
-		SWAP(arr[r], arr[i]);
+		SWAP(data[r], data[i]);
+		SWAP(rawdata[r], rawdata[i]);
 	}
 }
 
@@ -361,17 +409,29 @@ T sum(const vector<T> &v) {
 
 // Calculate baseline statistics
 // Finds mean, median, and whether or not the data is binary
-void calc_stats(const byte data[], double &mean, double &median, const int sample_size, const int alphabet_size) {
+void calc_stats(const data_t *dp, double &rawmean, double &median) {
 
 	// Calculate mean
-	mean = sum(data, sample_size) / (double)sample_size;
+	rawmean = sum(dp->rawsymbols, dp->len) / (double)dp->len;
 
 	// Sort in a vector for median/min/max
-	vector<byte> v(data, data + sample_size);
+	vector<byte> v(dp->symbols, dp->symbols + dp->len);
 	sort(v.begin(), v.end());
 
-	long int half = sample_size / 2;
-	median = (v[half] + v[half - 1]) / 2.0;
+	long int half = dp->len / 2;
+	if(dp->alph_size == 2) {
+		//This isn't necessarily true, but we are supposed to set it this way.
+		//See 5.1.5, 5.1.6.
+		median = 0.5;
+	} else {
+		if((dp->len & 1) == 1) {
+			//the length is odd
+			median = v[half];
+		} else {
+			//the length is even
+			median = (v[half] + v[half - 1]) / 2.0;
+		}
+	}
 }
 
 
@@ -402,6 +462,13 @@ void map_init(map<pair<byte, byte>, int> &m) {
 void calc_proportions(const byte data[], vector<double> &p, const int sample_size) {
 	for (int i = 0; i < sample_size; i++) {
 		p[data[i]] += (1.0 / sample_size);
+	}
+}
+
+// Calculates proportions of each value as an index
+void calc_counts(const byte data[], vector<int> &c, const int sample_size) {
+	for (int i = 0; i < sample_size; i++) {
+		c[data[i]] ++;
 	}
 }
 
@@ -502,7 +569,7 @@ double calc_p_global(long C, long N){
 
 double calc_p_local(long max_run_len, long N){
 	int i, j;
-	double p, q, r, log_alpha, exp, eps;
+	double p, q, r, log_alpha;
 	long double x;
 	double lastP, pVal;
 	double lvalue, hvalue;
@@ -589,7 +656,7 @@ double calc_p_local(long max_run_len, long N){
 		for(i = 0; i < 10; i++) x = 1.0 + q*powl(p, r)*powl(x, r+1.0);
 		pVal = log(1.0-p*x) - log((r+1.0-r*x)*q) - (N+1.0)*log(x);
 
-		//invariant: If this isn't true, then this isn't loosly monotonic
+		//invariant: If this isn't true, then this isn't loosely monotonic
 		if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
 			p = hbound;
 			break;

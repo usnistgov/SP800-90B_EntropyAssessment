@@ -5,7 +5,7 @@
 #define MAX_DICTIONARY_SIZE 65536
 
 // Section 6.3.10 - LZ78Y Prediction Estimate
-double LZ78Y_test(byte *data, long len, int alph_size){
+double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 	int dict_size;
 	long i, j, N, C, count, max_count, run_len, max_run_len;
 	byte y, prediction;
@@ -77,6 +77,8 @@ double LZ78Y_test(byte *data, long len, int alph_size){
 
 	p_global = calc_p_global(C, N);
 	p_local = calc_p_local(max_run_len, N);
+
+	if(verbose) printf("LZ78Y Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len+1);
 
 	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
 }
