@@ -486,18 +486,13 @@ void print_results(int C[][3]){
 
 bool permutation_tests(const data_t *dp, const double rawmean, const double median, const bool verbose){
 	uint64_t xoshiro256starstarMainSeed[4];
-	uint64_t xoshiro256starstarSeed[4];
-	int passed_count;
 
-	// We need a copy because the tests take in by reference and modify it
-	byte data[dp->len];
-	byte rawdata[dp->len];
 
 	// Counters for the pass/fail of each statistic
 	int C[num_tests][3];
 
-	// Original test results (t) and permuted test results (t' or tp)
-	long double t[num_tests], tp[num_tests];
+	// Original test results (t) 
+	long double t[num_tests];
 	bool test_status[num_tests];
 
 	// Build map of results
@@ -507,7 +502,6 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		C[i][2] = 0;
 
 		t[i] = -1;
-		tp[i] = -1;
 		test_status[i] = true;
 	}
 
@@ -529,8 +523,22 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	cout << "Beginning permutation tests... these may take some time" << endl;
 
 
-	#pragma omp parallel private(tp, xoshiro256starstarSeed, rawdata, data, passed_count)
+	#pragma omp parallel
 	{
+		byte *data;
+		byte *rawdata;
+		uint64_t xoshiro256starstarSeed[4];
+		long double tp[num_tests];
+		int passed_count;
+
+		data = new byte[dp->len];
+		rawdata = new byte[dp->len];
+
+		// Build map of results
+		for(unsigned int i = 0; i < num_tests; ++i){
+			tp[i] = -1;
+		}
+
 		for(int i = 0; i < dp->len; ++i){
 			data[i] = dp->symbols[i];
 			rawdata[i] = dp->rawsymbols[i];
@@ -544,7 +552,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		#pragma omp for
 		for(int i = 0; i < PERMS; ++i) {
 			if(verbose && (passed_count != 19)){
-				cout << "\rPermutation Test (core " << omp_get_thread_num() << "): " << divide(i, PERMS)*100 << "% complete (" << passed_count <<  " tests passed)" << endl;
+				cout << "\rPermutation Test (core " << omp_get_thread_num() << "): " << passed_count <<  " tests passed" << endl;
 			}
 
 			if(passed_count < 19) {
@@ -573,6 +581,8 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 				}
 			}
 		}
+	delete[](data);
+	delete[](rawdata);
 	}
 
 	if(verbose) print_results(C);
