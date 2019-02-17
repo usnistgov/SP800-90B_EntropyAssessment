@@ -54,8 +54,11 @@ using namespace std;
 //it can check for an absolute separation, using either the distance between the numbers, or
 //the number of ULPs that separate the two numbers.
 //See the following for details and discussion of this approach:
-//See https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+//https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
 //https://floating-point-gui.de/errors/comparison/
+//https://www.boost.org/doc/libs/1_62_0/libs/test/doc/html/boost_test/testing_tools/extended_comparison/floating_point/floating_points_comparison_theory.html
+//Knuth AoCP vol II (section 4.2.2)
+//Tested using modified test cases from https://floating-point-gui.de/errors/NearlyEqualsTest.java
 bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFactor, uint32_t maxULP)
 {
    double diff;
@@ -64,13 +67,14 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
    uint64_t Bint;
 
    assert(sizeof(uint64_t) == sizeof(double));
+   assert(maxAbsFactor >= 0.0);
+   assert(maxRelFactor >= 0.0);
 
    ///NaN is by definition not equal to anything (including itself)
    if(std::isnan(A) || std::isnan(B)) {
       return false;
    }
 
-   //We now know that absB>absA
    //Deals with equal infinities, and the corner case where they are actually copies
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -90,38 +94,51 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
    if(absA > absB) {
       double tmp;
 
+      //Swap A and B
       tmp = B;
       B=A;
       A=tmp;
 
-      tmp = absA;
-      absA = absB;
-      absB = tmp;
+      //Swap absA and absB
+      tmp = absB;
+      absB = absA;
+      absA = tmp;
    }
 
+   //Capture the difference of the largest magnitude from the smallest magnitude
    diff=fabs(B-A);
 
-   //Is absA or diff subnormal?
-   if((absA <= DBL_MIN) || (diff < DBL_MIN)) {
+   //Is absA, diff, or absB * maxRelFactor subnormal?
+   //Did diff overflow?
+   //if absA is effectively 0, then relative difference is effectively examining the fractional part absB, which isn't that meaningful
+   //In the instance of overflows, the resulting relative comparison will be nonsense.
+   if((absA < DBL_MIN) || (diff < DBL_MIN) || std::isinf(diff) || (absB * maxRelFactor < DBL_MIN)) {
       //Yes. Relative closeness is going to be nonsense
       return diff < maxAbsFactor;
-   } else if(diff <= absB * maxRelFactor) {
-      return true;
+   } else {
+      //No. Using relative closeness is probably the right thing to do.
+      //Proceeding roughly as per Knuth AoCP vol II (section 4.2.2)
+      if(diff <= absB * maxRelFactor) {
+         //These are relatively close
+         return true;
+      } 
    }
-   //They aren't close in the normal sense, but perhaps that's just due to IEEE representation.
-   //Check to see if the value is within maxULP ULPs
 
-   //Can't meaningfully compare non-zero values with 0.0 in this way,
-   //but A > DBL_MIN if we're here.
+   //Neither A or B is subnormal, and they aren't close in the conventional sense, 
+   //but perhaps that's just due to IEEE representation. Check to see if the value is within maxULP ULPs.
 
-   //if they aren't the same sign, they can't be equal
-   if(signbit(A) !=  signbit(B)) {
+   //We can't meaningfully compare non-zero values with 0.0 in this way,
+   //but absA > DBL_MIN if we're here, so neither value is 0.0.
+
+   //if they aren't the same sign, then these can't be only a few ULPs away from each other
+   if(signbit(A) != signbit(B)) {
       return false;
    }
 
-   //Note, casting from one type to another is undefined behavior
+   //Note, casting from one type to another is undefined behavior, but memcpy will necessarily work
    memcpy(&Aint, &absA, sizeof(double));
    memcpy(&Bint, &absB, sizeof(double));
+   //This should be true by the construction of IEEE doubles
    assert(Bint > Aint);
 
    return (Bint - Aint <= maxULP);
