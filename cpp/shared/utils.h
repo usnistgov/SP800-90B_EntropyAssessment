@@ -128,7 +128,7 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
    //but perhaps that's just due to IEEE representation. Check to see if the value is within maxULP ULPs.
 
    //We can't meaningfully compare non-zero values with 0.0 in this way,
-   //but absA > DBL_MIN if we're here, so neither value is 0.0.
+   //but absA >= DBL_MIN if we're here, so neither value is 0.0.
 
    //if they aren't the same sign, then these can't be only a few ULPs away from each other
    if(signbit(A) != signbit(B)) {
