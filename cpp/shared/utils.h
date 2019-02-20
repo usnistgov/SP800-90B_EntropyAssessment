@@ -110,11 +110,11 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
 
    //Is absA, diff, or absB * maxRelFactor subnormal?
    //Did diff overflow?
-   //if absA is effectively 0, then relative difference is effectively examining the fractional part absB, which isn't that meaningful
+   //if absA is subnormal (effectively 0) or 0, then relative difference isn't meaningful, as fabs(B-A)/B≈1 for all values of B
    //In the instance of overflows, the resulting relative comparison will be nonsense.
    if((absA < DBL_MIN) || (diff < DBL_MIN) || std::isinf(diff) || (absB * maxRelFactor < DBL_MIN)) {
       //Yes. Relative closeness is going to be nonsense
-      return diff < maxAbsFactor;
+      return diff <= maxAbsFactor;
    } else {
       //No. Using relative closeness is probably the right thing to do.
       //Proceeding roughly as per Knuth AoCP vol II (section 4.2.2)
