@@ -4,7 +4,9 @@
 #include <cmath>
 #include <algorithm>
 
-void print_usage(){
+#include <getopt.h>
+
+[[ noreturn ]] void print_usage(){
 	printf("Usage is: ea_conditioning <n_in> <n_out> <nw> <h_in> <-v|-n> <h'>\n\n");
 	printf("\t <n_in>: input number of bits to conditioning function.\n");
 	printf("\t <n_out>: output number of bits from conditioning function.\n");
@@ -20,74 +22,72 @@ void print_usage(){
 	printf("\t\t h_out = min(Output_Entropy(n_in, n_out, nw, h_in), 0.999*n_out, h'*n_out)\n\n");
 	printf("\t as stated in Section 3.1.5.2.\n");
 	printf("\n");
+	exit(-1);
 }
 
 int main(int argc, char* argv[]){
 	bool vetted;
 	double h_p, h_in, h_out, n_in, n_out, nw, n, p_high, p_low, psi, omega, output_entropy, power_term;
+	int opt;
+
+	vetted = true;
+
+        while ((opt = getopt(argc, argv, "vn")) != -1) {
+                switch(opt) {
+                        case 'v':
+                                vetted = true;
+                                break;
+                        case 'n':
+                                vetted = false;
+                                break;
+                        default:
+                                print_usage();
+                                break;
+                }
+        }
+
+        argc -= optind;
+        argv += optind;
 
 	// Parse args
-	if(argc != 6 && argc != 7){
+	if((vetted && (argc != 4)) || (!vetted && (argc != 5))){
 		printf("Incorrect usage.\n");
 		print_usage();
-		exit(-1);
 	}
 	else{
-
                 // get n_in     
-                n_in = atof(argv[1]);
-                if(n_in <= 0){
-                        printf("n_in must be positive.\n");
+                n_in = atof(argv[0]);
+                if((n_in <= 0) || (floor(n_in) != n_in)){
+                        printf("n_in must be a positive integer.\n");
                         print_usage();
-                        exit(-1);
                 }
 
 	    	// get n_out     
-                n_out = atof(argv[2]);
-                if(n_out <= 0){
-                        printf("n_out must be positive.\n");
+                n_out = atof(argv[1]);
+                if((n_out <= 0) || (floor(n_out) != n_out)){
+                        printf("n_out must be a positive integer.\n");
                         print_usage();
-                        exit(-1);
                 }
 
                 // get n_out     
-                nw = atof(argv[3]);
-                if(nw <= 0){
-                        printf("n_out must be positive.\n");
+                nw = atof(argv[2]);
+                if((nw <= 0) || (floor(nw) != nw)){
+                        printf("n_out must be a positive integer.\n");
                         print_usage();
-                        exit(-1);
                 }
 
                 // get h_in     
-                h_in = atof(argv[4]);
+                h_in = atof(argv[3]);
                 if((h_in <= 0) || (h_in > n_in)){
                         printf("h_in must be positive and at most n_in.\n");
                         print_usage();
-                        exit(-1);
-                }
-
-                // get vetted or non-vetted conditioning function
-                if(argv[5][1] == 'v') vetted = true;
-                else if(argv[5][1] == 'n') vetted = false;
-                else{
-                        printf("Must specify whether conditioning function is vetted or non-vetted.\n");
-                        print_usage();
-                        exit(-1);
                 }
 
 		if(!vetted){
-			if(argc == 7){
-				h_p = atof(argv[6]);
-				if((h_p < 0) || (h_p > 1.0)){
-					printf("h' must be between 0 and 1 inclusive.\n");
-					print_usage();
-					exit(-1);
-				}
-			}
-			else{
-				printf("Must specify h' for non-vetted conditioning function.\n");
+			h_p = atof(argv[4]);
+			if((h_p < 0) || (h_p > 1.0)){
+				printf("h' must be between 0 and 1 inclusive.\n");
 				print_usage();
-        	                exit(-1);
 			}
 		}
 	}

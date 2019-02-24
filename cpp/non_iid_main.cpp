@@ -9,8 +9,10 @@
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
 
+#include <getopt.h>
 
-void print_usage(){
+
+[[ noreturn ]] void print_usage(){
 	printf("Usage is: ea_non_iid <file_name> <bits_per_word> <-i|-c> <-a|-t> [-v]\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
 	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
@@ -44,55 +46,61 @@ void print_usage(){
 	printf("\t\t conditioning function is non-vetted. The samples are converted to a bitstring.\n");
 	printf("\t\t Returns h' = min(H_bitstring).\n");
 	printf("\n");
+	exit(-1);
 }
 
 int main(int argc, char* argv[]){
 	bool initial_entropy, all_bits, verbose = false;
-	const char verbose_flag = 'v';
 	char *file_path;
 	double H_original, H_bitstring, ret_min_entropy; 
 	data_t data;
+	int opt;
+
+        initial_entropy = true;
+        all_bits = true;
+        verbose = false;
+
+        while ((opt = getopt(argc, argv, "icatv")) != -1) {
+                switch(opt) {
+                        case 'i':
+                                initial_entropy = true;
+                                break;
+                        case 'c':
+                                initial_entropy = false;
+                                break;
+                        case 'a':
+                                all_bits = true;
+                                break;
+                        case 't':
+                                all_bits = false;
+                                break;
+                        case 'v':
+                                verbose = true;
+                                break;
+                        default:
+                                print_usage();
+                                break;
+                }
+        }
+
+        argc -= optind;
+        argv += optind;
 
 	// Parse args
-	if(argc != 5 && argc != 6){
+	if(argc != 2){
 		printf("Incorrect usage.\n");
 		print_usage();
-		exit(-1);
 	}
 	else{
 		// get filename
-		file_path = argv[1];
+		file_path = argv[0];
 
 		// get bits per word
-		data.word_size = atoi(argv[2]);
+		data.word_size = atoi(argv[1]);
 		if(data.word_size < 1 || data.word_size > 8){
 			printf("Invalid bits per word.\n");
 			print_usage();
-			exit(-1);
 		}
-
-		// get initial entropy estimate or conditioned dataset flag
-		if(argv[3][1] == 'i') initial_entropy = true;
-		else if(argv[3][1] == 'c') initial_entropy = false;
-		else{
-			printf("Must specify whether computing initial entropy estimate or conditioned dataset.\n");
-			print_usage();
-			exit(-1);
-		}
-
-		// get bitstring length flag
-		if(data.word_size > 1){
-			if(argv[4][1] == 'a') all_bits = true;
-			else if(argv[4][1] == 't') all_bits = false;
-			else{
-				printf("Must specify whether or not to truncate bitsring to %d bits.\n", MIN_SIZE);
-				print_usage();
-				exit(-1);
-			}
-		}
-		else all_bits = true;
-
-		if(argc == 6) verbose = (argv[5][1] == verbose_flag);
 	}
 
 	if(verbose) printf("Opening file: '%s'\n", file_path);
@@ -100,7 +108,6 @@ int main(int argc, char* argv[]){
 	if(!read_file(file_path, &data)){
 		printf("Error reading file.\n");
 		print_usage();
-		exit(-1);
 	}
 
 	if(data.alph_size <= 1){
@@ -247,9 +254,9 @@ int main(int argc, char* argv[]){
 	}
 
 	if(initial_entropy){
-		printf("\nH_original: %f\n", H_original);
+		if(data.word_size > 1) printf("\nH_original: %f\n", H_original);
 		printf("H_bitstring: %f\n\n", H_bitstring);
-		printf("min(H_original, %d X H_bitstring): %f\n\n", data.word_size, min(H_original, data.word_size*H_bitstring));
+		if(data.word_size > 1) printf("min(H_original, %d X H_bitstring): %f\n\n", data.word_size, min(H_original, data.word_size*H_bitstring));
 	}
 	else printf("\nh': %f\n", H_bitstring);
 
