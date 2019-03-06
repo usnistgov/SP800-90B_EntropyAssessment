@@ -77,5 +77,5 @@ double markov_test(byte* data, long len, const bool verbose){
 
 	if(verbose) printf("p_max = %.17g\n", pow(2.0, -H_min));
 
-	return H_min/128.0;
+	return fmin(H_min/128.0, 1.0);
 }

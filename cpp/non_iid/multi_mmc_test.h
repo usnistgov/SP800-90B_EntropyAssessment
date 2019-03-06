@@ -11,7 +11,6 @@ double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 	long i, d, N, C, run_len, max_run_len;
 	long scoreboard[D_MMC] = {0};
 	array<byte, D_MMC> x;
-	double p_global, p_local;
 	bool found_x;
 	// d             x                 y          M_d[x,y]
 	array<map<array<byte, D_MMC>, map<byte, long>>, D_MMC> M;
@@ -74,10 +73,6 @@ double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 			}
 		}
 	}
-	
-	p_global = calc_p_global(C, N);
-	p_local = calc_p_local(max_run_len, N);
-	if(verbose) printf("MultiMMC Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len+1);
 
-	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
+	return(predictionEstimate(C, N, max_run_len, alph_size, "MultiMMC", verbose));
 }

@@ -580,24 +580,30 @@ double calc_p_global(long C, long N){
 	double p = C/(double)N;
 
 	if(p > 0) p = min(1.0, p + ZALPHA*sqrt((p*(1.0-p))/(N-1.0)));
-	else p = 1 - pow(0.01, 1.0/(double)N);
+	else p = 1.0 - pow(0.01, 1.0/(double)N);
 	return p;
 }
 
-double calc_p_local(long max_run_len, long N){
-	int i, j;
-	double p, q, r, log_alpha;
-	long double x;
+double prediction_estimate_function(long double p, long r, long N){
+	long double q, x;
+
+	q = 1.0L-p;
+	x = 1.0L;
+	for(int i = 0; i < 10; i++) x = 1.0L + q*powl(p, r)*powl(x, r+1.0L);
+	return((double)(logl(1.0L-p*x) - logl((r+1.0L-r*x)*q) - (N+1.0L)*logl(x)));
+}
+
+double calc_p_local(long max_run_len, long N, double ldomain){
+	int j;
+	double p, log_alpha;
 	double lastP, pVal;
 	double lvalue, hvalue;
 	double hbound, lbound;
-	double hdomain, ldomain;
+	double hdomain;
 
 	// binary search for p_local
-	r = (double)max_run_len+1;
 	log_alpha = log(0.99);
 	
-	ldomain = 0.0;
 	hdomain = 1.0;
 
 	lbound = ldomain;
@@ -609,11 +615,7 @@ double calc_p_local(long max_run_len, long N){
 	//Note that the bounds are in [0,1], so overflows aren't an issue
 	//But underflows are.
 	p = (lbound + hbound) / 2.0;
-
-	q = 1.0-p;
-	x = 1.0;
-	for(i = 0; i < 10; i++) x = 1.0 + q*powl(p, r)*powl(x, r+1.0);
-	pVal = (double)(logl(1.0-p*x) - logl((r+1.0-r*x)*q) - (N+1.0)*logl(x));
+	pVal = prediction_estimate_function(p, max_run_len+1, N);
 
 	//We don't need the initial pVal invariant, as our initial bounds are infinite.
 	//We don't need the initial bounds, as they are set to the domain bounds
@@ -668,10 +670,7 @@ double calc_p_local(long max_run_len, long N){
 		}
 #pragma GCC diagnostic pop
 
-		q = 1.0-p;
-		x = 1.0;
-		for(i = 0; i < 10; i++) x = 1.0 + q*powl(p, r)*powl(x, r+1.0);
-		pVal = log(1.0-p*x) - log((r+1.0-r*x)*q) - (N+1.0)*log(x);
+		pVal = prediction_estimate_function(p, max_run_len+1, N);
 
 		//invariant: If this isn't true, then this isn't loosely monotonic
 		if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
@@ -682,3 +681,23 @@ double calc_p_local(long max_run_len, long N){
 
 	return p;
 }
+
+double predictionEstimate(long C, long N, long max_run_len, long k, const char *label, const bool verbose){
+	double curMax;
+	double p_global, p_local=-1.0;
+
+	curMax = 1.0 / ((double)k);
+	p_global = calc_p_global(C, N);
+	curMax = fmax(curMax, p_global);
+	if((curMax < 1.0) && (prediction_estimate_function(curMax, max_run_len+1, N) > log(0.99))) {
+		p_local = fmax(curMax, calc_p_local(max_run_len, N, curMax));
+		curMax = fmax(curMax, p_local);
+	}
+
+	if(verbose) {
+		if(p_local > 0.0) printf("%s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", label, N, p_global, C, p_local, max_run_len+1);
+		else printf("%s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal can't affect result (r = %ld)\n", label, N, p_global, C, max_run_len+1);
+	}
+	return(-log2(curMax));
+}
+

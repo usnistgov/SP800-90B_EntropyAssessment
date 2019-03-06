@@ -10,7 +10,6 @@ double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 	long i, j, N, C, count, max_count, run_len, max_run_len;
 	byte y, prediction;
 	array<byte, B> prev;
-	double p_global, p_local;
 	bool found_prev, have_prediction;
 	// j             prev          y          D[x,y]
 	array<map<array<byte, B>, map<byte, long>>, B> D;
@@ -75,10 +74,5 @@ double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 		else run_len = 0;
 	}
 
-	p_global = calc_p_global(C, N);
-	p_local = calc_p_local(max_run_len, N);
-
-	if(verbose) printf("LZ78Y Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len+1);
-
-	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
+	return(predictionEstimate(C, N, max_run_len, alph_size, "LZ78Y", verbose));
 }
