@@ -7,7 +7,7 @@
 #include <getopt.h>
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_conditioning <n_in> <n_out> <nw> <h_in> <-v|-n> <h'>\n\n");
+	printf("Usage is: ea_conditioning <-v|-n> <n_in> <n_out> <nw> <h_in> <h'>\n\n");
 	printf("\t <n_in>: input number of bits to conditioning function.\n");
 	printf("\t <n_out>: output number of bits from conditioning function.\n");
 	printf("\t <nw>: narrowest internal width of conditioning function.\n");

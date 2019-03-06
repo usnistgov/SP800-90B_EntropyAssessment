@@ -15,7 +15,7 @@
 #define SIMULATION_ROUNDS 5000000
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_restart <file_name> <bits_per_word> <H_I> <-i|-n> [-v]\n\n");
+	printf("Usage is: ea_restart <-i|-n> [-v] <file_name> <bits_per_word> <H_I>\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
 	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
