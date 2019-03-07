@@ -10,26 +10,82 @@ inline void kahan_add(double &sum, double &comp, double in){
 	sum = t;
 }
 
-double G(double z, long v, int d, long num_blocks){
-	long u, t;
-	double ret=0.0, ret_comp=0.0;
-	double inner_sum=0.0, inner_sum_comp=0.0;
+//There is some cleverness associated with this calculation of G; in particular,
+//one doesn't need to calculate all the terms independently (they are inter-related!)
+//See UL's implementation comments here: https://bit.ly/UL90BCOM 
+//Look in the section "Compression Estimate G Function Calculation"
+double G(double z, int d, long num_blocks){
+	double Ai=0.0, Ai_comp=0.0;
+	double firstSum=0.0, firstSum_comp=0.0;
+	long v = num_blocks - d;
+	double Ad1;
 
-	// precompute inner sum
-	for(u = 2; u <= d; u++) kahan_add(inner_sum, inner_sum_comp, log2(u) * z*z*pow(1.0-z, u-1));
-	
-	// compute full sum
-	ret = 0.0;
-	for(t = d+1; t <= num_blocks; t++){
-		kahan_add(ret, ret_comp, log2(t) * z*pow(1.0-z, t-1) + inner_sum);
-		kahan_add(inner_sum, inner_sum_comp, log2(t) * z*z*pow(1.0-z, t-1));
+	long double Bi;
+	long double Bterm;
+	long double ai;
+	long double aiScaled;
+	bool underflowTruncate;
+
+	assert(d>0);
+	assert(num_blocks>d);
+
+	//i=2
+	Bterm = (1.0L-(long double)z);
+	//Note: B_1 isn't needed, as a_1 = 0
+	//B_2
+	Bi = Bterm;
+
+	//Calculate A_{d+1}
+	for(int i=2; i<=d; i++) {
+		//calculate the a_i term
+		kahan_add(Ai, Ai_comp, log2l((long double)i)*Bi);
+
+		//Calculate B_{i+1}
+		Bi *= Bterm;
 	}
-	
-	return ret/v;
+
+	//Store A_{d+1}
+	Ad1 = Ai;
+
+	underflowTruncate = false;
+	//Now calculate A_{num_blocks} and the sum of sums term (firstsum)
+	for(long i=d+1; i<=num_blocks-1; i++) {
+		//calculate the a_i term
+		ai = log2l((long double)i)*Bi;
+
+		//Calculate A_{i+1}
+		kahan_add(Ai, Ai_comp, (double)ai);
+		//Sum in A_{i+1} into the firstSum
+
+		//Calculate the tail of the sum of sums term (firstsum)
+		aiScaled = (long double)(num_blocks-i) * ai;
+		if((double)aiScaled > 0.0) {
+			kahan_add(firstSum, firstSum_comp, (double)aiScaled);
+		} else {
+			underflowTruncate = true;
+			break;
+		}
+
+		//Calculate B_{i+1}
+		Bi *= Bterm;
+	}
+
+	//Ai now contains A_{num_blocks} and firstsum contains the tail
+	//finalize the calculation of firstsum
+	kahan_add(firstSum, firstSum_comp, ((double)(num_blocks-d))*Ad1);
+
+	//Calculate A_{num_blocks+1}
+	if(!underflowTruncate) {
+		A scaled 
+		ai = log2l((long double)num_blocks)*Bi;
+		kahan_add(Ai, Ai_comp, (double)ai);
+	}
+
+	return 1/(double)v * z*(z*firstSum + (Ai - Ad1));
 }
 
-double com_exp(double p, double q, unsigned int alph_size, long v, int d, long num_blocks){
-        return G(p, v, d, num_blocks) + (alph_size-1) * G(q, v, d, num_blocks);
+double com_exp(double p, double q, unsigned int alph_size, int d, long num_blocks){
+        return G(p, d, num_blocks) + (alph_size-1) * G(q, d, num_blocks);
 }
 
 // Section 6.3.4 - Compression Estimate
@@ -91,7 +147,7 @@ double compression_test(byte* data, long len, const bool verbose){
         //Note that the bounds are in [0,1], so overflows aren't an issue
         //But underflows are.
         p = (lbound + hbound) / 2.0;
-	pVal = com_exp(p, (1.0-p)/(alph_size-1), alph_size, v, d, num_blocks);
+	pVal = com_exp(p, (1.0-p)/(alph_size-1), alph_size, d, num_blocks);
 
         //We don't need the initial pVal invariant, as our initial bounds are infinite.
         //We don't need the initial bounds, as they are set to the domain bounds
@@ -148,7 +204,7 @@ double compression_test(byte* data, long len, const bool verbose){
                 }
 #pragma GCC diagnostic pop
 
-		pVal = com_exp(p, (1.0-p)/(alph_size-1), alph_size, v, d, num_blocks);
+		pVal = com_exp(p, (1.0-p)/(alph_size-1), alph_size, d, num_blocks);
 
                 //invariant: If this isn't true, then this isn't loosly monotonic
                 if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
