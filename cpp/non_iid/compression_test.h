@@ -76,7 +76,6 @@ double G(double z, int d, long num_blocks){
 
 	//Calculate A_{num_blocks+1}
 	if(!underflowTruncate) {
-		A scaled 
 		ai = log2l((long double)num_blocks)*Bi;
 		kahan_add(Ai, Ai_comp, (double)ai);
 	}
