@@ -9,11 +9,13 @@
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
 
+#include <getopt.h>
+
 //Each test has a targeted chance of roughly 0.000005, and we need to witness at least 5 failures, so this should be no less than 1000000
 #define SIMULATION_ROUNDS 5000000
 
-void print_usage(){
-	printf("Usage is: ea_restart <file_name> <bits_per_word> <H_I> <-i|-n> [-v]\n\n");
+[[ noreturn ]] void print_usage(){
+	printf("Usage is: ea_restart <-i|-n> [-v] <file_name> <bits_per_word> <H_I>\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
 	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
@@ -38,6 +40,7 @@ void print_usage(){
 	printf("\t min(H_r, H_c, H_I), which is either the validated entropy assessment or used to derive\n");
 	printf("\t 'h_in' if conditioning is used (Section 3.1.5).\n"); 
 	printf("\n");
+	exit(-1);
 }
 
 //Here, we simulate a sort of "worst case" for this test, where there are a maximal number of symbols with maximal probability,
@@ -124,7 +127,6 @@ long int simulateBound(double alpha, int k, double H_I){
 
 int main(int argc, char* argv[]){
 	bool iid, verbose = false;
-	const char verbose_flag = 'v';
 	char *file_path;
 	int r = 1000, c = 1000;
 	int counts[256];
@@ -133,43 +135,54 @@ int main(int argc, char* argv[]){
 	double H_I, H_r, H_c, alpha, ret_min_entropy; 
 	byte *rdata, *cdata;
 	data_t data;
+	int opt;
+
+	iid = false;
+	verbose = false;
+
+        while ((opt = getopt(argc, argv, "inv")) != -1) {
+                switch(opt) {
+                        case 'i':
+                                iid = true;
+                                break;
+                        case 'n':
+                                iid = false;
+                                break;
+                        case 'v':
+                                verbose = true;
+                                break;
+                        default:
+                                print_usage();
+                                break;
+                }
+        }
+
+        argc -= optind;
+        argv += optind;
+
 
 	// Parse args
-	if(argc != 5 && argc != 6){
+	if(argc != 3){
 		printf("Incorrect usage.\n");
 		print_usage();
-		exit(-1);
 	}
 	else{
 		// get filename
-		file_path = argv[1];
+		file_path = argv[0];
 
 		// get bits per word
-		data.word_size = atoi(argv[2]);
+		data.word_size = atoi(argv[1]);
 		if(data.word_size < 1 || data.word_size > 8){
 			printf("Invalid bits per word.\n");
 			print_usage();
-			exit(-1);
 		}
 
 		// get H_I	
-		H_I = atof(argv[3]);
+		H_I = atof(argv[2]);
 		if((H_I < 0) || (H_I > data.word_size)){
 			printf("H_I must be nonnegative and at most 'bits_per_word'.\n");
 			print_usage();
-			exit(-1);
 		}
-
-		// get IID or non-IID
-		if(argv[4][1] == 'i') iid = true;
-		else if(argv[4][1] == 'n') iid = false;
-		else{
-			printf("Must specify whether data is IID or non-IID.\n");
-			print_usage();
-			exit(-1);
-		}
-
-		if(argc == 6) verbose = (argv[5][1] == verbose_flag);
 	}
 
 	if(verbose) printf("Opening file: '%s'\n", file_path);
@@ -177,7 +190,6 @@ int main(int argc, char* argv[]){
 	if(!read_file(file_path, &data)){
 		printf("Error reading file.\n");
 		print_usage();
-		exit(-1);
 	}
 
         if(data.alph_size <= 1){
