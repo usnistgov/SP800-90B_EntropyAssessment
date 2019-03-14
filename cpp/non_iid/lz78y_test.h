@@ -4,6 +4,94 @@
 #define B 16
 #define MAX_DICTIONARY_SIZE 65536
 
+static double binaryLZ78YPredictionEstimate(const byte *S, long L, const bool verbose){
+   byte curPrediction;
+   byte prediction;
+   long maxCount;
+   long curPredictionCount;
+   long curRunOfCorrects;
+   long maxRunOfCorrects;
+   long correctCount;
+   long j, i;
+   long dictElems;
+   bool makeBranches;
+   long *binaryDict[B];
+   uint32_t curPattern=0;
+
+   assert(L-B > 2);
+   assert(B < 32);
+
+   //Initialize the data structure tables
+   for(j=0; j< B; j++) {
+      binaryDict[j] = new long[2*(1U<<(j+1))];
+
+      memset(binaryDict[j], 0, sizeof(long)*2*(1U<<(j+1)));
+   }
+
+   //But the first B bits into curPattern
+   curPattern = compressedBitSymbols(S, B);
+
+   maxRunOfCorrects = 0;
+   curRunOfCorrects = 0;
+   correctCount = 0;
+   dictElems=0;
+
+   //In C, arrays are 0 indexed.
+   //i is the index of the bit to be predicted.
+   //This is all rather confusing, but it helps to run the first and last few cycles, to verify that it works...
+   for(i=B+1; i<L; i++) {
+      //j is the length of the word to be used
+      //3a
+      for(j=B; j>0; j--) {
+         //update the state to reflect last round's new value (add S[i-1] to the predictor) if our dictionary has room
+         //We need the j-tuple prior to S[i-1], that is (S[i-j-1], ..., S[i-2])
+         //Now update the state to reflect the new value.
+         makeBranches = dictElems < MAX_DICTIONARY_SIZE;
+         //This tuple is stored in curPattern. Take the lower j bits.
+         if(incrementBinaryDict(binaryDict, j, curPattern, S[i-1], makeBranches, false) && makeBranches) {
+            dictElems++;
+         }
+      }
+
+      maxCount = 0;
+      prediction = 0;
+
+      //Add S[i-1] to the curPattern
+      curPattern = ((curPattern << 1) | S[i-1]) & ((1U << B) - 1);
+
+      //3b.
+      for(j=B; j>0; j--) {
+         //Get the predictions
+         //predict S[i] by using the prior j bits and the current state
+         //We need the j-tuple prior to S[i], that is (S[i-j], ..., S[i-1])
+         curPredictionCount = predictBinaryDict(binaryDict, j, curPattern, &curPrediction);
+
+         if(curPredictionCount > maxCount) {
+            prediction = curPrediction;
+            maxCount = curPredictionCount;
+         }
+      }
+
+      if((maxCount!=0) && (S[i] == prediction)) {
+         correctCount++;
+         curRunOfCorrects++;
+      } else {
+         curRunOfCorrects = 0;
+      }
+
+      if(curRunOfCorrects > maxRunOfCorrects) {
+         maxRunOfCorrects = curRunOfCorrects;
+      }
+   }
+
+   for(j=0; j<B; j++) {
+      delete[](binaryDict[j]);
+      binaryDict[j] = NULL;
+   }
+
+   return(predictionEstimate(correctCount, L-2, maxRunOfCorrects, 2, "LZ78Y", verbose));
+}
+
 // Section 6.3.10 - LZ78Y Prediction Estimate
 double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 	int dict_size;
@@ -11,6 +99,10 @@ double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 	byte y, prediction;
 	array<byte, B> prev;
 	bool found_prev, have_prediction;
+
+
+	if(alph_size==2) return binaryLZ78YPredictionEstimate(data, len, verbose);
+
 	// j             prev          y          D[x,y]
 	array<map<array<byte, B>, map<byte, long>>, B> D;
 

@@ -701,3 +701,68 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 	return(-log2(curMax));
 }
 
+#define BINARYDICTLOC(d, b) (binaryDict[(d)-1] + (((b) & ((1U << (d)) - 1))<<1))
+
+//If all the data exists, choose the "best" leaf.
+//Note, if neither of these leaves were initialized (the prefix has not yet been seen), then this function returns 0
+//the 0 return is interpreted as not being able to render a prediction.
+inline long predictBinaryDict(long **binaryDict, long d, uint32_t curPattern, byte *next)
+{
+   long *binaryDictEntry;
+
+   binaryDictEntry = BINARYDICTLOC(d, curPattern);
+   
+   if((binaryDictEntry[0] > binaryDictEntry[1])) {
+      *next = 0;
+      return binaryDictEntry[0];
+   } else {
+      *next = 1;
+      return binaryDictEntry[1];
+   }
+}
+
+//createEntry tells us if we can create new "counted" entries. 
+//the return indicates if branch / leaf nodes (if leafCounts is true) would have been created (or were created, if that was allowed)
+//the return indicates if branch nodes would have been created (or were created, if that was allowed)
+bool incrementBinaryDict(long **binaryDict, long d, uint32_t curPattern, uint32_t newBit, bool createEntry, bool leafCounts)
+{
+   long *binaryDictEntry;
+
+   binaryDictEntry = BINARYDICTLOC(d, curPattern);
+
+   if(binaryDictEntry[newBit] > 0) {
+      //The actual value is already initialized
+      binaryDictEntry[newBit] ++;
+      return(false);
+   } else if(binaryDictEntry[(~newBit)&1] > 0) {
+      //The other value has been incremented, so the prefix is already initialized, but not the actual entry
+      if(!leafCounts || createEntry) {
+         binaryDictEntry[newBit] ++;
+      }
+      //Note that in this situation, the data absolutely directed us to create a leaf. Does this count as "creation"?
+      return(leafCounts);
+   } else {
+      //The prefix is not initialized at all
+      if(createEntry) {
+         binaryDictEntry[newBit] ++;
+      }
+      return(true);
+   }
+}
+
+static uint32_t compressedBitSymbols(const byte *S, long length)
+{
+   uint32_t retPattern;
+   long j;
+
+   assert(length<=32);
+
+   retPattern = 0;
+
+   for(j=0; j<length; j++) {
+      assert(S[j] <= 1);
+      retPattern = (retPattern << 1) | S[j];
+   }
+
+   return retPattern;
+}
