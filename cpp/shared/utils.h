@@ -690,7 +690,7 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 	p_global = calc_p_global(C, N);
 	curMax = fmax(curMax, p_global);
 	if((curMax < 1.0) && (prediction_estimate_function(curMax, max_run_len+1, N) > log(0.99))) {
-		p_local = fmax(curMax, calc_p_local(max_run_len, N, curMax));
+		p_local = calc_p_local(max_run_len, N, curMax);
 		curMax = fmax(curMax, p_local);
 	}
 
