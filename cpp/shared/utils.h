@@ -701,6 +701,11 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 	return(-log2(curMax));
 }
 
+//The idea here is that we've given an array of pointers (binaryDict). 
+//We are trying to produce the address of the length-2 array associated with the length-d prefix "b".
+// array The dth index is d-1, so we first find the start of the address space (binaryDict[(d)-1])
+//We take the least significant d bits from "b": this is the expression "(b) & ((1U << (d)) - 1)"
+//We then multiply this by 2 (as each pattern is associated with a length-2 array) by left shifting by 1.
 #define BINARYDICTLOC(d, b) (binaryDict[(d)-1] + (((b) & ((1U << (d)) - 1))<<1))
 
 //If all the data exists, choose the "best" leaf.

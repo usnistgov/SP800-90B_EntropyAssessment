@@ -19,13 +19,16 @@ static double binaryLZ78YPredictionEstimate(const byte *S, long L, const bool ve
    uint32_t curPattern=0;
 
    assert(L-B > 2);
-   assert(B < 32);
+   assert(B < 31); //B+1 < 32 to make the bit shifts well defined
 
    //Initialize the data structure tables
    for(j=0; j< B; j++) {
-      binaryDict[j] = new long[2*(1U<<(j+1))];
+      //For a length m prefix, we need 2^m sets of length 2 arrays.
+      //Here, j+1 is the length of the prefix, so we need 2^(j+1) prefixes, or 2*2^(j+1) = 2^(j+2) storage total.
+      //Note: 2^(j+2) = 1<<(j+2).
+      binaryDict[j] = new long[1U<<(j+2)];
 
-      memset(binaryDict[j], 0, sizeof(long)*2*(1U<<(j+1)));
+      memset(binaryDict[j], 0, sizeof(long)*(1U<<(j+2)));
    }
 
    //But the first B bits into curPattern

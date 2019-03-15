@@ -20,7 +20,7 @@ static double binaryMultiMMCPredictionEstimate(const byte *S, long L, const bool
    long dictElems[D_MMC];
 
    assert(L>3);
-   assert(D_MMC < 32);
+   assert(D_MMC < 31); //B+1 < 32 to make the bit shifts well defined
 
    //Initialize the predictors
    for(j=0; j< D_MMC; j++) {
@@ -28,10 +28,12 @@ static double binaryMultiMMCPredictionEstimate(const byte *S, long L, const bool
       scoreboard[j] = 0;
       predictionCount[j] = 0;
       dictElems[j]=0;
-      binaryDict[j] = new long[2*(1U<<(j+1))];
-      for(i=0; i<(1U<<(j+1))*2; i++) {
-         (binaryDict[j])[i] = 0;
-      }
+
+      //For a length m prefix, we need 2^m sets of length 2 arrays.
+      //Here, j+1 is the length of the prefix, so we need 2^(j+1) prefixes, or 2*2^(j+1) = 2^(j+2) storage total.
+      //Note: 2^(j+2) = 1<<(j+2).
+      binaryDict[j] = new long[1U<<(j+2)];
+      memset(binaryDict[j], 0, sizeof(long)*(1U<<(j+2)));
    }
 
    winner = 0;
@@ -162,7 +164,7 @@ double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 				if(found_x){
 					// x has occurred, find max (x,y) pair across all y's
 					if(max_map(M[d][x]) == data[i]){
-						// prediction is correct, udpate scoreboard and winner
+						// prediction is correct, update scoreboard and winner
 						if(++scoreboard[d] >= scoreboard[winner]) winner = d;
 						if(d == cur_winner){
 							C++;
