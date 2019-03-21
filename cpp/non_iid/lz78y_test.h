@@ -92,7 +92,7 @@ static double binaryLZ78YPredictionEstimate(const byte *S, long L, const bool ve
       binaryDict[j] = NULL;
    }
 
-   return(predictionEstimate(correctCount, L-2, maxRunOfCorrects, 2, "LZ78Y", verbose));
+   return(predictionEstimate(correctCount, L-B-1, maxRunOfCorrects, 2, "LZ78Y", verbose));
 }
 
 // Section 6.3.10 - LZ78Y Prediction Estimate
