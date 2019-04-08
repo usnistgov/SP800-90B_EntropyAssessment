@@ -4,6 +4,112 @@
 #define D_MMC 16
 #define MAX_ENTRIES 100000
 
+static double binaryMultiMMCPredictionEstimate(const byte *S, long L, const bool verbose)
+{
+   byte prediction[D_MMC];
+   long predictionCount[D_MMC];
+   long scoreboard[D_MMC];
+   long *binaryDict[D_MMC];
+   long winner;
+   long curRunOfCorrects;
+   long maxRunOfCorrects;
+   long correctCount;
+   long j, d, i;
+   uint32_t curPattern=0;
+   bool makeBranches;
+   long dictElems[D_MMC];
+
+   assert(L>3);
+   assert(D_MMC < 31); //B+1 < 32 to make the bit shifts well defined
+
+   //Initialize the predictors
+   for(j=0; j< D_MMC; j++) {
+      prediction[j] = 0;
+      scoreboard[j] = 0;
+      predictionCount[j] = 0;
+      dictElems[j]=0;
+
+      //For a length m prefix, we need 2^m sets of length 2 arrays.
+      //Here, j+1 is the length of the prefix, so we need 2^(j+1) prefixes, or 2*2^(j+1) = 2^(j+2) storage total.
+      //Note: 2^(j+2) = 1<<(j+2).
+      binaryDict[j] = new long[1U<<(j+2)];
+      memset(binaryDict[j], 0, sizeof(long)*(1U<<(j+2)));
+   }
+
+   winner = 0;
+   maxRunOfCorrects = 0;
+   curRunOfCorrects = 0;
+   correctCount = 0;
+
+   curPattern = S[0];
+
+   //In C, arrays are 0 indexed.
+   //i is the index of the new symbol to be predicted
+   //This is all rather confusing, but it helps to run the first and last few cycles, to verify that it works...
+   for(i=2; i<L; i++) {
+      //4a
+
+      //currentPattern should contain the D_MMC-tuple (S[i-D_MMC-1] ... S[i-2])
+
+      //d is the number of symbols used by the predictor
+      for(d=1; (d<=D_MMC) && (d<=(i-1)); d++) {
+         //update the state to reflect last round's new value (add S[i-1] to the predictor)
+         //We need the d-tuple prior to S[i-1], that is (S[i-d-1], ..., S[i-2])
+         makeBranches = dictElems[d-1] < MAX_ENTRIES;
+         //This tuple is stored in curPattern. Take the lower d bits.
+         if(incrementBinaryDict(binaryDict, d, curPattern, S[i-1], makeBranches, true) && makeBranches) {
+            dictElems[d-1]++;
+         }
+      }
+
+      //4b
+      //Add S[i-1] to the curPattern
+      curPattern = ((curPattern << 1) | S[i-1]) & ((1 << D_MMC) - 1);
+      //curPattern should contain the D_MMC-tuple (S[i-D_MMC] ... S[i-1])
+
+      for(d=1; d<=D_MMC; d++) {
+         //Get the predictions
+         //predict S[i] by using the prior d bits and the current state
+         //We need the d-tuple prior to S[i], that is (S[i-d], ..., S[i-1])
+         if(d <= i) {
+            predictionCount[d-1] = predictBinaryDict(binaryDict, d, curPattern, prediction+(d-1));
+         } else {
+            //We can't form a string to query the predictor
+            predictionCount[d-1] = 0;
+         }
+      }
+
+      if((predictionCount[winner]!=0) && (S[i] == prediction[winner])) {
+         correctCount++;
+         curRunOfCorrects++;
+      } else {
+         curRunOfCorrects = 0;
+      }
+
+      if(curRunOfCorrects > maxRunOfCorrects) {
+         maxRunOfCorrects = curRunOfCorrects;
+      }
+
+      for(j=0; j<D_MMC; j++) {
+         if(predictionCount[j] != 0) {
+            if(prediction[j] == S[i]) {
+               scoreboard[j]++;
+               if(scoreboard[j] >= scoreboard[winner]) {
+                  winner=j;
+               }
+            }
+         }
+      }
+   }
+
+   for(j=0; j<D_MMC; j++) {
+      delete[](binaryDict[j]);
+      binaryDict[j] = NULL;
+   }
+
+   return(predictionEstimate(correctCount, L-2, maxRunOfCorrects, 2, "MultiMMC", verbose));
+}
+
 // Section 6.3.9 - MultiMMC Prediction Estimate
 double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 	int winner, cur_winner;
@@ -11,8 +117,10 @@ double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 	long i, d, N, C, run_len, max_run_len;
 	long scoreboard[D_MMC] = {0};
 	array<byte, D_MMC> x;
-	double p_global, p_local;
 	bool found_x;
+
+	if(alph_size == 2) return binaryMultiMMCPredictionEstimate(data, len, verbose);
+
 	// d             x                 y          M_d[x,y]
 	array<map<array<byte, D_MMC>, map<byte, long>>, D_MMC> M;
 
@@ -56,7 +164,7 @@ double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 				if(found_x){
 					// x has occurred, find max (x,y) pair across all y's
 					if(max_map(M[d][x]) == data[i]){
-						// prediction is correct, udpate scoreboard and winner
+						// prediction is correct, update scoreboard and winner
 						if(++scoreboard[d] >= scoreboard[winner]) winner = d;
 						if(d == cur_winner){
 							C++;
@@ -74,10 +182,6 @@ double multi_mmc_test(byte *data, long len, int alph_size, const bool verbose){
 			}
 		}
 	}
-	
-	p_global = calc_p_global(C, N);
-	p_local = calc_p_local(max_run_len, N);
-	if(verbose) printf("MultiMMC Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", N, p_global, C, p_local, max_run_len+1);
 
-	return -log2(max(max(p_global, p_local), 1/(double)alph_size));
+	return(predictionEstimate(C, N, max_run_len, alph_size, "MultiMMC", verbose));
 }
