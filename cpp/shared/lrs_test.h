@@ -3,13 +3,15 @@
 #include "utils.h"
 #include <divsufsort.h>
 
+#define SAINDEX_MAX INT32_MAX
+
 //Using the Kasai (et. al) O(n) time "13n space" algorithm.
 //"Linear-Time Longest-Common-Prefix Computation in Suffix Arrays and Its Applications", by Kasai, Lee, Arimura, Arikawa, and Park
 //https://doi.org/10.1007/3-540-48194-X_17
 //http://web.cs.iastate.edu/~cs548/references/linear_lcp.pdf
 //The default implementation uses 4 byte indexes
 //Note that indexes should be signed, so the next natural size is int64_t
-static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vector<saidx_t> &lcp){
+static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vector<saidx_t> &lcp) {
 	saidx_t h;
 	vector<saidx_t> rank(n+1,-1);
 
@@ -42,7 +44,7 @@ static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vec
 	}
 }
 
-void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp){
+void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp) {
 	int32_t res;
 
 	assert(n < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
@@ -57,108 +59,137 @@ void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_
    	sa2lcp(text, n, sa, lcp);
 }
 
-//The logic underlying this is outlined in UL's implementation guidance
-//https://bit.ly/UL90BCOM
-//See the section titled "Algorithms for t-tuple and LRS Estimates", the last 3 pages of the PDF.
-static void countTuples(const vector<saidx_t> &sa, const vector<saidx_t> &lcp, long int L, long int tupleSize, double &Pmax, double &PWmax){
-	long int h;
-	long int Q=0;
-	double PW;
-	double P;
-	uint64_t PWnum=0;
+/* Based on the algorithm outlined by Aaron Kaufer
+ * This is described here:
+ * http://www.untruth.org/~josh/sp80090b/Kaufer%20Further%20Improvements%20for%20SP%20800-90B%20Tuple%20Counts.pdf
+ */
+void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &lrs_res, bool verbose) {
+	vector <saidx_t> sa(n+1, -1); //each value is at most n-1
+	vector <saidx_t> L(n+2, -1); //each value is at most n-1
 
-	for(long int m=0; m<=L; m+=h) {
-		h=1;
-		if(sa[m] + tupleSize <= L) {
-			//This is a tuple to count
-			while((m+h <= L) && ((saidx_t)tupleSize <= lcp[m+h])) {
-				h++;
-			}
-			//h now contains the number of times this particular tuple occurred in the text
+   	long int u; //The length of a string: 1 <= u <= v+1 <= n
+   	long int v; //The length of the LRS. 1 <= v <= n-1
+	long int c; //contains a count from A
+	long int j; //0 <= j <= v+1 <= n
+	saidx_t t; //Takes values from LCP array. 0 <= t < n
 
-			//Account for the tuple
-			//For t-tuple test
-			if(Q < h) Q=h;
-
-			//For the LRS test
-			//The numerator must necessarily be even, so we can divide by 2 without problems
-			PWnum += (((uint64_t)h)*((uint64_t)h-1)) >> 1;
-		} 
-	}
-
-	//Now we're done with this tuple size. Finalize the outputs
-	//t-tuple test
-	if(Q >= 35) {
-		//tupleSize <= t
-		P = ((double)Q)/((double)(L-tupleSize+1));
-		Pmax = pow(P, 1.0/(double)tupleSize);
-
-		//tupleSize < u; set this value to flag nonsense
-		PWmax = -1.0;
-	} else {
-		//Otherwise, tupleSize > t
-		//a.k.a. tupleSize >= u
-		PW = ((double)PWnum) / (double)(((L-tupleSize+1)*(L-tupleSize))>>1);
-		PWmax = pow(PW, 1.0/((double)tupleSize));
-		//tupleSize > t; set this value to flag nonsense
-		Pmax = -1.0;
-	}
-}
-
-void SAalgs(const byte text[], long int L, int k, double &t_tuple_res, double &lrs_res, bool verbose){
-	vector <saidx_t> sa(L+1, -1);
-	vector <saidx_t> lcp(L+1, -1);
-   	long int u;
-   	long int v;
-   	long int lrs_len;
 	double curPmax;
-	double curPWmax;
 	double Pmax;
-	double PWmax;
 	double pu;
 
-	assert(L>0);
+	assert(n>0);
 	assert(k>0);
-	assert(L < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
+	assert(n <= SAINDEX_MAX - 1);
 
-	calcSALCP(text, L, sa, lcp);
+	calcSALCP(text, n, sa, L);
+
+	//to conform with Kaufer's conventions
+	L.erase(L.begin());
+	L[n] = 0;
+	assert(L[0] == 0);
 
 	//Find the length of the LRS, v
-	lrs_len = -1;
-	for(long int j=0; j<=L; j++) {
-		if(lcp[j]>lrs_len) lrs_len = lcp[j];
+
+	v=0;
+	for(long int i=0; i<n; i++) {
+		if(L[i]>v) v = L[i];
 	}
 
-	assert(lrs_len>0);
-	//lrs_len is now set correctly
-   	v = lrs_len;
+	assert((v>0) && (v < n));
+	//v is now set correctly
 
-	//This is work factor on order O(L * v)
-	Pmax = -1.0;
-	PWmax = -1.0;
-	u = 0;
-	for(long int j=1; j<=v; j++) {
-		countTuples(sa, lcp, L, j, curPmax, curPWmax);
-		if(u == 0) {
-			if(curPmax < 0.0) {
-				u = j;
-            			PWmax = curPWmax;
-         		} else {
-				// curPmax >= 0
-				assert(curPWmax < 0.0);
-				if(curPmax > Pmax) Pmax = curPmax;
+	vector <saidx_t> Q(v+1, 1); //Contains an accumulation of positive counts 1 <= Q[i] <= n
+	vector <saidx_t> A(v+2, 0); //Contains an accumulation of positive counts 0 <= A[i] <= n
+	//I is set from L
+	//Note that I is indexed by at most j+1.
+	// j takes the value 0 to v+1  (so I[v+2] should work)
+	//(I stores indices of A, and there are only v+2 of these)
+	vector <saidx_t> I(v+3, 0); //each value is most 0 <= I[i] <= v+2 <= n+1
+
+	j = 0;
+	for(long int i = 1; i <= n; i++) {
+		c = 0;
+		//Note L[0] is already verified to be 0
+		assert(L[i] >= 0);
+
+		if(L[i] < L[i-1]) {
+			t = L[i-1];
+			assert(j>0);
+			j--;
+			assert(j<=v);
+
+			while(t > L[i]) {
+				assert((t>0) && (t <= v));
+				if((j > 0) && (I[j] == t)) {
+					/* update count for non-zero entry of A */
+					A[I[j]] += A[I[j+1]];
+					A[I[j+1]] = 0;
+					j--;
+				}
+
+				if(Q[t] >= A[I[j+1]]+1) {
+					/*
+					 * Q[t] is at least as large as current count,
+					 * and since Q[t] <= Q[t-1] <= ... <= Q[1],
+					 * there is no need to check zero entries of A
+					 * until next non-zero entry
+					 */
+					if(j > 0) {
+						/* skip to next non-zero entry of A */
+						t = I[j];
+					} else {
+						/*
+						 * no more non-zero entries of A,
+						 * so skip to L[i] (terminate while loop)
+						 */
+						t = L[i];
+					}
+				} else {
+					/* update Q[t] with new maximum count */
+					Q[t--] = A[I[j+1]]+1;
+				}
 			}
-		} else {
-			assert(curPWmax >= 0.0);
-			assert(curPmax < 0.0);
-			if(curPWmax > PWmax) PWmax = curPWmax;
+
+			c = A[I[j+1]]; /* store carry over count */
+			A[I[j+1]] = 0;
+		}
+
+		if(L[i] > 0) {
+			if((j < 1) || (I[j] < L[i])) {
+				/* insert index of next non-zero entry of A */
+				assert(j<v);
+				I[++j] = L[i];
+			}
+			A[I[j]] += c+1; /* update count for t = I[j] = L[i] */
+		}
+	}
+
+	//Calculate u
+	for(u=1; (u<=v) && (Q[u] >= 35); u++);
+
+	assert(u > 0);
+	assert(((u == v+1) || ((u <= v) && (Q[u] < 35))));
+	assert(((u == 1) || (Q[u-1] >= 35)));
+	//u is now correctly set.
+
+	//at this point, Q is completely calculated.
+	/*Calculate the various Pmax[i] values. We need not save the actual values, only the largest*/
+	Pmax = -1.0;
+	for(long int i=1; i<u; i++) {
+		double curP = ((double)(Q[i]))/((double)(n-i+1));
+		double curPMax = pow(curP, 1.0/(double)i);
+		 //fprintf(stderr, "t-Tuple Estimate: P[%ld] = %.17g ( %d / %ld )\n", i, curP, Q[i], n-i+1);
+		 //fprintf(stderr, "t-Tuple Estimate: P_max[%ld] = %.17g\n", i, curPMax);
+
+		if(curPMax > Pmax) {
+			Pmax=curPMax;
 		}
 	}
 
 	//finalize the t-tuple estimate
 	if(Pmax > 0.0) {
 		//We encountered a valid t, so we can run the test
-		pu = Pmax + ZALPHA*sqrt(Pmax*(1.0 - Pmax)/((double)(L - 1)));
+		pu = Pmax + ZALPHA*sqrt(Pmax*(1.0 - Pmax)/((double)(n - 1)));
 		if(verbose) printf("t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", u-1, Pmax, pu);
 		if(pu > 1.0) {
 			pu = 1.0;
@@ -170,13 +201,56 @@ void SAalgs(const byte text[], long int L, int k, double &t_tuple_res, double &l
 		t_tuple_res = -1.0;
 	}
 
-	//finalize the LRS estimate
+	//calculate the LRS estimate
 	if(v>=u) {
-		pu = PWmax + ZALPHA*sqrt(PWmax*(1.0 - PWmax)/((double)(L - 1)));
+		vector <long int> S(v+1, 0);
+		memset(A.data(), 0, sizeof(saidx_t)*sizeof((v+2)));
+
+		for(long int i = 1; i <= n; i++) {
+			if((L[i-1] >= u) && (L[i] < L[i-1])) {
+				saidx_t b = L[i];
+
+				//A[u] stores the number of u-length tuples. We need to eventually clear down to A[u]=A[b+1].
+				if(b < u) b = u-1;
+
+				for(t = L[i-1]; t > b; t--) {
+					A[t] += A[t+1];
+					A[t+1] = 0;
+
+					assert(A[t] >= 0);
+					//update sum
+					//Note that (c choose 2) is just (c)(c-1)/2.
+					//The numerator of this expression is necessarily even
+					//Dividing an even quantity by 2 is the same as right shifting by 1.
+					S[t] += ((((uint64_t)(A[t]+1) * (uint64_t)(A[t]))))>>1; /* update sum */ 
+				}
+
+				if(b >= u) A[b] += A[b+1]; /* carry over count for t = L[i] */
+				A[b+1] = 0;
+			}
+
+			if(L[i] >= u) A[L[i]]++; /* update count for t = L[i] */
+		}
+
+		//We now have a complete set of numerators in S
+		Pmax = 0.0;
+		for(long int i=u; i<=v; i++) {
+			double curP = ((double)S[i]) / (double)(((n-i)*(n-i+1))>>1);
+			double curPMax = pow(curP, 1.0/((double)i));
+			 //fprintf(stderr, "LRS Estimate: P_%ld = %.17g ( %zu / %zu )\n", i, curP, S[i], ((n-i)*(n-i+1))>>1);
+			 //fprintf(stderr, "LRS Estimate: P_{max,%ld} = %.17g\n", i, curPMax);
+
+
+			if(Pmax < curPMax) {
+				Pmax = curPMax;
+			}
+		}
+
+		pu = Pmax + ZALPHA*sqrt(Pmax*(1.0 - Pmax)/((double)(n - 1)));
 		if(pu > 1.0) {
 			pu = 1.0;
 		}
-		if(verbose) printf("LRS Estimate: u = %ld, v = %ld, P_{max,W} = %.17g, p_u = %.17g\n", u, v, PWmax, pu);
+		if(verbose) printf("LRS Estimate: u = %ld, v = %ld, p-hat = %.17g, p_u = %.17g\n", u, v, Pmax, pu);
 
 		lrs_res = -log2(pu);
 	} else {
@@ -200,18 +274,6 @@ int len_LRS(const byte text[], const int sample_size){
 	}
 
 	return(lrs_len);
-}
-
-void count_tuples(const byte data[], const int length, map<vector<byte>, int> &tuples, const int sample_size){
-
-	for(int i = 0; i < sample_size-length; i++){
-		vector<byte> substring = substr(data, i, length, sample_size);
-		if(tuples.find(substring) == tuples.end()){
-			tuples[substring] = 1;
-		}else{
-			tuples[substring]++;
-		}
-	}
 }
 
 /*
