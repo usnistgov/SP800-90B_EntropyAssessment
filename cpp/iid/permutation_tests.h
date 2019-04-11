@@ -23,7 +23,7 @@ using namespace std;
 //
 // Requires binary data
 vector<byte> conversion1(const byte data[], const int sample_size){
-	vector<byte> ret((sample_size / 8) + 1, 0);
+	vector<byte> ret((sample_size / 8) + ((sample_size%8==0)?0:1), 0);
 
 	for(int i = 0; i < sample_size; ++i){
 		ret[i/8] += data[i];	// integer division to ensure the size of ret is sample_size / 8
@@ -38,10 +38,10 @@ vector<byte> conversion1(const byte data[], const int sample_size){
 //
 // Requires binary data
 vector<byte> conversion2(const byte data[], const int sample_size){
-	vector<byte> ret((sample_size / 8) + 1, 0);
+	vector<byte> ret((sample_size / 8) + ((sample_size%8==0)?0:1), 0);
 
-	for(int i = 0; i < sample_size; ++i){
-		ret[i/8] += data[i] << (8 - ((i+1)%8));
+	for(int i = 0; i < sample_size; ++i) {
+		ret[i/8] += data[i] << (7 - i%8);
 	}
 
 	return ret;
@@ -187,40 +187,32 @@ unsigned int num_increases_decreases(const vector<int> &alt_seq){
 }
 
 // Helper function to prepare for 5.1.7 and 5.1.8
-// Should take about 2-3 seconds for a 1mil size list
-// Maybe speed up by randomizing the check_size progression
-// based on the average amount until the next collision (about 16-19 for a full 256 alphabet size)
-// Just advance maybe 4-5 per iteration and back up if collisions are found based on how many collisions are found.
-// POC: https://repl.it/C4eI
-vector<unsigned int> find_collisions(const byte data[], const unsigned int n){
+vector<unsigned int> find_collisions(const byte data[], const unsigned int n, const unsigned int k){
 	vector<unsigned int> ret;
-	set<unsigned int> dups;
+	vector<bool> dups(k, false);
 
-	unsigned int i = 0;
-	unsigned int check_size;
+	unsigned long int i=0;
+	unsigned long int j=0;
 
-	// Begin from each element
-	while(i < n){
-		check_size = 0;
+	// Begin at the start
+	while(i + j < n){
+		for(unsigned int l=0; l<k; l++) dups[l] = false;
 
 		// Progressively increase the number of elements checked
-		while(check_size < (n - i)){
-
-			// Toss elements into a set
-			dups.insert(data[i+check_size]);
-
-			// If sizes don't match up then a collision exists
-			if(dups.size() != check_size+1){
-
+		while(i + j < n) {
+			// Check for a collision
+			if(dups[data[i+j]]) {
 				// Record info on collision and end inner loop
 				// Advance outer loop past the collision end
-				ret.push_back(check_size+1);
-				i += check_size;
-				check_size = n;
-				dups.clear();
+				ret.push_back(j);
+				i += j;
+				j=0;
+				break;
+			} else {
+				dups[data[i+j]]=true;
+				++j;
 			}
 
-			++check_size;
 		}
 
 		++i;
@@ -349,7 +341,7 @@ void directional_tests(const byte data[], const int alphabet_size, const int sam
 	if(test_status[1] || test_status[2] || test_status[3]) {
 		if(alphabet_size == 2){
 			vector<byte> cs1 = conversion1(data, sample_size);
-			alt_seq = alt_sequence1(cs1.data(), sample_size/8);		// conversion1 reduces the total size by a factor of 8
+			alt_seq = alt_sequence1(cs1.data(), cs1.size());		// conversion1 reduces the total size by a factor of 8
 		}else{
 			alt_seq = alt_sequence1(data, sample_size);
 		}
@@ -366,8 +358,7 @@ void consecutive_runs_tests(const byte data[], const double median, const int al
 
 	if(test_status[4] || test_status[5]) {
 		if(alphabet_size == 2){
-			vector<byte> cs2 = conversion2(data, sample_size);
-			alt_seq = alt_sequence2(cs2.data(), 0.5, sample_size/8);	// conversion2 reduces the total size by a factor of 8
+			alt_seq = alt_sequence2(data, 0.5, sample_size);
 		}else{
 			alt_seq = alt_sequence2(data, median, sample_size);
 		}
@@ -384,9 +375,9 @@ void collision_tests(const byte data[], const int alphabet_size, const int sampl
 	if(test_status[7] || test_status[6]) {
 		if(alphabet_size == 2){
 			vector<byte> cs2 = conversion2(data, sample_size);
-			col_seq = find_collisions(cs2.data(), sample_size/8);		// conversion2 reduces the total size by a factor of 8
+			col_seq = find_collisions(cs2.data(), cs2.size(), 256);		// conversion2 reduces the total size by a factor of 8
 		}else{
-			col_seq = find_collisions(data, sample_size);
+			col_seq = find_collisions(data, sample_size, alphabet_size);
 		}
 
 		if(test_status[6]) stats[6] = avg_collision(col_seq);
@@ -399,11 +390,11 @@ void periodicity_tests(const byte data[], const int alphabet_size, const int sam
 	if(test_status[8] || test_status[9] || test_status[10] || test_status[11] || test_status[12]) {
 		if(alphabet_size == 2){
 			vector<byte> cs1 = conversion1(data, sample_size);
-			if(test_status[8]) stats[8] = periodicity(cs1.data(), 1, sample_size/8);
-			if(test_status[9]) stats[9] = periodicity(cs1.data(), 2, sample_size/8);
-			if(test_status[10]) stats[10] = periodicity(cs1.data(), 8, sample_size/8);
-			if(test_status[11]) stats[11] = periodicity(cs1.data(), 16, sample_size/8);
-			if(test_status[12]) stats[12] = periodicity(cs1.data(), 32, sample_size/8);
+			if(test_status[8]) stats[8] = periodicity(cs1.data(), 1, cs1.size());
+			if(test_status[9]) stats[9] = periodicity(cs1.data(), 2, cs1.size());
+			if(test_status[10]) stats[10] = periodicity(cs1.data(), 8, cs1.size());
+			if(test_status[11]) stats[11] = periodicity(cs1.data(), 16, cs1.size());
+			if(test_status[12]) stats[12] = periodicity(cs1.data(), 32, cs1.size());
 		}else{
 			if(test_status[8]) stats[8] = periodicity(data, 1, sample_size);
 			if(test_status[9]) stats[9] = periodicity(data, 2, sample_size);
@@ -419,11 +410,11 @@ void covariance_tests(const byte data[], const int alphabet_size, const int samp
 	if(test_status[13] || test_status[14] || test_status[15] || test_status[16] || test_status[17]) {
 		if(alphabet_size == 2){
 			vector<byte> cs1 = conversion1(data, sample_size);
-			if(test_status[13]) stats[13] = covariance(cs1.data(), 1, sample_size/8);		// top should be cs1
-			if(test_status[14]) stats[14]  = covariance(cs1.data(), 2, sample_size/8);
-			if(test_status[15]) stats[15]  = covariance(cs1.data(), 8, sample_size/8);
-			if(test_status[16]) stats[16]  = covariance(cs1.data(), 16, sample_size/8);
-			if(test_status[17]) stats[17]  = covariance(cs1.data(), 32, sample_size/8);
+			if(test_status[13]) stats[13] = covariance(cs1.data(), 1, cs1.size());		// top should be cs1
+			if(test_status[14]) stats[14]  = covariance(cs1.data(), 2, cs1.size());
+			if(test_status[15]) stats[15]  = covariance(cs1.data(), 8, cs1.size());
+			if(test_status[16]) stats[16]  = covariance(cs1.data(), 16, cs1.size());
+			if(test_status[17]) stats[17]  = covariance(cs1.data(), 32, cs1.size());
 		}else{
 			if(test_status[13]) stats[13]  = covariance(data, 1, sample_size);
 			if(test_status[14]) stats[14] = covariance(data, 2, sample_size);
