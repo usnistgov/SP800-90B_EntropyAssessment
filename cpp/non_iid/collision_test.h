@@ -12,13 +12,14 @@ double col_exp(double p, double q){
 
 // Section 6.3.2 - Collision Estimate
 // data is assumed to be binary (e.g., bit string)
-double collision_test(byte* data, long len, const bool verbose){
+double collision_test(byte* data, long len, const int verbose, const char *label){
 	long v, i, j;
 	int t_v;
 	double X, s, p, lastP, pVal;
         double lvalue, hvalue;
         double hbound, lbound;
         double hdomain, ldomain;
+	double entEst;
 
 	i = 0;
 	v = 0;
@@ -38,12 +39,22 @@ double collision_test(byte* data, long len, const bool verbose){
 	// X is mean of t_v's, s is sample stdev, where
 	// s^2 = (sum(t_v^2) - sum(t_v)^2/v) / (v-1)
 	X = i / (double)v;
-	if(verbose) printf("Collision Estimate: X-bar = %.17g, ", X);
+	if(verbose == 1) printf("%s Collision Estimate: X-bar = %.17g, ", label, X);
 	s = sqrt((s - (i*X)) / (v-1));
-	if(verbose) printf("sigma-hat = %.17g, ", s);
+	if(verbose == 1) printf("sigma-hat = %.17g, ", s);
+
+	if(verbose == 2) {
+		printf("%s Collision Estimate: v = %ld\n", label, v);
+		printf("%s Collision Estimate: Sum t_i = %ld\n", label, i);
+		printf("%s Collision Estimate: X-bar = %.17g\n", label, X);
+		printf("%s Collision Estimate: sigma-hat = %.17g\n", label, s);
+	}
 
 	// binary search for p
 	X -= ZALPHA * s/sqrt(v);
+
+	if(verbose == 2)
+		printf("%s Collision Estimate: X-bar' = %.17g\n", label, X);
 
 	ldomain = 0.5;
         hdomain = 1.0;
@@ -124,6 +135,13 @@ double collision_test(byte* data, long len, const bool verbose){
                 }
         }//for loop
 
-	if(verbose > 0) printf("p = %.17g\n", p);
-	return -log2(p);
+	entEst = -log2(p);
+
+	if(verbose == 1) printf("p = %.17g\n", p);
+	else if(verbose == 2) {
+		printf("%s Collision Estimate: Found p = %.17g\n", label, p);
+		printf("%s Collision Estimate: min entropy = %.17g\n", label, entEst);
+	}
+
+	return entEst;
 }

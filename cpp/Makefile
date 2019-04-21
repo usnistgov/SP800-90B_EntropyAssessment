@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -fopenmp
+CXXFLAGS = -std=c++11 -fopenmp -O2
 LIB = -lbz2 -lpthread -ldivsufsort
 INC=
 
@@ -10,7 +10,7 @@ INC=
 all:    iid non_iid restart conditioning
 
 clean:
-	rm -f ea_iid ea_non_iid ea_restart ea_conditioning
+	rm -f ea_iid ea_non_iid ea_restart ea_conditioning selftest/*.res
 
 iid: iid_main.o
 iid_main.o: iid_main.cpp
@@ -27,9 +27,3 @@ restart_main.o: restart_main.cpp
 conditioning: conditioning_main.o
 conditioning_main.o: conditioning_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) conditioning_main.cpp -o ea_conditioning $(LIB)
-
-run_iid:
-	./ea_iid ../bin/truerand_8bit.bin 8 -i -t -v
-
-run_non_iid:
-	./ea_non_iid ../bin/truerand_8bit.bin 8 -i -t -v

@@ -45,7 +45,8 @@
 
 int main(int argc, char* argv[]){
 
-	bool initial_entropy, all_bits, verbose = false;
+	bool initial_entropy, all_bits;
+	int verbose = 0;
 	double rawmean, median;
 	char* file_path;
 	data_t data;
@@ -53,7 +54,6 @@ int main(int argc, char* argv[]){
 
 	initial_entropy = true;
 	all_bits = true;
-	verbose = false;
 
 	while ((opt = getopt(argc, argv, "icatv")) != -1) {
 		switch(opt) {
@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 				all_bits = false;
 				break;
 			case 'v':
-				verbose = true;
+				verbose++;
 				break;
 			default:
 				print_usage();
@@ -98,7 +98,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	if(verbose){
+	if(verbose > 0){
 		printf("Opening file: '%s'\n", file_path);
 	}
 
@@ -115,10 +115,10 @@ int main(int argc, char* argv[]){
 
 	if(!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
 
-	if(verbose && initial_entropy && (data.word_size > 1)) printf("Number of Symbols: %ld\n", data.len);
-	if(verbose) printf("Number of Binary Symbols: %ld\n", data.blen);
+	if((verbose > 0) && initial_entropy && (data.word_size > 1)) printf("Number of Symbols: %ld\n", data.len);
+	if(verbose > 0) printf("Number of Binary Symbols: %ld\n", data.blen);
 	if(data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
-	if(verbose){
+	if(verbose > 0){
 		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been mapped down to an alphabet size of %d unique symbols\n", data.alph_size);
 		else printf("\nSymbol alphabet consists of %d unique symbols\n", data.alph_size);
 	}
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]){
 	printf("Calculating baseline statistics...\n");
 	calc_stats(&data, rawmean, median);
 
-	if(verbose){
+	if(verbose > 0){
 		printf("\tRaw Mean: %f\n", rawmean);
 		printf("\tMedian: %f\n", median);
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]){
 	//double start_time = omp_get_wtime();
 
 	// Compute the min-entropy of the dataset
-	double H_min = most_common(data.symbols, sample_size, alphabet_size, verbose);
+	double H_min = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal");
 	printf("min-entropy = %f\n\n", H_min);
 
 	// Compute chi square stats
@@ -153,7 +153,7 @@ int main(int argc, char* argv[]){
 	}
 
 	// Compute length of the longest repeated substring stats
-	bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose);
+	bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
 
 	if(len_LRS_test_pass){
 		printf("** Passed length of longest repeated substring test\n\n");

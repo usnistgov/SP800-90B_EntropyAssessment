@@ -89,14 +89,14 @@ double com_exp(double p, double q, unsigned int alph_size, int d, long num_block
 
 // Section 6.3.4 - Compression Estimate
 // data is assumed to be binary (e.g., bit string)
-double compression_test(byte* data, long len, const bool verbose){
+double compression_test(byte* data, long len, const int verbose, const char *label){
 	int j, d, b = 6;
 	long i, num_blocks, v;
 	unsigned int block, alph_size = 1 << b; 
 	unsigned int dict[alph_size];
 	double X=0.0, X_comp=0.0;
 	double sigma=0.0, sigma_comp=0.0;
-	double p;
+	double p, entEst;
 	double ldomain, hdomain, lbound, hbound, lvalue, hvalue, pVal, lastP;
 
 	d = 1000;
@@ -127,12 +127,20 @@ double compression_test(byte* data, long len, const bool verbose){
 
 	// compute mean and stdev
 	X /= v;
-	if(verbose) printf("Compression Estimate: X-bar = %.17g, ", X);
 	sigma = 0.5907 * sqrt(sigma/(v-1.0) - X*X);
-	if(verbose) printf("sigma-hat = %.17g, ", sigma);
+
+	if(verbose == 1) {
+		printf("%s Compression Estimate: X-bar = %.17g, ", label, X);
+		printf("sigma-hat = %.17g, ", sigma);
+	} else if(verbose == 2) {
+		printf("%s Compression Estimate: X-bar = %.17g\n", label, X);
+		printf("%s Compression Estimate: sigma-hat = %.17g\n", label, sigma);
+	}
 
         // binary search for p
 	X -= ZALPHA * sigma/sqrt(v);
+
+	if(verbose == 2) printf("%s Compression Estimate: X-bar' = %.17g\n", label, X);
 
 	ldomain = 1.0 / alph_size;
 	hdomain = 1.0;
@@ -212,7 +220,12 @@ double compression_test(byte* data, long len, const bool verbose){
                 }
         }//for loop
 
-	if(verbose) printf("p = %.17g\n", p);
+        entEst = -log2(p)/b;
+	if(verbose == 1) printf("p = %.17g\n", p);
+	else if(verbose == 2) {
+		printf("%s Compression Estimate: Found p = %.17g\n", label, p);
+		printf("%s Compression Estimate: min entropy = %.17g\n", label, entEst);
+	}
 
-        return -log2(p)/b;
+        return entEst;
 }

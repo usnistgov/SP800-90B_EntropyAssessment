@@ -475,7 +475,7 @@ void print_results(int C[][3]){
 	cout << endl;
 }
 
-bool permutation_tests(const data_t *dp, const double rawmean, const double median, const bool verbose){
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose){
 	uint64_t xoshiro256starstarMainSeed[4];
 
 

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+for file in ../../bin/*; do
+	bfile=`basename $file`
+	echo -n "${bfile}: "
+	../ea_non_iid -vv ${file} > ${bfile/bin/res}
+	./compareresults.pl ${bfile/bin/res} refdata/${bfile/bin/res} 
+done

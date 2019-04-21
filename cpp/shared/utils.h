@@ -27,8 +27,10 @@
 #define MIN_SIZE 1000000
 #define PERMS 10000
 
-#define RELEPSILON 4.0*DBL_EPSILON
-#define ABSEPSILON 4.0*DBL_EPSILON
+//This is the smallest practical value (one can't do better with the double type)
+#define RELEPSILON DBL_EPSILON
+//This is clearly overkill, but it's difficult to do better without a view into the monotonic function
+#define ABSEPSILON DBL_MIN
 #define DBL_INFINITY __builtin_inf ()
 #define ITERMAX 1076
 #define ZALPHA 2.5758293035489008
@@ -152,6 +154,170 @@ void free_data(data_t *dp){
 } 
 
 // Read in binary file to test
+bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
+	FILE *file; 
+	int mask, j, max_symbols;
+	long rc, i;
+	long fileLen;
+
+	file = fopen(file_path, "rb");
+	if(!file){
+		printf("Error: could not open '%s'\n", file_path);
+		return false;
+	}
+
+	rc = (long)fseek(file, 0, SEEK_END);
+	if(rc < 0){
+		printf("Error: fseek failed\n");
+		fclose(file);
+		return false;
+	}
+
+	fileLen = ftell(file);
+	if(dp->len < 0){
+		printf("Error: ftell failed\n");
+		fclose(file);
+		return false;
+	}
+
+	rewind(file);
+
+	if(subsetSize == 0) {
+		dp->len = fileLen;
+	} else {
+		rc = (long)fseek(file, subsetIndex*subsetSize, SEEK_SET);
+		if(rc < 0){
+			printf("Error: fseek failed\n");
+			fclose(file);
+			return false;
+		}
+
+		dp->len = min(fileLen - subsetIndex*subsetSize, subsetSize);
+	}
+
+	if(dp->len == 0){
+		printf("Error: '%s' is empty\n", file_path);
+		fclose(file);
+		return false;
+	}
+
+	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
+	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
+	if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
+		printf("Error: failure to initialize memory for symbols\n");
+		fclose(file);
+		if(dp->symbols != NULL) {
+			free(dp->symbols);
+			dp->symbols = NULL;
+		}
+		if(dp->rawsymbols != NULL) {
+			free(dp->rawsymbols);
+			dp->rawsymbols = NULL;
+		}
+		return false;
+	}
+
+	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
+	if(rc != dp->len){
+		printf("Error: file read failure\n");
+		fclose(file);
+		free(dp->symbols);
+		dp->symbols = NULL;
+		free(dp->rawsymbols);
+		dp->rawsymbols = NULL;
+		return false;
+	}
+	fclose(file);
+
+	//Do we need to establish the word size?
+	if(dp->word_size == 0) {
+		byte datamask = 0;
+		byte curbit = 0x80;
+
+		for(i = 0; i < dp->len; i++) {
+			datamask = datamask | dp->symbols[i];
+		}
+
+		for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
+			curbit = curbit >> 1;
+		}
+
+		dp->word_size = i;
+	} else {
+		byte datamask = 0;
+		byte curbit = 0x80;
+
+		for(i = 0; i < dp->len; i++) {
+			datamask = datamask | dp->symbols[i];
+		}
+
+		for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
+			curbit = curbit >> 1;
+		}
+
+		if( i < dp->word_size ) {
+			printf("Warning: Symbols appear to be narrower than described.\n");
+		} else if( i > dp->word_size ) {
+			printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
+			free(dp->symbols);
+			dp->symbols = NULL;
+			free(dp->rawsymbols);
+			dp->rawsymbols = NULL;
+			return false;
+		}
+	}
+
+	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
+	dp->maxsymbol = 0;
+
+	max_symbols = 1 << dp->word_size;
+	int symbol_map_down_table[max_symbols];
+
+	// create symbols (samples) and check if they need to be mapped down
+	dp->alph_size = 0;
+	memset(symbol_map_down_table, 0, max_symbols*sizeof(int));
+	mask = max_symbols-1;
+	for(i = 0; i < dp->len; i++){ 
+		dp->symbols[i] &= mask;
+		if(dp->symbols[i] > dp->maxsymbol) dp->maxsymbol = dp->symbols[i];
+		if(symbol_map_down_table[dp->symbols[i]] == 0) symbol_map_down_table[dp->symbols[i]] = 1;
+	}
+
+	for(i = 0; i < max_symbols; i++){
+		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (byte)dp->alph_size++;
+	}
+
+	// create bsymbols (bitstring) using the non-mapped data
+	dp->blen = dp->len * dp->word_size;
+	if(dp->word_size == 1) dp->bsymbols = dp->symbols;
+	else{
+		dp->bsymbols = (byte*)malloc(dp->blen);
+		if(dp->bsymbols == NULL){
+			printf("Error: failure to initialize memory for bsymbols\n");
+			free(dp->symbols);
+			dp->symbols = NULL;
+			free(dp->rawsymbols);
+			dp->rawsymbols = NULL;
+
+			return false;
+		}
+
+		for(i = 0; i < dp->len; i++){
+			for(j = 0; j < dp->word_size; j++){
+				dp->bsymbols[i*dp->word_size+j] = (dp->symbols[i] >> (dp->word_size-1-j)) & 0x1;
+			}
+		}
+	}
+
+	// map down symbols if less than 2^bits_per_word unique symbols
+	if(dp->alph_size < dp->maxsymbol + 1){
+		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
+	} 
+
+	return true;
+}
+
+
 bool read_file(const char *file_path, data_t *dp){
 	FILE *file; 
 	int mask, j, max_symbols = 1 << dp->word_size;
@@ -188,11 +354,19 @@ bool read_file(const char *file_path, data_t *dp){
 
 	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
 	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
-	if(dp->symbols == NULL){
-		printf("Error: failure to initialize memory for symbols\n");
-		fclose(file);
-		return false;
-	}
+        if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
+                printf("Error: failure to initialize memory for symbols\n");
+                fclose(file);
+                if(dp->symbols != NULL) {
+                        free(dp->symbols);
+                        dp->symbols = NULL;
+                }
+                if(dp->rawsymbols != NULL) {
+                        free(dp->rawsymbols);
+                        dp->rawsymbols = NULL;
+                }
+                return false;
+        }
 
 	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
 	if(rc != dp->len){
@@ -200,9 +374,50 @@ bool read_file(const char *file_path, data_t *dp){
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
+		free(dp->rawsymbols);
+		dp->rawsymbols = NULL;
 		return false;
 	}
 	fclose(file);
+
+	//Do we need to establish the word size?
+	if(dp->word_size == 0) {
+		//Yes. Establish the word size using the highest order bit in use
+		byte datamask = 0;
+		byte curbit = 0x80;
+
+		for(i = 0; i < dp->len; i++) {
+			datamask = datamask | dp->symbols[i];
+		}
+
+		for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
+			curbit = curbit >> 1;
+		}
+
+		dp->word_size = i;
+       } else {
+                byte datamask = 0;
+		byte curbit = 0x80;
+
+                for(i = 0; i < dp->len; i++) {
+                        datamask = datamask | dp->symbols[i];
+                }
+
+                for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
+                        curbit = curbit >> 1;
+                }
+
+                if( i < dp->word_size ) {
+                        printf("Warning: Symbols appear to be narrower than described.\n");
+                } else if( i > dp->word_size ) {
+                        printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
+                        free(dp->symbols);
+                        dp->symbols = NULL;
+                        free(dp->rawsymbols);
+                        dp->rawsymbols = NULL;
+                        return false;
+                }
+        }
 
 	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
 	dp->maxsymbol = 0;
@@ -230,6 +445,8 @@ bool read_file(const char *file_path, data_t *dp){
 			printf("Error: failure to initialize memory for bsymbols\n");
 			free(dp->symbols);
 			dp->symbols = NULL;
+			free(dp->rawsymbols);
+			dp->rawsymbols = NULL;
 			return false;
 		}
 
@@ -576,14 +793,6 @@ double divide(const int a, const int b) {
 	return ((double)a / (double)b);
 }
 
-double calc_p_global(long C, long N){
-	double p = C/(double)N;
-
-	if(p > 0) p = min(1.0, p + ZALPHA*sqrt((p*(1.0-p))/(N-1.0)));
-	else p = 1.0 - pow(0.01, 1.0/(double)N);
-	return p;
-}
-
 double prediction_estimate_function(long double p, long r, long N){
 	long double q, x;
 
@@ -682,23 +891,44 @@ double calc_p_local(long max_run_len, long N, double ldomain){
 	return p;
 }
 
-double predictionEstimate(long C, long N, long max_run_len, long k, const char *label, const bool verbose){
+double predictionEstimate(long C, long N, long max_run_len, long k, const char *testname, const int verbose, const char *label) {
 	double curMax;
-	double p_global, p_local=-1.0;
+	double p_local=-1.0;
+	double entEst;
+	double p_global;
+	double p_globalPrime;
 
 	curMax = 1.0 / ((double)k);
-	p_global = calc_p_global(C, N);
-	curMax = fmax(curMax, p_global);
+
+	p_global = (double)C/(double)N;
+
+	if(p_global > 0) p_globalPrime = min(1.0, p_global + ZALPHA*sqrt((p_global*(1.0-p_global))/((double)N-1.0)));
+	else p_globalPrime = 1.0 - pow(0.01, 1.0/(double)N);
+
+	curMax = fmax(curMax, p_globalPrime);
 	if((curMax < 1.0) && (prediction_estimate_function(curMax, max_run_len+1, N) > log(0.99))) {
 		p_local = calc_p_local(max_run_len, N, curMax);
 		curMax = fmax(curMax, p_local);
 	}
 
-	if(verbose) {
-		if(p_local > 0.0) printf("%s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", label, N, p_global, C, p_local, max_run_len+1);
-		else printf("%s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal can't affect result (r = %ld)\n", label, N, p_global, C, max_run_len+1);
+	entEst = -log2(curMax);
+
+	if(verbose == 1) {
+		if(p_local > 0.0) printf("%s %s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", label, testname, N, p_globalPrime, C, p_local, max_run_len+1);
+		else printf("%s %s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal can't affect result (r = %ld)\n", label, testname, N, p_globalPrime, C, max_run_len+1);
+	} else if(verbose == 2) {
+		printf("%s %s Prediction Estimate: C = %ld\n", label, testname, C);
+		printf("%s %s Prediction Estimate: r = %ld\n", label, testname, max_run_len + 1);
+		printf("%s %s Prediction Estimate: N = %ld\n", label, testname, N);
+		printf("%s %s Prediction Estimate: P_global = %.17g\n", label, testname, p_global);
+		printf("%s %s Prediction Estimate: P_global' = %.17g\n", label, testname, p_globalPrime);
+
+		if(p_local > 0.0) printf("%s %s Prediction Estimate: P_local = %.17g\n", label, testname, p_local);
+		else printf("%s %s Prediction Estimate: P_local can't change the result.\n", label, testname);
+
+		printf("%s %s Prediction Estimate: min entropy = %.17g\n", label, testname, entEst);
 	}
-	return(-log2(curMax));
+	return entEst;
 }
 
 //The idea here is that we've given an array of pointers (binaryDict). 
@@ -707,53 +937,6 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 //We take the least significant d bits from "b": this is the expression "(b) & ((1U << (d)) - 1)"
 //We then multiply this by 2 (as each pattern is associated with a length-2 array) by left shifting by 1.
 #define BINARYDICTLOC(d, b) (binaryDict[(d)-1] + (((b) & ((1U << (d)) - 1))<<1))
-
-//If all the data exists, choose the "best" leaf.
-//Note, if neither of these leaves were initialized (the prefix has not yet been seen), then this function returns 0
-//the 0 return is interpreted as not being able to render a prediction.
-inline long predictBinaryDict(long **binaryDict, long d, uint32_t curPattern, byte *next)
-{
-   long *binaryDictEntry;
-
-   binaryDictEntry = BINARYDICTLOC(d, curPattern);
-   
-   if((binaryDictEntry[0] > binaryDictEntry[1])) {
-      *next = 0;
-      return binaryDictEntry[0];
-   } else {
-      *next = 1;
-      return binaryDictEntry[1];
-   }
-}
-
-//createEntry tells us if we can create new "counted" entries. 
-//the return indicates if branch / leaf nodes (if leafCounts is true) would have been created (or were created, if that was allowed)
-//the return indicates if branch nodes would have been created (or were created, if that was allowed)
-bool incrementBinaryDict(long **binaryDict, long d, uint32_t curPattern, uint32_t newBit, bool createEntry, bool leafCounts)
-{
-   long *binaryDictEntry;
-
-   binaryDictEntry = BINARYDICTLOC(d, curPattern);
-
-   if(binaryDictEntry[newBit] > 0) {
-      //The actual value is already initialized
-      binaryDictEntry[newBit] ++;
-      return(false);
-   } else if(binaryDictEntry[(~newBit)&1] > 0) {
-      //The other value has been incremented, so the prefix is already initialized, but not the actual entry
-      if(!leafCounts || createEntry) {
-         binaryDictEntry[newBit] ++;
-      }
-      //Note that in this situation, the data absolutely directed us to create a leaf. Does this count as "creation"?
-      return(leafCounts);
-   } else {
-      //The prefix is not initialized at all
-      if(createEntry) {
-         binaryDictEntry[newBit] ++;
-      }
-      return(true);
-   }
-}
 
 static uint32_t compressedBitSymbols(const byte *S, long length)
 {
@@ -771,3 +954,37 @@ static uint32_t compressedBitSymbols(const byte *S, long length)
 
    return retPattern;
 }
+
+class PostfixDictionary {
+	map<byte, long> postfixes;
+	long curBest;
+	byte curPrediction;
+public:
+	PostfixDictionary() { curBest = 0; curPrediction = 0;};
+	byte predict(long &count) {assert(curBest > 0); count = curBest; return curPrediction;};
+	bool incrementPostfix(byte in, bool makeNew) {
+		map<byte, long>::iterator curp = postfixes.find(in);
+		long curCount;
+		bool newEntry=false;
+
+		if(curp != postfixes.end()) {
+			//The entry is already there. We always increment in this case.
+			curCount = ++(curp->second);
+		} else if(makeNew) {
+			//The entry is not here, but we are allowed to create a new entry
+			newEntry = true;
+			curCount = postfixes[in] = 1;
+		} else {
+			//The entry is not here, we are not allowed to create a new entry
+			return false;
+		}
+
+		//Only instances where curCount is set and an increment was performed get here
+		if((curCount > curBest) || ((curCount == curBest) && (in > curPrediction))) { 
+			curPrediction = in; 
+			curBest = curCount; 
+		} 
+
+		return newEntry;
+	};
+};

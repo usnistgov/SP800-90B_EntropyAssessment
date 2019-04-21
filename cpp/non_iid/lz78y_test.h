@@ -4,22 +4,19 @@
 #define B 16
 #define MAX_DICTIONARY_SIZE 65536
 
-static double binaryLZ78YPredictionEstimate(const byte *S, long L, const bool verbose){
-   byte curPrediction;
-   byte prediction;
-   long maxCount;
-   long curPredictionCount;
-   long curRunOfCorrects;
-   long maxRunOfCorrects;
-   long correctCount;
-   long j, i;
-   long dictElems;
-   bool makeBranches;
+static double binaryLZ78YPredictionEstimate(const byte *S, long L, const int verbose, const char *label)
+{
    long *binaryDict[B];
+   long curRunOfCorrects=0;
+   long maxRunOfCorrects=0;
+   long correctCount=0;
+   long i, j;
    uint32_t curPattern=0;
+   long dictElems=0;
 
+   assert(L>B);
    assert(L-B > 2);
-   assert(B < 31); //B+1 < 32 to make the bit shifts well defined
+   assert(B < 32); //B < 32 to make the bit shifts well defined
 
    //Initialize the data structure tables
    for(j=0; j< B; j++) {
@@ -31,59 +28,79 @@ static double binaryLZ78YPredictionEstimate(const byte *S, long L, const bool ve
       memset(binaryDict[j], 0, sizeof(long)*(1U<<(j+2)));
    }
 
-   //But the first B bits into curPattern
-   curPattern = compressedBitSymbols(S, B);
+   // initialize B counts with {(S[15]), S[16]}, {(S[14], S[15]), S[16]}, ..., {(S[0]), S[1], ..., S[15]), S[16]},
+   for(j=0; j<B; j++) {
+      curPattern = curPattern | (((uint32_t)(S[B - j - 1]&1)) << j);
 
-   maxRunOfCorrects = 0;
-   curRunOfCorrects = 0;
-   correctCount = 0;
-   dictElems=0;
+      //This is necessarily the first symbol of this length
+      (BINARYDICTLOC(j+1, curPattern))[S[B]&0x1] = 1;
+      dictElems++;
+   }
 
    //In C, arrays are 0 indexed.
    //i is the index of the bit to be predicted.
-   //This is all rather confusing, but it helps to run the first and last few cycles, to verify that it works...
    for(i=B+1; i<L; i++) {
-      //j is the length of the word to be used
-      //3a
+      bool found_x;
+      bool havePrediction = false;
+      byte roundPrediction=2;
+      byte curPrediction=2;
+      long maxCount = 0;
+
+      //But the first B bits into curPattern
+      curPattern = compressedBitSymbols(S+i-B, B);
+
+      //j is the length of the prefix to be used
       for(j=B; j>0; j--) {
-         //update the state to reflect last round's new value (add S[i-1] to the predictor) if our dictionary has room
-         //We need the j-tuple prior to S[i-1], that is (S[i-j-1], ..., S[i-2])
-         //Now update the state to reflect the new value.
-         makeBranches = dictElems < MAX_DICTIONARY_SIZE;
-         //This tuple is stored in curPattern. Take the lower j bits.
-         if(incrementBinaryDict(binaryDict, j, curPattern, S[i-1], makeBranches, false) && makeBranches) {
+         long curCount;
+         long *binaryDictEntry;
+
+         //curPattern starts off as long as possible. We then clear bits at the end
+         //as we shorten curPattern
+         curPattern = curPattern & ((1U<<j)-1);
+         //curPattern should contain the j-tuple (S[i-j] ... S[i-1])
+
+         binaryDictEntry = BINARYDICTLOC(j, curPattern);
+
+          //check if x has been previously seen.
+         //For the prediction, roundPrediction is the max across all pairs (there are only 2 symbols here!)
+         if((binaryDictEntry[0] > binaryDictEntry[1])) {
+            roundPrediction = 0;
+            curCount = binaryDictEntry[0];
+         } else {
+            roundPrediction = 1;
+            curCount = binaryDictEntry[1];
+         }
+
+         if(curCount == 0) {
+            found_x = false;
+         } else {
+            found_x = true;
+         }
+
+         if(found_x) {
+            // x is present in the dictionary as a prefix.
+            if(curCount > maxCount) {
+               maxCount = curCount;
+               havePrediction = true;
+               curPrediction = roundPrediction;
+            }
+
+            binaryDictEntry[S[i]&1]++;
+         } else if(dictElems < MAX_DICTIONARY_SIZE) {
+            //We didn't find the x prefix, so (x,y) surely can't have occurred.
+            //We're allowed to make a new entry. Do so.
+            binaryDictEntry[S[i]&1]=1;
             dictElems++;
          }
       }
 
-      maxCount = 0;
-      prediction = 0;
-
-      //Add S[i-1] to the curPattern
-      curPattern = ((curPattern << 1) | S[i-1]) & ((1U << B) - 1);
-
-      //3b.
-      for(j=B; j>0; j--) {
-         //Get the predictions
-         //predict S[i] by using the prior j bits and the current state
-         //We need the j-tuple prior to S[i], that is (S[i-j], ..., S[i-1])
-         curPredictionCount = predictBinaryDict(binaryDict, j, curPattern, &curPrediction);
-
-         if(curPredictionCount > maxCount) {
-            prediction = curPrediction;
-            maxCount = curPredictionCount;
-         }
-      }
-
-      if((maxCount!=0) && (S[i] == prediction)) {
-         correctCount++;
-         curRunOfCorrects++;
+      // Check to see if the current prediction is correct.
+      if(havePrediction && (curPrediction == S[i])) {
+            correctCount++;
+            curRunOfCorrects++;
+            if(curRunOfCorrects > maxRunOfCorrects) maxRunOfCorrects = curRunOfCorrects;
       } else {
-         curRunOfCorrects = 0;
-      }
-
-      if(curRunOfCorrects > maxRunOfCorrects) {
-         maxRunOfCorrects = curRunOfCorrects;
+            curRunOfCorrects = 0;
       }
    }
 
@@ -92,22 +109,18 @@ static double binaryLZ78YPredictionEstimate(const byte *S, long L, const bool ve
       binaryDict[j] = NULL;
    }
 
-   return(predictionEstimate(correctCount, L-B-1, maxRunOfCorrects, 2, "LZ78Y", verbose));
+   return(predictionEstimate(correctCount, L-B-1, maxRunOfCorrects, 2, "LZ78Y", verbose, label));
 }
 
 // Section 6.3.10 - LZ78Y Prediction Estimate
-double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
+double LZ78Y_test(byte *data, long len, int alph_size, const int verbose, const char *label) {
 	int dict_size;
-	long i, j, N, C, count, max_count, run_len, max_run_len;
-	byte y, prediction;
-	array<byte, B> prev;
-	bool found_prev, have_prediction;
+	long i, j, N, C, run_len, max_run_len;
+	array<byte, B> x;
 
+	if(alph_size==2) return binaryLZ78YPredictionEstimate(data, len, verbose, label);
 
-	if(alph_size==2) return binaryLZ78YPredictionEstimate(data, len, verbose);
-
-	// j             prev          y          D[x,y]
-	array<map<array<byte, B>, map<byte, long>>, B> D;
+	array<map<array<byte, B>, PostfixDictionary>, B> D;
 
 	if(len < B+2){	
 		printf("\t*** Warning: not enough samples to run LZ78Y test (need more than %d) ***\n", B+2);
@@ -121,47 +134,59 @@ double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 
 	// initialize dictionary counts
 	dict_size = 0;
-	memset(prev.data(), 0, B);
-	for(j = 0; j < B; j++){
-		memcpy(prev.data(), data+B-j-1, j+1);
-		D[j][prev][data[B]] = 1;
+	memset(x.data(), 0, B);
+	// initialize LZ78Y counts with {(S[15]), S[16]}, {(S[14], S[15]), S[16]}, ..., {(S[0]), S[1], ..., S[15]), S[16]}
+	for(j = 1; j <= B; j++){
+		memcpy(x.data(), data+B-j, j);
+		D[j-1][x].incrementPostfix(data[B], true);
 		dict_size++;
 	}
 
 	// perform predictions
-	for(i = B+1; i < len; i++){
-		max_count = 0;
-		have_prediction = false;
-		memset(prev.data(), 0, B);
-		for(j = 0; j < B; j++){
-			// check if prev has been previously seen. If (prev,y) has not occurred, 
-			// then do not make a prediction for current d and larger d's 
-			// as well, since it will not occur for them either. In other words,
-			// prediction is NULL, so do not update the scoreboard.
-			if((j == 0) || found_prev){
-				memcpy(prev.data(), data+i-j-1, j+1);
-				if(D[j].find(prev) == D[j].end()) found_prev = false;
-				else found_prev = true;
-			}
+	for(i = B+1; i < len; i++) {
+		bool found_x;
+		bool have_prediction = false;
+		byte prediction = 0;
+		long max_count = 0;
 
-			if(found_prev){
-				y = max_map(D[j][prev]);
-				count = D[j][prev][y];
-				if(count >= max_count){
+		for(j = B; j > 0; j--) {
+			map<array<byte, B>, PostfixDictionary>::iterator curp;
+
+			// check if x has been previously seen. 
+			//For the prediction, roundPrediction is the max across all pairs
+			//The prefix string should contain the j-tuple (S[i-j] ... S[i-1])
+			memset(x.data(), 0, B);
+			memcpy(x.data(), data+i-j, j);
+			curp = D[j-1].find(x);
+
+			if(curp == D[j-1].end()) found_x = false;
+			else found_x = true;
+
+			if(found_x) {
+				long count;
+				byte y;
+
+				// x has occurred, find max (x,y) pair across all y's
+				// Check to see if the current prediction is correct.
+				y = (curp->second).predict(count);
+
+				if(count > max_count){
 					max_count = count;
 					prediction = y;
 					have_prediction = true;
 				}
-				D[j][prev][data[i]]++;
-			}
-			else if(dict_size < MAX_DICTIONARY_SIZE){
-				memcpy(prev.data(), data+i-j-1, j+1);
-				D[j][prev][data[i]] = 1;
+				//x exists as a prefix, so we always increment (and perhaps add a new postfix)
+				(curp->second).incrementPostfix(data[i], true);
+			} else if(dict_size < MAX_DICTIONARY_SIZE) {
+				//We didn't find the x prefix, so (x,y) surely can't have occurred.
+                                //We're allowed to make a new entry. Do so.
+                                //curp isn't populated here, because it wasn't found
+				D[j-1][x].incrementPostfix(data[i], true);
 				dict_size++;
 			}
 		}
 	
-		// test	prediction of maximum (prev,y) pair
+		// test	prediction of maximum (x,y) pair
 		if(have_prediction && (prediction == data[i])){
 			C++;
 			if(++run_len > max_run_len) max_run_len = run_len;
@@ -169,5 +194,5 @@ double LZ78Y_test(byte *data, long len, int alph_size, const bool verbose){
 		else run_len = 0;
 	}
 
-	return(predictionEstimate(C, N, max_run_len, alph_size, "LZ78Y", verbose));
+	return(predictionEstimate(C, N, max_run_len, alph_size, "LZ78Y", verbose, label));
 }
