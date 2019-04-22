@@ -60,7 +60,7 @@ int main(int argc, char* argv[]){
 	int opt;
 	double bin_t_tuple_res = -1.0, bin_lrs_res = -1.0;
 	double t_tuple_res = -1.0, lrs_res = -1.0;
-	unsigned long subsetIndex;
+	unsigned long subsetIndex=ULONG_MAX;
 	unsigned long subsetSize=0;
 	unsigned long long inint;
 	char *nextOption;

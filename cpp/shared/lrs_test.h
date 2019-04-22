@@ -190,6 +190,10 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	if(Pmax > 0.0) {
 		//We encountered a valid t, so we can run the test
 		pu = Pmax + ZALPHA*sqrt(Pmax*(1.0 - Pmax)/((double)(n - 1)));
+		if(pu > 1.0) {
+			pu = 1.0;
+		}
+
 		t_tuple_res = -log2(pu);
 
 		if(verbose == 1) printf("%s t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", label, u-1, Pmax, pu);
@@ -198,9 +202,6 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 			printf("%s t-Tuple Estimate: p-hat_max = %.17g\n", label, Pmax);
 			printf("%s t-Tuple Estimate: p_u = %.17g\n", label, pu);
 			printf("%s t-Tuple Estimate: min entropy = %.17g\n", label, t_tuple_res);
-		}
-		if(pu > 1.0) {
-			pu = 1.0;
 		}
 
 	} else {

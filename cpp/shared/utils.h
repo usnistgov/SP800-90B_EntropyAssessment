@@ -174,7 +174,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	}
 
 	fileLen = ftell(file);
-	if(dp->len < 0){
+	if(fileLen < 0){
 		printf("Error: ftell failed\n");
 		fclose(file);
 		return false;

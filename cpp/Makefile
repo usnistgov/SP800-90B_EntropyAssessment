@@ -1,5 +1,9 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -fopenmp -O2
+#CXX = clang++-8
+#CXXFLAGS = -Wno-padded -Wno-disabled-macro-expansion -Wno-gnu-statement-expression -Wno-bad-function-cast -fopenmp -O1 -fsanitize=address -fsanitize=undefined
+#static analysis in clang using
+#scan-build-8 --use-c++=/usr/bin/clang++-8 make
 LIB = -lbz2 -lpthread -ldivsufsort
 INC=
 
