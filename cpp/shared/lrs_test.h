@@ -73,7 +73,6 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	long int j; //0 <= j <= v+1 <= n
 	saidx_t t; //Takes values from LCP array. 0 <= t < n
 
-	double curPmax;
 	double Pmax;
 	double pu;
 

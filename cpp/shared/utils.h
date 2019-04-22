@@ -749,22 +749,6 @@ array<byte, 16> fast_substr(const byte text[], const int pos, const int len) {
 	return substring;
 }
 
-// Return the key that leads to the maximum value
-byte max_map(const map<byte, long>& m){
-	long max_cnt = 0;
-	byte max_key;
-	map<byte, long>::const_iterator itr;
-
-	for(itr = m.begin(); itr != m.end(); ++itr){
-		if((itr->second > max_cnt) || ((itr->second == max_cnt) && (itr->first > max_key))){
-			max_key = itr->first;
-			max_cnt = itr->second;
-		}
-	}
-
-	return max_key;
-}
-
 template<typename T>
 T max_vector(const vector<T> &vals) {
 	T max = vals[0];
