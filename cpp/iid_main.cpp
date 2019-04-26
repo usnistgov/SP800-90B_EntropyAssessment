@@ -155,21 +155,18 @@ int main(int argc, char* argv[]){
 	// Compute the min-entropy of the dataset
 	if(initial_entropy) {
 		H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal");
-		printf("H_original = %f\n\n", H_original);
 	}
 
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
-		printf("H_bitstring = %f\n\n", H_bitstring);
 	}
 
         if(verbose <= 1) {
-                printf("\n");
                 if(initial_entropy){
                         printf("H_original: %f\n", H_original);
                         if(data.alph_size > 2) {
-                                printf("H_bitstring: %f\n\n", H_bitstring);
-                                printf("min(H_original, %d X H_bitstring): %f\n\n", data.word_size, min(H_original, data.word_size*H_bitstring));
+                                printf("H_bitstring: %f\n", H_bitstring);
+                                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
                         }
                 } else printf("h': %f\n", H_bitstring);
         } else {
@@ -187,6 +184,8 @@ int main(int argc, char* argv[]){
 
                 printf("Assessed min entropy: %.17g\n", h_assessed);
         }
+
+	printf("\n");
 
 	// Compute chi square stats
 	bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
