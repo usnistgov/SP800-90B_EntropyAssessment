@@ -15,21 +15,15 @@
 #define SIMULATION_ROUNDS 5000000
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_restart <-i|-n> [-v] <file_name> <bits_per_word> <H_I>\n\n");
-	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
-	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
+	printf("Usage is: ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>\n\n");
+	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
+	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
-	printf("\t <-i|-n>: '-i' for IID data, '-n' for non-IID data.\n");
+	printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
 	printf("\t -v: Optional verbosity flag for more output.\n");
 	printf("\n");
-	printf("\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_word'\n");
-	printf("\t bits constitute the sample. For example, if 'bits_per_word' is 3, then the four samples\n"); 
-	printf("\t 0x6F, 0xA4, 0x39, 0x58, would be truncated to 0x07, 0x04, 0x01, 0x00.\n");
-	printf("\n");
-        printf("\t If there are less than 2^{bits_per_word} symbols observed in the data, the alphabet is\n");
-        printf("\t mapped down to 0, 1, 2, ..., alph_size-1 in ascending numeric order of the symbols.\n");
-        printf("\t For example, given 'bits_per_word' is 4, if the data consists of the three unique symbols\n");
-        printf("\t 0x7, 0x3, 0xA, they would be mapped down to 0x3 => 0x0, 0x7 => 0x1, 0xA => 0x2.\n");
+	printf("\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_symbol'\n");
+	printf("\t bits constitute the sample.\n");
 	printf("\n");
 	printf("\t This program performs restart testing as described in Restart Tests (Section 3.1.4). The data\n"); 
 	printf("\t consists of 1000 restarts, each with 1000 samples. The data is converted to rows and columns\n");
@@ -94,7 +88,6 @@ long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
 //Larger values should fail.
 long int simulateBound(double alpha, int k, double H_I){
 	uint64_t xoshiro256starstarMainSeed[4];
-	uint64_t xoshiro256starstarSeed[4];
 	vector<long int> results(SIMULATION_ROUNDS, -1);
 	long int returnIndex;
 
@@ -102,8 +95,10 @@ long int simulateBound(double alpha, int k, double H_I){
 
 	seed(xoshiro256starstarMainSeed);
 
-        #pragma omp parallel private(xoshiro256starstarSeed)
+        #pragma omp parallel
 	{
+		uint64_t xoshiro256starstarSeed[4];
+
 		memcpy(xoshiro256starstarSeed, xoshiro256starstarMainSeed, sizeof(xoshiro256starstarMainSeed));
 		//Cause the RNG to jump omp_get_thread_num() * 2^128 calls
 		xoshiro_jump(omp_get_thread_num(), xoshiro256starstarSeed);
@@ -139,6 +134,7 @@ int main(int argc, char* argv[]){
 	int opt;
 
 	iid = false;
+	data.word_size = 0;
 
         while ((opt = getopt(argc, argv, "inv")) != -1) {
                 switch(opt) {
@@ -153,7 +149,6 @@ int main(int argc, char* argv[]){
                                 break;
                         default:
                                 print_usage();
-                                break;
                 }
         }
 
@@ -162,27 +157,32 @@ int main(int argc, char* argv[]){
 
 
 	// Parse args
-	if(argc != 3){
+	if((argc != 3) && (argc != 2)){
 		printf("Incorrect usage.\n");
 		print_usage();
 	}
-	else{
-		// get filename
-		file_path = argv[0];
 
+	// get filename
+	file_path = argv[0];
+	argv++;
+	argc--;
+
+	if(argc == 2) {
 		// get bits per word
-		data.word_size = atoi(argv[1]);
+		data.word_size = atoi(argv[0]);
 		if(data.word_size < 1 || data.word_size > 8){
-			printf("Invalid bits per word.\n");
+			printf("Invalid bits per symbol.\n");
 			print_usage();
 		}
+		argv++;
+		argc--;
+	}
 
-		// get H_I	
-		H_I = atof(argv[2]);
-		if((H_I < 0) || (H_I > data.word_size)){
-			printf("H_I must be nonnegative and at most 'bits_per_word'.\n");
-			print_usage();
-		}
+	// get H_I	
+	H_I = atof(argv[0]);
+	if(H_I < 0){
+		printf("H_I must be nonnegative.\n");
+		print_usage();
 	}
 
 	if(verbose > 0) printf("Opening file: '%s'\n", file_path);
@@ -190,6 +190,13 @@ int main(int argc, char* argv[]){
 	if(!read_file(file_path, &data)){
 		printf("Error reading file.\n");
 		print_usage();
+	}
+	if(verbose > 0) printf("Loaded %ld samples made up of %d distinct %d-bit-wide symbols.\n", data.len, data.alph_size, data.word_size);
+
+	if(H_I > data.word_size) {
+		printf("H_I must be at most 'bits_per_symbol'.\n");
+                free_data(&data);
+                exit(-1);
 	}
 
         if(data.alph_size <= 1){
@@ -203,9 +210,7 @@ int main(int argc, char* argv[]){
 		exit(-1);
 	}
 	if(verbose > 0) {
-		printf("Number of Symbols: %ld\n", data.len);
-		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been mapped down to an alphabet size of %d unique symbols\n\n", data.alph_size);
-		else printf("\nSymbol alphabet consists of %d unique symbols\n\n", data.alph_size);
+		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been translated.\n\n");
 	}
 
 	rdata = data.symbols;
@@ -378,9 +383,11 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	printf("\nH_r: %f\n", H_r);
+	printf("\n");
+	printf("H_r: %f\n", H_r);
 	printf("H_c: %f\n", H_c);
-	printf("H_I: %f\n\n", H_I);
+	printf("H_I: %f\n", H_I);
+	printf("\n");
 
 	if(min(H_r, H_c) < H_I/2.0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
 	else{
@@ -390,4 +397,5 @@ int main(int argc, char* argv[]){
 
 	free(cdata);
 	free_data(&data);
+	return 0;
 }

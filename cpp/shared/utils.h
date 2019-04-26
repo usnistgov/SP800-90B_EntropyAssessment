@@ -320,8 +320,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 bool read_file(const char *file_path, data_t *dp){
 	FILE *file; 
-	int mask, j, max_symbols = 1 << dp->word_size;
-	int symbol_map_down_table[max_symbols];
+	int mask, j, max_symbols;
 	long rc, i;
 
 	file = fopen(file_path, "rb");
@@ -419,8 +418,12 @@ bool read_file(const char *file_path, data_t *dp){
                 }
         }
 
+
 	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
 	dp->maxsymbol = 0;
+
+	max_symbols = 1 << dp->word_size;
+	int symbol_map_down_table[max_symbols];
 
 	// create symbols (samples) and check if they need to be mapped down
 	dp->alph_size = 0;
@@ -944,8 +947,8 @@ class PostfixDictionary {
 	long curBest;
 	byte curPrediction;
 public:
-	PostfixDictionary() { curBest = 0; curPrediction = 0;};
-	byte predict(long &count) {assert(curBest > 0); count = curBest; return curPrediction;};
+	PostfixDictionary() { curBest = 0; curPrediction = 0;}
+	byte predict(long &count) {assert(curBest > 0); count = curBest; return curPrediction;}
 	bool incrementPostfix(byte in, bool makeNew) {
 		map<byte, long>::iterator curp = postfixes.find(in);
 		long curCount;
@@ -970,5 +973,5 @@ public:
 		} 
 
 		return newEntry;
-	};
+	}
 };

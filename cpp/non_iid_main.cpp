@@ -13,34 +13,27 @@
 #include <limits.h>
 
 
-[[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_non_iid <-i|-c> <-a|-t> [-v] [-l <index>,<samples> ] <file_name> [bits_per_word]\n\n");
-	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
-	printf("\t [bits_per_word]: Must be between 1-8, inclusive.\n");
-	printf("\t <-i|-c>: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate.\n");
-	printf("\t <-a|-t>: '-a' tests all bits in bitstring, '-t' truncates bitstring to %d bits.\n", MIN_SIZE);
-	printf("\t          ('-a' is forced if bits_per_word is 1)\n");
-	printf("\t -v: Optional verbosity flag for more output.\n");
+[[ noreturn ]] void print_usage() {
+	printf("Usage is: ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
+	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
+	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
+	printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
+	printf("\t [-a|-t]: '-a' tests all bits in bitstring, '-t' truncates bitstring to %d bits. Test all data by default.\n", MIN_SIZE);
+	printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
 	printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
 	printf("\n");
-	printf("\t Samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_word'\n");
-	printf("\t bits constitute the sample. For example, if 'bits_per_word' is 3, then the four samples\n"); 
-	printf("\t 0x6F, 0xA4, 0x39, 0x58, would be truncated to 0x07, 0x04, 0x01, 0x00.\n");
-	printf("\n");
-	printf("\t If there are less than 2^{bits_per_word} symbols observed in the data, the alphabet is\n");
-	printf("\t mapped down to 0, 1, 2, ..., alph_size-1 in ascending numeric order of the symbols.\n");
-	printf("\t For example, given 'bits_per_word' is 4, if the data consists of the three unique symbols\n");
-	printf("\t 0x7, 0x3, 0xA, they would be mapped down to 0x3 => 0x0, 0x7 => 0x1, 0xA => 0x2.\n");
+	printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n");
+	printf("\t bits constitute the symbol.\n"); 
 	printf("\n");
 	printf("\t -i: Initial Entropy Estimate (Section 3.1.3)\n");
 	printf("\n");
 	printf("\t\t Computes the initial entropy estimate H_I as described in Section 3.1.3\n");
-	printf("\t\t (not accounting for H_submitter) using the ten entropy estimators specified in\n");
-	printf("\t\t Section 6.3.  If 'bits_per_word' is greater than 1, the samples are also\n");
-	printf("\t\t converted to bitstrings. Two entropy estimates are computed: H_original and H_bitstring.\n");
-	printf("\t\t Note that if 'bits_per_word' is 1, only H_bitstring is computed.\n"); 
-	printf("\t\t Returns min(H_original, bits_per_word X H_bitstring). The initial entropy\n");
-	printf("\t\t estimate H_I = min(H_submitter, H_original, bits_per_word X H_bitstring).\n");
+	printf("\t\t (not accounting for H_submitter) using the entropy estimators specified in\n");
+	printf("\t\t Section 6.3.  If 'bits_per_symbol' is greater than 1, the samples are also\n");
+	printf("\t\t converted to bitstrings and assessed to create H_bitstring; for multi-bit symbols,\n");
+	printf("\t\t two entropy estimates are computed: H_original and H_bitstring.\n");
+	printf("\t\t Returns min(H_original, bits_per_symbol X H_bitstring). The initial entropy\n");
+	printf("\t\t estimate H_I = min(H_submitter, H_original, bits_per_symbol X H_bitstring).\n");
 	printf("\n");
 	printf("\t -c: Conditioned Sequential Dataset Entropy Estimate (Section 3.1.5.2)\n");
 	printf("\n");
@@ -104,7 +97,6 @@ int main(int argc, char* argv[]){
 				break;
                         default:
                                 print_usage();
-                                break;
                 }
         }
 
@@ -123,7 +115,7 @@ int main(int argc, char* argv[]){
 		// get bits per word
 		inint = atoi(argv[1]);
 		if(inint < 1 || inint > 8){
-			printf("Invalid bits per word.\n");
+			printf("Invalid bits per symbol.\n");
 			print_usage();
 		} else {
 			data.word_size = inint;
@@ -136,10 +128,7 @@ int main(int argc, char* argv[]){
 		printf("Error reading file.\n");
 		print_usage();
 	}
-
-	if(verbose > 0) {
-		printf("Data is %d bits wide\n", data.word_size);
-	}
+	if(verbose > 0) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
 	if(data.alph_size <= 1){
 		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
@@ -149,12 +138,10 @@ int main(int argc, char* argv[]){
 
 	if(!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
 
-	if((verbose>0) && initial_entropy) printf("Number of Symbols: %ld\n", data.len);
 	if((verbose>0) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary Symbols: %ld\n", data.blen);
 	if(data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
 	if(verbose>0){
-		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been mapped down to an alphabet size of %d unique symbols\n", data.alph_size);
-		else printf("Symbol alphabet consists of %d unique symbols\n", data.alph_size);
+		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been translated.\n");
 	}
 
 	// The maximum min-entropy is -log2(1/2^word_size) = word_size
@@ -349,4 +336,5 @@ int main(int argc, char* argv[]){
 	}
 
 	free_data(&data);
+	return 0;
 }

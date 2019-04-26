@@ -7,12 +7,13 @@
 #include <getopt.h>
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_conditioning <-v|-n> <n_in> <n_out> <nw> <h_in> <h'>\n\n");
+	printf("Usage is: ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>\n");
+	printf("\tor \n\tea_conditioning -n <n_in> <n_out> <nw> <h_in> <h'>\n\n");
 	printf("\t <n_in>: input number of bits to conditioning function.\n");
 	printf("\t <n_out>: output number of bits from conditioning function.\n");
 	printf("\t <nw>: narrowest internal width of conditioning function.\n");
 	printf("\t <h_in>: input entropy to conditioning function.\n");
-	printf("\t <-v|-n>: '-v' for vetted conditioning function, '-n' for non-vetted conditioning function.\n");
+	printf("\t <-v|-n>: '-v' for vetted conditioning function, '-n' for non-vetted conditioning function. Vetted conditioning is the default.\n");
 	printf("\t <h'>: entropy estimate per bit of conditioned sequential dataset (only for '-n' option).\n");
 	printf("\n");
 	printf("\t This program computes the entropy of the output of a conditioning function 'h_out' (Section 3.1.5).\n"); 
@@ -27,7 +28,8 @@
 
 int main(int argc, char* argv[]){
 	bool vetted;
-	double h_p, h_in, h_out, n_in, n_out, nw, n, p_high, p_low, psi, omega, output_entropy, power_term;
+	double h_p = -1.0;
+	double h_in, h_out, n_in, n_out, nw, n, p_high, p_low, psi, omega, output_entropy, power_term;
 	int opt;
 
 	vetted = true;
@@ -42,7 +44,6 @@ int main(int argc, char* argv[]){
                                 break;
                         default:
                                 print_usage();
-                                break;
                 }
         }
 

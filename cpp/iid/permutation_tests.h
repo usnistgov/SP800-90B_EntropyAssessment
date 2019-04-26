@@ -121,7 +121,6 @@ unsigned int num_directional_runs(const vector<int> &alt_seq){
 	if(alt_seq.size() > 0) num_runs ++;
 
 	// openmp optimization
-#pragma omp parallel for reduction(+:num_runs)
 	for(unsigned int i = 1; i < alt_seq.size(); ++i){
 		if(alt_seq[i] != alt_seq[i-1]){
 			++num_runs;
@@ -176,7 +175,6 @@ unsigned int num_increases_decreases(const vector<int> &alt_seq){
 	unsigned int pos = 0;
 
 	// openmp optimization
-#pragma omp parallel for reduction(+:pos)
 	for(unsigned int i = 0; i < alt_seq.size(); ++i){
 		if(alt_seq[i] == 1)
 			++pos;
@@ -253,7 +251,6 @@ unsigned int periodicity(const byte data[], const unsigned int p, const unsigned
 
 	assert(n>=p);
 
-#pragma omp parallel for reduction(+:T)
 	for(unsigned int i = 0; i < n-p; ++i){
 		if(data[i] == data[i+p]){
 			++T;
@@ -271,7 +268,6 @@ unsigned int periodicity(const byte data[], const unsigned int p, const unsigned
 unsigned long int covariance(const byte data[], const unsigned int p, const unsigned int n){
 	unsigned long int T = 0;
 
-#pragma omp parallel for reduction(+:T)
 	for(unsigned int i = 0; i < n-p; ++i){
 		T += data[i] * data[i+p];
 	}
