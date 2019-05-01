@@ -1,7 +1,5 @@
 Opening file: '../../bin/data.pi.bin'
-Data is 1 bits wide
-Number of Symbols: 1165666
-Symbol alphabet consists of 2 unique symbols
+Loaded 1165666 samples of 2 distinct 1-bit-wide symbols
 Literal Most Common Value Estimate: Mode count = 662972
 Literal Most Common Value Estimate: p-hat = 0.56874953889021385
 Literal Most Common Value Estimate: p_u = 0.56993109817230025
@@ -11,7 +9,8 @@ Literal Collision Estimate: Sum t_i = 1165666
 Literal Collision Estimate: X-bar = 2.4414154213486086
 Literal Collision Estimate: sigma-hat = 0.49655650591493028
 Literal Collision Estimate: X-bar' = 2.4395643654531334
-Literal Collision Estimate: Found p = 0.67383272785477999
+Literal Collision Estimate: Found p.
+Literal Collision Estimate: p = 0.67383272785477999
 Literal Collision Estimate: min entropy = 0.56953759345777466
 Literal Markov Estimate: P_0 = 0.43125046110978615
 Literal Markov Estimate: P_1 = 0.56874953889021385
@@ -24,7 +23,8 @@ Literal Markov Estimate: min entropy = 0.72318078199004532
 Literal Compression Estimate: X-bar = 5.1280437523324389
 Literal Compression Estimate: sigma-hat = 1.0483049347003059
 Literal Compression Estimate: X-bar' = 5.1219016843117551
-Literal Compression Estimate: Found p = 0.081936203422937059
+Literal Compression Estimate: Found p.
+Literal Compression Estimate: p = 0.081936203422937059
 Literal Compression Estimate: min entropy = 0.60155919063219654
 Literal t-Tuple Estimate: t = 18
 Literal t-Tuple Estimate: p-hat_max = 0.61361698191214176

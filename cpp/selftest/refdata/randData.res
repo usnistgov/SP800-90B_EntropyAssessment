@@ -1,8 +1,6 @@
 Opening file: '../../bin/randData.bin'
-Data is 8 bits wide
-Number of Symbols: 1000000
+Loaded 1000000 samples of 256 distinct 8-bit-wide symbols
 Number of Binary Symbols: 8000000
-Symbol alphabet consists of 256 unique symbols
 Bitstring Most Common Value Estimate: Mode count = 4000077
 Bitstring Most Common Value Estimate: p-hat = 0.50000962500000001
 Bitstring Most Common Value Estimate: p_u = 0.50046497162030446
@@ -16,7 +14,8 @@ Bitstring Collision Estimate: Sum t_i = 8000000
 Bitstring Collision Estimate: X-bar = 2.5003805266614014
 Bitstring Collision Estimate: sigma-hat = 0.49999993333632531
 Bitstring Collision Estimate: X-bar' = 2.4996605057885732
-Bitstring Collision Estimate: Found p = 0.51302870314782467
+Bitstring Collision Estimate: Found p.
+Bitstring Collision Estimate: p = 0.51302870314782467
 Bitstring Collision Estimate: min entropy = 0.96288855028194542
 Bitstring Markov Estimate: P_0 = 0.50000962500000001
 Bitstring Markov Estimate: P_1 = 0.49999037499999999
@@ -29,7 +28,8 @@ Bitstring Markov Estimate: min entropy = 0.99974540640072795
 Bitstring Compression Estimate: X-bar = 5.2178099081894862
 Bitstring Compression Estimate: sigma-hat = 1.0152449941036219
 Bitstring Compression Estimate: X-bar' = 5.2155443170166746
-Bitstring Compression Estimate: Found p = 0.023090584022117611
+Bitstring Compression Estimate: Found p.
+Bitstring Compression Estimate: p = 0.023090584022117611
 Bitstring Compression Estimate: min entropy = 0.906091921102817
 Bitstring t-Tuple Estimate: t = 19
 Bitstring t-Tuple Estimate: p-hat_max = 0.5231065809785963

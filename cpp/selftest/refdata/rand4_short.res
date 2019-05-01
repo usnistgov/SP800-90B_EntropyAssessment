@@ -1,11 +1,9 @@
 Opening file: '../../bin/rand4_short.bin'
-Data is 4 bits wide
-Number of Symbols: 10000
+Loaded 10000 samples of 16 distinct 4-bit-wide symbols
 Number of Binary Symbols: 40000
 
 *** Warning: data contains less than 1000000 samples ***
 
-Symbol alphabet consists of 16 unique symbols
 Bitstring Most Common Value Estimate: Mode count = 20033
 Bitstring Most Common Value Estimate: p-hat = 0.50082499999999996
 Bitstring Most Common Value Estimate: p_u = 0.50726464498906265
@@ -19,7 +17,8 @@ Bitstring Collision Estimate: Sum t_i = 40000
 Bitstring Collision Estimate: X-bar = 2.5075225677031092
 Bitstring Collision Estimate: sigma-hat = 0.49995907875148304
 Bitstring Collision Estimate: X-bar' = 2.4973262356970052
-Bitstring Collision Estimate: Found p = 0.53656339906925155
+Bitstring Collision Estimate: Found p.
+Bitstring Collision Estimate: p = 0.53656339906925155
 Bitstring Collision Estimate: min entropy = 0.89817944838102126
 Bitstring Markov Estimate: P_0 = 0.50082499999999996
 Bitstring Markov Estimate: P_1 = 0.49917500000000004
@@ -32,7 +31,8 @@ Bitstring Markov Estimate: min entropy = 0.99061680777094752
 Bitstring Compression Estimate: X-bar = 5.239445781335264
 Bitstring Compression Estimate: sigma-hat = 1.0048781438323628
 Bitstring Compression Estimate: X-bar' = 5.205058947116413
-Bitstring Compression Estimate: Found p = 0.035323389566711438
+Bitstring Compression Estimate: Found p.
+Bitstring Compression Estimate: p = 0.035323389566711438
 Bitstring Compression Estimate: min entropy = 0.80387206696918412
 Bitstring t-Tuple Estimate: t = 11
 Bitstring t-Tuple Estimate: p-hat_max = 0.52991300078008163

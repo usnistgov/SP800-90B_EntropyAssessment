@@ -1,7 +1,5 @@
 Opening file: '../../bin/truerand_1bit.bin'
-Data is 1 bits wide
-Number of Symbols: 1000000
-Symbol alphabet consists of 2 unique symbols
+Loaded 1000000 samples of 2 distinct 1-bit-wide symbols
 Literal Most Common Value Estimate: Mode count = 500433
 Literal Most Common Value Estimate: p-hat = 0.50043300000000002
 Literal Most Common Value Estimate: p_u = 0.50172091481279224
@@ -11,7 +9,8 @@ Literal Collision Estimate: Sum t_i = 999999
 Literal Collision Estimate: X-bar = 2.4995100955313716
 Literal Collision Estimate: sigma-hat = 0.50000038487257392
 Literal Collision Estimate: X-bar' = 2.4974739206155063
-Literal Collision Estimate: Found p = 0.53553926972023191
+Literal Collision Estimate: Found p.
+Literal Collision Estimate: p = 0.53553926972023191
 Literal Collision Estimate: min entropy = 0.90093572690822665
 Literal Markov Estimate: P_0 = 0.49956699999999998
 Literal Markov Estimate: P_1 = 0.50043300000000002
@@ -24,7 +23,8 @@ Literal Markov Estimate: min entropy = 0.99848647555611059
 Literal Compression Estimate: X-bar = 5.2152990022175647
 Literal Compression Estimate: sigma-hat = 1.0178795278641199
 Literal Compression Estimate: X-bar' = 5.2088573575292516
-Literal Compression Estimate: Found p = 0.03172881608928213
+Literal Compression Estimate: Found p.
+Literal Compression Estimate: p = 0.03172881608928213
 Literal Compression Estimate: min entropy = 0.82967708323406131
 Literal t-Tuple Estimate: t = 16
 Literal t-Tuple Estimate: p-hat_max = 0.52934264357354366

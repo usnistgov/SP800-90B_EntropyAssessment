@@ -1,7 +1,5 @@
 Opening file: '../../bin/biased-random-bits.bin'
-Data is 1 bits wide
-Number of Symbols: 1000000
-Symbol alphabet consists of 2 unique symbols
+Loaded 1000000 samples of 2 distinct 1-bit-wide symbols
 Literal Most Common Value Estimate: Mode count = 979988
 Literal Most Common Value Estimate: p-hat = 0.97998799999999997
 Literal Most Common Value Estimate: p_u = 0.98034872224294312
@@ -11,7 +9,8 @@ Literal Collision Estimate: Sum t_i = 999999
 Literal Collision Estimate: X-bar = 2.0390873036102075
 Literal Collision Estimate: sigma-hat = 0.19380289702168033
 Literal Collision Estimate: X-bar' = 2.0383744580128056
-Literal Collision Estimate: Found p = 0.98042977738018067
+Literal Collision Estimate: Found p.
+Literal Collision Estimate: p = 0.98042977738018067
 Literal Collision Estimate: min entropy = 0.028513792826295892
 Literal Markov Estimate: P_0 = 0.97998799999999997
 Literal Markov Estimate: P_1 = 0.02001200000000003
@@ -24,7 +23,8 @@ Literal Markov Estimate: min entropy = 0.029123023940057065
 Literal Compression Estimate: X-bar = 0.71412876245517609
 Literal Compression Estimate: sigma-hat = 1.0802523007775686
 Literal Compression Estimate: X-bar' = 0.70729239203524708
-Literal Compression Estimate: Found p = 0.92877466571109557
+Literal Compression Estimate: Found p.
+Literal Compression Estimate: p = 0.92877466571109557
 Literal Compression Estimate: min entropy = 0.017766579116465196
 Literal t-Tuple Estimate: t = 513
 Literal t-Tuple Estimate: p-hat_max = 0.98145911043718781

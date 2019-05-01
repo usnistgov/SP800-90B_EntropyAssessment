@@ -1,8 +1,6 @@
 Opening file: '../../bin/truerand_4bit.bin'
-Data is 4 bits wide
-Number of Symbols: 1000000
+Loaded 1000000 samples of 16 distinct 4-bit-wide symbols
 Number of Binary Symbols: 4000000
-Symbol alphabet consists of 16 unique symbols
 Bitstring Most Common Value Estimate: Mode count = 2000573
 Bitstring Most Common Value Estimate: p-hat = 0.50014325000000004
 Bitstring Most Common Value Estimate: p_u = 0.50078720737995319
@@ -16,7 +14,8 @@ Bitstring Collision Estimate: Sum t_i = 3999998
 Bitstring Collision Estimate: X-bar = 2.4997222182296084
 Bitstring Collision Estimate: sigma-hat = 0.5000000790700484
 Bitstring Collision Estimate: X-bar' = 2.4987040884494611
-Bitstring Collision Estimate: Found p = 0.52545497545213493
+Bitstring Collision Estimate: Found p.
+Bitstring Collision Estimate: p = 0.52545497545213493
 Bitstring Collision Estimate: min entropy = 0.92836094530468272
 Bitstring Markov Estimate: P_0 = 0.49985675000000002
 Bitstring Markov Estimate: P_1 = 0.50014325000000004
@@ -29,7 +28,8 @@ Bitstring Markov Estimate: min entropy = 0.99946953975472053
 Bitstring Compression Estimate: X-bar = 5.2184492903182935
 Bitstring Compression Estimate: sigma-hat = 1.0140889112328864
 Bitstring Compression Estimate: X-bar' = 5.2152477061344653
-Bitstring Compression Estimate: Found p = 0.023621435424653558
+Bitstring Compression Estimate: Found p.
+Bitstring Compression Estimate: p = 0.023621435424653558
 Bitstring Compression Estimate: min entropy = 0.90062659214175955
 Bitstring t-Tuple Estimate: t = 18
 Bitstring t-Tuple Estimate: p-hat_max = 0.52442120241726853

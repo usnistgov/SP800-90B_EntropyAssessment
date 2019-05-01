@@ -1,10 +1,8 @@
 Opening file: '../../bin/rand1_short.bin'
-Data is 1 bits wide
-Number of Symbols: 10000
+Loaded 10000 samples of 2 distinct 1-bit-wide symbols
 
 *** Warning: data contains less than 1000000 samples ***
 
-Symbol alphabet consists of 2 unique symbols
 Literal Most Common Value Estimate: Mode count = 5008
 Literal Most Common Value Estimate: p-hat = 0.50080000000000002
 Literal Most Common Value Estimate: p_u = 0.51367977403722886
@@ -14,7 +12,8 @@ Literal Collision Estimate: Sum t_i = 10000
 Literal Collision Estimate: X-bar = 2.4919013207076999
 Literal Collision Estimate: sigma-hat = 0.49999670809559466
 Literal Collision Estimate: X-bar' = 2.47157074650488
-Literal Collision Estimate: Found p = 0.61922510955147203
+Literal Collision Estimate: Found p.
+Literal Collision Estimate: p = 0.61922510955147203
 Literal Collision Estimate: min entropy = 0.69146412099724186
 Literal Markov Estimate: P_0 = 0.49919999999999998
 Literal Markov Estimate: P_1 = 0.50080000000000002
@@ -27,7 +26,8 @@ Literal Markov Estimate: min entropy = 0.98759610445940904
 Literal Compression Estimate: X-bar = 5.2322840424169268
 Literal Compression Estimate: sigma-hat = 1.0295215682119498
 Literal Compression Estimate: X-bar' = 5.1295260964851117
-Literal Compression Estimate: Found p = 0.07854715169871973
+Literal Compression Estimate: Found p.
+Literal Compression Estimate: p = 0.07854715169871973
 Literal Compression Estimate: min entropy = 0.61171620479394506
 Literal t-Tuple Estimate: t = 9
 Literal t-Tuple Estimate: p-hat_max = 0.5352007027872665

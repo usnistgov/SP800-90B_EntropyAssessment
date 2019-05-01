@@ -1,9 +1,8 @@
 Opening file: '../../bin/normal.bin'
-Data is 8 bits wide
-Number of Symbols: 1000000
+Loaded 1000000 samples of 179 distinct 8-bit-wide symbols
 Number of Binary Symbols: 8000000
 
-Symbols have been mapped down to an alphabet size of 179 unique symbols
+Symbols have been translated.
 Bitstring Most Common Value Estimate: Mode count = 4006586
 Bitstring Most Common Value Estimate: p-hat = 0.50082325000000005
 Bitstring Most Common Value Estimate: p_u = 0.5012785960031747
@@ -17,7 +16,8 @@ Bitstring Collision Estimate: Sum t_i = 7999999
 Bitstring Collision Estimate: X-bar = 2.523192558094939
 Bitstring Collision Estimate: sigma-hat = 0.49946189437149541
 Bitstring Collision Estimate: X-bar' = 2.5224700384317478
-Bitstring Collision Estimate: Found p = 0.50000000000000011
+Bitstring Collision Estimate: Found p.
+Bitstring Collision Estimate: p = 0.50000000000000011
 Bitstring Collision Estimate: min entropy = 0.99999999999999967
 Bitstring Markov Estimate: P_0 = 0.49917675
 Bitstring Markov Estimate: P_1 = 0.50082325000000005
@@ -30,7 +30,8 @@ Bitstring Markov Estimate: min entropy = 0.9937925432957424
 Bitstring Compression Estimate: X-bar = 5.0306901312440173
 Bitstring Compression Estimate: sigma-hat = 1.0488632759418641
 Bitstring Compression Estimate: X-bar' = 5.0283495184921581
-Bitstring Compression Estimate: Found p = 0.11866185634166618
+Bitstring Compression Estimate: Found p.
+Bitstring Compression Estimate: p = 0.11866185634166618
 Bitstring Compression Estimate: min entropy = 0.51251197288878858
 Bitstring t-Tuple Estimate: t = 23
 Bitstring t-Tuple Estimate: p-hat_max = 0.58478886944022623

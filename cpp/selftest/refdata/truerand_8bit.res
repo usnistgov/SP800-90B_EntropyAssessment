@@ -1,8 +1,6 @@
 Opening file: '../../bin/truerand_8bit.bin'
-Data is 8 bits wide
-Number of Symbols: 1000000
+Loaded 1000000 samples of 256 distinct 8-bit-wide symbols
 Number of Binary Symbols: 8000000
-Symbol alphabet consists of 256 unique symbols
 Bitstring Most Common Value Estimate: Mode count = 4001353
 Bitstring Most Common Value Estimate: p-hat = 0.50016912499999999
 Bitstring Most Common Value Estimate: p_u = 0.50062447159433998
@@ -16,7 +14,8 @@ Bitstring Collision Estimate: Sum t_i = 8000000
 Bitstring Collision Estimate: X-bar = 2.5002922216534058
 Bitstring Collision Estimate: sigma-hat = 0.49999999274063417
 Bitstring Collision Estimate: X-bar' = 2.4995722134095013
-Bitstring Collision Estimate: Found p = 0.51462509129032696
+Bitstring Collision Estimate: Found p.
+Bitstring Collision Estimate: p = 0.51462509129032696
 Bitstring Collision Estimate: min entropy = 0.95840629541836875
 Bitstring Markov Estimate: P_0 = 0.49983087500000001
 Bitstring Markov Estimate: P_1 = 0.50016912499999999
@@ -29,7 +28,8 @@ Bitstring Markov Estimate: min entropy = 0.99943930316686191
 Bitstring Compression Estimate: X-bar = 5.2177128660275782
 Bitstring Compression Estimate: sigma-hat = 1.0157985743570803
 Bitstring Compression Estimate: X-bar' = 5.2154460395011881
-Bitstring Compression Estimate: Found p = 0.023269820763614391
+Bitstring Compression Estimate: Found p.
+Bitstring Compression Estimate: p = 0.023269820763614391
 Bitstring Compression Estimate: min entropy = 0.90423268189731187
 Bitstring t-Tuple Estimate: t = 19
 Bitstring t-Tuple Estimate: p-hat_max = 0.5231065809785963

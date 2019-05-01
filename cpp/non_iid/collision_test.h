@@ -147,7 +147,7 @@ double collision_test(byte* data, long len, const int verbose, const char *label
 
 	if(verbose == 1) printf("p = %.17g\n", p);
 	else if(verbose == 2) {
-		printf("%s Collision Estimate: p = %.17g\n", label, 0.5);
+		printf("%s Collision Estimate: p = %.17g\n", label, p);
 		printf("%s Collision Estimate: min entropy = %.17g\n", label, entEst);
 	}
 
