@@ -135,11 +135,19 @@ double collision_test(byte* data, long len, const int verbose, const char *label
                 }
         }//for loop
 
-	entEst = -log2(p);
+	if(p > 0.5) {
+		entEst = -log2(p);
+
+		if(verbose == 2) printf("%s Collision Estimate: Found p.\n", label);
+	} else {
+		p = 0.5;
+		entEst = 1.0;
+		if(verbose == 2) printf("%s Collision Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
+	}
 
 	if(verbose == 1) printf("p = %.17g\n", p);
 	else if(verbose == 2) {
-		printf("%s Collision Estimate: Found p = %.17g\n", label, p);
+		printf("%s Collision Estimate: p = %.17g\n", label, 0.5);
 		printf("%s Collision Estimate: min entropy = %.17g\n", label, entEst);
 	}
 

@@ -213,17 +213,26 @@ double compression_test(byte* data, long len, const int verbose, const char *lab
 
 		pVal = com_exp(p, (1.0-p)/(alph_size-1), alph_size, d, num_blocks);
 
-                //invariant: If this isn't true, then this isn't loosly monotonic
+                //invariant: If this isn't true, then this isn't loosely monotonic
                 if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
                         p = hbound;
                         break;
                 }
         }//for loop
 
-        entEst = -log2(p)/b;
+	if(p > 1.0 / (double)alph_size) {
+        	entEst = -log2(p)/b;
+	
+		if(verbose == 2) printf("%s Compression Estimate: Found p.\n", label);
+	} else {
+		p = 1.0 / (double)alph_size;
+		entEst = 1.0;
+		if(verbose == 2) printf("%s Compression Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
+	}
+
 	if(verbose == 1) printf("p = %.17g\n", p);
 	else if(verbose == 2) {
-		printf("%s Compression Estimate: Found p = %.17g\n", label, p);
+		printf("%s Compression Estimate: p = %.17g\n", label, p);
 		printf("%s Compression Estimate: min entropy = %.17g\n", label, entEst);
 	}
 
