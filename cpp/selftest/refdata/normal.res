@@ -16,9 +16,9 @@ Bitstring Collision Estimate: Sum t_i = 7999999
 Bitstring Collision Estimate: X-bar = 2.523192558094939
 Bitstring Collision Estimate: sigma-hat = 0.49946189437149541
 Bitstring Collision Estimate: X-bar' = 2.5224700384317478
-Bitstring Collision Estimate: Found p.
-Bitstring Collision Estimate: p = 0.50000000000000011
-Bitstring Collision Estimate: min entropy = 0.99999999999999967
+Bitstring Collision Estimate: Could Not Find p. Proceeding with the lower bound for p.
+Bitstring Collision Estimate: p = 0.5
+Bitstring Collision Estimate: min entropy = 1
 Bitstring Markov Estimate: P_0 = 0.49917675
 Bitstring Markov Estimate: P_1 = 0.50082325000000005
 Bitstring Markov Estimate: P_{0,0} = 0.4969995597751698
