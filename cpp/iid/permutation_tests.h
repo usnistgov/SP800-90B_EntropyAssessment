@@ -4,6 +4,7 @@
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
 #include <assert.h>
+#include <unistd.h>
 
 // The tests used
 const unsigned int num_tests = 19;
@@ -540,10 +541,16 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		//Cause the RNG to jump omp_get_thread_num() * 2^128 calls
 		xoshiro_jump(omp_get_thread_num(), xoshiro256starstarSeed);
 
+        // Make the long-running output a little prettier
+        ios::fmtflags old_settings = cout.flags();
+        cout.setf(ios::fixed, ios::floatfield);
+        cout.precision(2);
+
 		#pragma omp for
 		for(int i = 0; i < PERMS; ++i) {
 			if(verbose && (passed_count != 19)){
-				cout << "\rPermutation Test (core " << omp_get_thread_num() << "): " << passed_count <<  " tests passed" << endl;
+                
+				cout << "\r" << (i*1.0/PERMS*100) << "%: Permutation Test (core " << omp_get_thread_num() << "): " << passed_count <<  " tests passed" << (isatty(STDOUT_FILENO) ? "" : "\n") << flush;
 			}
 
 			if(passed_count < 19) {
@@ -572,9 +579,13 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 				}
 			}
 		}
-	delete[](data);
-	delete[](rawdata);
-	}
+
+        // Restore output flags
+        cout.flags(old_settings);
+
+        delete[](data);
+        delete[](rawdata);
+    }
 
 	if(verbose) print_results(C);
 
