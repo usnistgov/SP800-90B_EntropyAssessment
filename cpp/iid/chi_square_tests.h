@@ -479,7 +479,7 @@ void binary_chi_square_independence(const byte data[], double &score, int &df, c
 		}
 	}
 
-	fprintf(stderr, "chi_square m: %u\n", m);
+	//fprintf(stderr, "chi_square m: %u\n", m);
 	tuple_count = 1 << m;
 
 	if (m < 2){
