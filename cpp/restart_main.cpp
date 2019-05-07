@@ -280,7 +280,7 @@ int main(int argc, char* argv[]){
 	H_c = min(ret_min_entropy, H_c);
 
 	if(!iid){
-		if(data.word_size == 1){
+		if(data.alph_size == 2){
 			printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
 			// Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
