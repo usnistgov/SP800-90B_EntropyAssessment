@@ -270,7 +270,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 		}
 
 	} else {
-		fprintf(stderr, "LRS Estimate: v<u. Can't Run LRS Test.\n");
+		printf("LRS Estimate: v<u. Can't Run LRS Test.\n");
 		lrs_res = -1.0;
 		return;
 	}
