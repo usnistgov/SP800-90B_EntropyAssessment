@@ -4,6 +4,7 @@
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
 #include <assert.h>
+#include <unistd.h>
 
 // The tests used
 const unsigned int num_tests = 19;
@@ -474,6 +475,8 @@ void print_results(int C[][3]){
 bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose){
 	uint64_t xoshiro256starstarMainSeed[4];
 
+    // Progress
+    size_t completed = 0;
 
 	// Counters for the pass/fail of each statistic
 	int C[num_tests][3];
@@ -538,10 +541,6 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 
 		#pragma omp for
 		for(int i = 0; i < PERMS; ++i) {
-			if(verbose && (passed_count != 19)){
-				cout << "\rPermutation Test (core " << omp_get_thread_num() << "): " << passed_count <<  " tests passed" << endl;
-			}
-
 			if(passed_count < 19) {
 				FYshuffle(data, rawdata, dp->len, xoshiro256starstarSeed);
 				run_tests(dp, data, rawdata, rawmean, median, tp, test_status);
@@ -565,12 +564,40 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 					}
 					passed_count = 0;
 					for(unsigned int j=0; j < num_tests; j++) if(!test_status[j]) passed_count++;
+                    //printf("Passed count: %d\n", passed_count);
 				}
 			}
+
+            #pragma omp atomic
+            completed ++;
+
+            if(verbose){
+                /* Construct pretty output regardless of whether on terminal (tty) or 
+                 * redirected to another file descriptor (eg. redirect to file).
+                 * Note that if using something like 'tee' to replicate the output
+                 * then it might be handy to use 'unbuffer' to fake the call into
+                 * thinking it is still being sent to a tty.
+                 */
+                if(isatty(STDOUT_FILENO))
+                    printf("\r");
+
+                #pragma omp critical
+                printf("%.02f%%: Permutuation test", (100.0*completed/PERMS));
+
+                /* If not diplaying to screen, then we can print even more information. Ultimately
+                 * we want the '\n' however printed when not printing to terminal so that the redirected
+                 * output looks nicer. 
+                 */
+                if(!isatty(STDOUT_FILENO))  {
+                    printf(" (Core %d/%d, passed_count %d)\n", omp_get_thread_num(), omp_get_num_threads()-1, passed_count);
+                }
+                fflush(stdout);
+			}
 		}
-	delete[](data);
-	delete[](rawdata);
-	}
+
+        delete[](data);
+        delete[](rawdata);
+    }
 
 	if(verbose) print_results(C);
 
