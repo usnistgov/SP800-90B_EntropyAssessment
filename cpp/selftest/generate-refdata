@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for file in ../../bin/*; do
+	bfile=`basename $file`
+	echo $file : $bfile
+	../ea_non_iid -vv ${file} > refdata/${bfile/bin/res}
+done

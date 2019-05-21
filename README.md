@@ -4,8 +4,6 @@ Cryptographic random bit generators (RBGs), also known as random number generato
 
 ## Disclaimer
 
-Please note that this code package was published to assist in the evaluation of the entropy estimation methods provided in SP800-90B. As such, it is written to resemble the pseudocode in the specification, and is not necessarily optimized for performance.
-
 NIST-developed software is provided by NIST as a public service. You may use, copy and distribute copies of the software in any medium, provided that you keep intact this entire notice. You may improve, modify and create derivative works of the software or any portion of the software, and you may distribute such modifications or works. Modified works should carry a notice stating that you changed the software and should note the date and nature of any such change. Please explicitly acknowledge the National Institute of Standards and Technology as the source of the software.
 
 ## Issues
@@ -18,14 +16,26 @@ This code package requires a C++11 compiler. The code uses OpenMP directives, so
 
 The resulting binary is linked with bzlib and divsufsort, so these libraries (and their associated include files) must be installed and accessible to the compiler.
 
+See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-libdivsufsort) for some distribution-specific instructions on installing divsufsort.
+
 ## Overview
 
-* `bin/` has a bunch of randomly generated binary files for testing
+* `bin/` has binary files for testing
 * `cpp/` holds the new codebase
 
 ## How to run
 
-The project is divided into two sections, IID tests and non-IID tests. They are intended to be separate. One provides an assurance that a dataset is IID [(independent and identically distributed)](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) and the other provides an estimate for min-entropy for any data provided. 
+The project is divided into two sections, IID tests and non-IID tests. They are intended to be separate. One provides an assurance that a dataset is IID [(independent and identically distributed)](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) and the other provides an estimate for min-entropy for any data provided. Please note that most commonly used entropy sources are not IID; see IG7.18 for the additional justification necessary to support any IID claim.
+
+One can make all the binaries using:
+
+	make
+
+After compiling, one can test that your compilation behaves as expected by using the self-test functionality:
+	cd selftest
+	./selftest
+
+Any observed delta less than 1.0E-6 is considered a pass for the self test.
 
 For IID tests use the Makefile to compile the program:
 
@@ -33,28 +43,53 @@ For IID tests use the Makefile to compile the program:
 
 Then you can run the program with
 
-    ./ea_iid <binary_file> <bits_per_word> <-i|-c> <-a|-t> [-v]
+    ./ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples>] <file_name> [bits_per_symbol]
 
-Look at the Makefile for an example. You must specify either `-i` or `-c`, and either `-a` or `-t`. These correspond to the following:
+You must specify either `-i` or `-c`, and either `-a` or `-t`. These correspond to the following:
 
-* `-i`: Indicates the data is unconditioned and returns an initial entropy estimate
+* `-i`: Indicates the data is unconditioned and returns an initial entropy estimate. This is the default.
 * `-c`: Indicates the data is conditioned
-* `-a`: Estimates the entropy for all data in the binary file
-* `-t`: Truncates the binary file to the first one million bits
+* `-a`: Estimates the entropy for all data in the binary file. This is the default.
+* `-t`: Truncates the created bitstring representation of data to the first one million bits.
+* `-l`: Reads (at most) <samples> data samples after indexing into the file by <index> * <samples> bytes.
+* `-v: Optional verbosity flag for more output. Can be used multiple times.
+* bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
 
-All provided binaries are stored in the `bin/` folder, but if you have one you want to test, just link it using a relative path from the executable.
-
-To run the non-IID tests, use the following command to compile:
+To run the non-IID tests, use the Makefile to compile:
 
     make non_iid
 
-Running works the same way but without the threading flag. This looks like
+Running this works the same way. This looks like
 
-	./ea_non_iid <binary_file> <bits_per_word> <-i|-c> <-a|-t> [-v]
+	./ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]
+
+To run the restart testing, use the Makefile to compile:
+    make restart
+
+Running this is similar.
+	./ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>
+
+* `-i`: Indicates IID data.
+* `-n`: Indicates non-IID data.
+* `-v`: Optional verbosity flag for more output. Can be used multiple times.
+* bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
+* `H_I` is the assessed entropy.
+
+To calculate the entropy reduction due to conditioning, use the Makefile to compile:
+    make conditioning
+
+Running this is similar.
+	./ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>
+
+* `-v`: Optional verbosity flag for more output. Can be used multiple times.
+* `n_in`: The number of bits entering the conditioning step per output.
+* `n_out`: The number of bits per conditioning step output.
+* `nw`: The narrowest width of the conditioning step.
+* `h_in`: The amount of entropy entering the conditioning step per output. Must be less than n_in.
 
 ## Make
 
-A `Makefile` is provided with examples of these commands. Take a look at the file before using though as there is no default action.
+A `Makefile` is provided.
 
 ## More Information
 

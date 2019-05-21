@@ -632,7 +632,7 @@ void goodness_of_fit(const byte data[], double &score, int &df, const int sample
 	df = 9*(bin_expectations.size()-1);
 }
 
-bool chi_square_tests(const byte data[], const int sample_size, const int alphabet_size, const bool verbose){
+bool chi_square_tests(const byte data[], const int sample_size, const int alphabet_size, const int verbose){
 
 	double score = 0.0;
 	double pvalue;

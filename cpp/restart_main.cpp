@@ -15,21 +15,15 @@
 #define SIMULATION_ROUNDS 5000000
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_restart <-i|-n> [-v] <file_name> <bits_per_word> <H_I>\n\n");
-	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (words).\n");
-	printf("\t <bits_per_word>: Must be between 1-8, inclusive.\n");
+	printf("Usage is: ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>\n\n");
+	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
+	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
-	printf("\t <-i|-n>: '-i' for IID data, '-n' for non-IID data.\n");
+	printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
 	printf("\t -v: Optional verbosity flag for more output.\n");
 	printf("\n");
-	printf("\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_word'\n");
-	printf("\t bits constitute the sample. For example, if 'bits_per_word' is 3, then the four samples\n"); 
-	printf("\t 0x6F, 0xA4, 0x39, 0x58, would be truncated to 0x07, 0x04, 0x01, 0x00.\n");
-	printf("\n");
-        printf("\t If there are less than 2^{bits_per_word} symbols observed in the data, the alphabet is\n");
-        printf("\t mapped down to 0, 1, 2, ..., alph_size-1 in ascending numeric order of the symbols.\n");
-        printf("\t For example, given 'bits_per_word' is 4, if the data consists of the three unique symbols\n");
-        printf("\t 0x7, 0x3, 0xA, they would be mapped down to 0x3 => 0x0, 0x7 => 0x1, 0xA => 0x2.\n");
+	printf("\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_symbol'\n");
+	printf("\t bits constitute the sample.\n");
 	printf("\n");
 	printf("\t This program performs restart testing as described in Restart Tests (Section 3.1.4). The data\n"); 
 	printf("\t consists of 1000 restarts, each with 1000 samples. The data is converted to rows and columns\n");
@@ -94,7 +88,6 @@ long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
 //Larger values should fail.
 long int simulateBound(double alpha, int k, double H_I){
 	uint64_t xoshiro256starstarMainSeed[4];
-	uint64_t xoshiro256starstarSeed[4];
 	vector<long int> results(SIMULATION_ROUNDS, -1);
 	long int returnIndex;
 
@@ -102,8 +95,10 @@ long int simulateBound(double alpha, int k, double H_I){
 
 	seed(xoshiro256starstarMainSeed);
 
-        #pragma omp parallel private(xoshiro256starstarSeed)
+        #pragma omp parallel
 	{
+		uint64_t xoshiro256starstarSeed[4];
+
 		memcpy(xoshiro256starstarSeed, xoshiro256starstarMainSeed, sizeof(xoshiro256starstarMainSeed));
 		//Cause the RNG to jump omp_get_thread_num() * 2^128 calls
 		xoshiro_jump(omp_get_thread_num(), xoshiro256starstarSeed);
@@ -126,7 +121,8 @@ long int simulateBound(double alpha, int k, double H_I){
 }
 
 int main(int argc, char* argv[]){
-	bool iid, verbose = false;
+	bool iid;
+	int verbose = 0;
 	char *file_path;
 	int r = 1000, c = 1000;
 	int counts[256];
@@ -138,7 +134,7 @@ int main(int argc, char* argv[]){
 	int opt;
 
 	iid = false;
-	verbose = false;
+	data.word_size = 0;
 
         while ((opt = getopt(argc, argv, "inv")) != -1) {
                 switch(opt) {
@@ -149,11 +145,10 @@ int main(int argc, char* argv[]){
                                 iid = false;
                                 break;
                         case 'v':
-                                verbose = true;
+                                verbose++;
                                 break;
                         default:
                                 print_usage();
-                                break;
                 }
         }
 
@@ -162,34 +157,46 @@ int main(int argc, char* argv[]){
 
 
 	// Parse args
-	if(argc != 3){
+	if((argc != 3) && (argc != 2)){
 		printf("Incorrect usage.\n");
 		print_usage();
 	}
-	else{
-		// get filename
-		file_path = argv[0];
 
+	// get filename
+	file_path = argv[0];
+	argv++;
+	argc--;
+
+	if(argc == 2) {
 		// get bits per word
-		data.word_size = atoi(argv[1]);
+		data.word_size = atoi(argv[0]);
 		if(data.word_size < 1 || data.word_size > 8){
-			printf("Invalid bits per word.\n");
+			printf("Invalid bits per symbol.\n");
 			print_usage();
 		}
-
-		// get H_I	
-		H_I = atof(argv[2]);
-		if((H_I < 0) || (H_I > data.word_size)){
-			printf("H_I must be nonnegative and at most 'bits_per_word'.\n");
-			print_usage();
-		}
+		argv++;
+		argc--;
 	}
 
-	if(verbose) printf("Opening file: '%s'\n", file_path);
+	// get H_I	
+	H_I = atof(argv[0]);
+	if(H_I < 0){
+		printf("H_I must be nonnegative.\n");
+		print_usage();
+	}
+
+	if(verbose > 0) printf("Opening file: '%s'\n", file_path);
 
 	if(!read_file(file_path, &data)){
 		printf("Error reading file.\n");
 		print_usage();
+	}
+	if(verbose > 0) printf("Loaded %ld samples made up of %d distinct %d-bit-wide symbols.\n", data.len, data.alph_size, data.word_size);
+
+	if(H_I > data.word_size) {
+		printf("H_I must be at most 'bits_per_symbol'.\n");
+                free_data(&data);
+                exit(-1);
 	}
 
         if(data.alph_size <= 1){
@@ -202,10 +209,8 @@ int main(int argc, char* argv[]){
 		printf("\n*** Error: data does not contain %d samples ***\n\n", MIN_SIZE);
 		exit(-1);
 	}
-	if(verbose) printf("Number of Symbols: %ld\n", data.len);
-	if(verbose){
-		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been mapped down to an alphabet size of %d unique symbols\n\n", data.alph_size);
-		else printf("\nSymbol alphabet consists of %d unique symbols\n\n", data.alph_size);
+	if(verbose > 0) {
+		if(data.alph_size < (1 << data.word_size)) printf("\nSymbols have been translated.\n\n");
 	}
 
 	rdata = data.symbols;
@@ -255,7 +260,7 @@ int main(int argc, char* argv[]){
 		printf("\n*** Restart Sanity Check Failed ***\n");
 		exit(-1);
 	}
-	else if(verbose) printf("\nRestart Sanity Check Passed...\n");
+	else if(verbose> 0) printf("\nRestart Sanity Check Passed...\n");
 
 	// The maximum min-entropy is -log2(1/2^word_size) = word_size
 	H_c = data.word_size;
@@ -267,42 +272,42 @@ int main(int argc, char* argv[]){
 	printf("Running Most Common Value Estimate...\n");
 
 	// Section 6.3.1 - Estimate entropy with Most Common Value
-	ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose);
-	if(verbose) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+	ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
+	if(verbose > 0) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 	H_r = min(ret_min_entropy, H_r);
-	ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose);
-	if(verbose) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+	ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
+	if(verbose > 0) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 	H_c = min(ret_min_entropy, H_c);
 
 	if(!iid){
-		if(data.word_size == 1){
+		if(data.alph_size == 2){
 			printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
 			// Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
-			ret_min_entropy = collision_test(rdata, data.len, verbose);
-			if(verbose) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy); 
+			ret_min_entropy = collision_test(rdata, data.len, verbose, "Literal");
+			if(verbose > 0) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy); 
 			H_r = min(ret_min_entropy, H_r);
-			ret_min_entropy = collision_test(cdata, data.len, verbose);
-			if(verbose) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy); 
+			ret_min_entropy = collision_test(cdata, data.len, verbose, "Literal");
+			if(verbose > 0) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy); 
 			H_c = min(ret_min_entropy, H_c);
 
 			// Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
-			ret_min_entropy = markov_test(rdata, data.len, verbose);
-			if(verbose) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy); 
+			ret_min_entropy = markov_test(rdata, data.len, verbose, "Literal");
+			if(verbose > 0) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy); 
 			H_r = min(ret_min_entropy, H_r);
-			ret_min_entropy = markov_test(cdata, data.len, verbose);
-			if(verbose) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy); 
+			ret_min_entropy = markov_test(cdata, data.len, verbose, "Literal");
+			if(verbose > 0) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy); 
 			H_c = min(ret_min_entropy, H_c);
 
 			// Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
-			ret_min_entropy = compression_test(rdata, data.len, verbose);
+			ret_min_entropy = compression_test(rdata, data.len, verbose, "Literal");
 			if(ret_min_entropy >= 0){
-				if(verbose) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy); 
+				if(verbose > 0) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy); 
 				H_r = min(ret_min_entropy, H_r);
 			}
-			ret_min_entropy = compression_test(cdata, data.len, verbose);
+			ret_min_entropy = compression_test(cdata, data.len, verbose, "Literal");
 			if(ret_min_entropy >= 0){
-				if(verbose) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy); 
+				if(verbose > 0) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy); 
 				H_c = min(ret_min_entropy, H_c);
 			}
 		}
@@ -312,75 +317,77 @@ int main(int argc, char* argv[]){
 		// Section 6.3.5 - Estimate entropy with t-Tuple Test
 		double row_t_tuple_res, row_lrs_res;
 		double col_t_tuple_res, col_lrs_res;
-		SAalgs(rdata, data.len, data.alph_size, row_t_tuple_res, row_lrs_res, verbose);
-		SAalgs(cdata, data.len, data.alph_size, col_t_tuple_res, col_lrs_res, verbose);
+		SAalgs(rdata, data.len, data.alph_size, row_t_tuple_res, row_lrs_res, verbose, "Literal");
+		SAalgs(cdata, data.len, data.alph_size, col_t_tuple_res, col_lrs_res, verbose, "Literal");
 
-		if(verbose) printf("\tT-Tuple Test Estimate (Rows) = %f / %d bit(s)\n", row_t_tuple_res, data.word_size);
+		if(verbose > 0) printf("\tT-Tuple Test Estimate (Rows) = %f / %d bit(s)\n", row_t_tuple_res, data.word_size);
 		H_r = min(row_t_tuple_res, H_r);
 
-		if(verbose) printf("\tT-Tuple Test Estimate (Cols) = %f / %d bit(s)\n", col_t_tuple_res, data.word_size);
+		if(verbose > 0) printf("\tT-Tuple Test Estimate (Cols) = %f / %d bit(s)\n", col_t_tuple_res, data.word_size);
 		H_c = min(col_t_tuple_res, H_c);
 
 		// Section 6.3.6 - Estimate entropy with LRS Test
-		if(verbose) printf("\tLRS Test Estimate (Rows) = %f / %d bit(s)\n", row_lrs_res, data.word_size);
+		if(verbose > 0) printf("\tLRS Test Estimate (Rows) = %f / %d bit(s)\n", row_lrs_res, data.word_size);
 		H_r = min(row_lrs_res, H_r);
-		if(verbose) printf("\tLRS Test Estimate (Cols) = %f / %d bit(s)\n", col_lrs_res, data.word_size);
+		if(verbose > 0) printf("\tLRS Test Estimate (Cols) = %f / %d bit(s)\n", col_lrs_res, data.word_size);
 		H_c = min(col_lrs_res, H_c);
 
 		printf("\nRunning Predictor Estimates...\n");
 
 		// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
-		ret_min_entropy = multi_mcw_test(rdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = multi_mcw_test(rdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_r = min(ret_min_entropy, H_r);
 		}
-		ret_min_entropy = multi_mcw_test(cdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = multi_mcw_test(cdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_c = min(ret_min_entropy, H_c);
 		}
 
 		// Section 6.3.8 - Estimate entropy with Lag Prediction Test
-		ret_min_entropy = lag_test(rdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = lag_test(rdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_r = min(ret_min_entropy, H_r);
 		}
-		ret_min_entropy = lag_test(cdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = lag_test(cdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_c = min(ret_min_entropy, H_c);
 		}
 
 		// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
-		ret_min_entropy = multi_mmc_test(rdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = multi_mmc_test(rdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_r = min(ret_min_entropy, H_r);
 		}
-		ret_min_entropy = multi_mmc_test(cdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = multi_mmc_test(cdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_c = min(ret_min_entropy, H_c);
 		}
 
 		// Section 6.3.10 - Estimate entropy with LZ78Y Test
-		ret_min_entropy = LZ78Y_test(rdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = LZ78Y_test(rdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_r = min(ret_min_entropy, H_r);
 		}
-		ret_min_entropy = LZ78Y_test(cdata, data.len, data.alph_size, verbose);
+		ret_min_entropy = LZ78Y_test(cdata, data.len, data.alph_size, verbose, "Literal");
 		if(ret_min_entropy >= 0){
-			if(verbose) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+			if(verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 			H_c = min(ret_min_entropy, H_c);
 		}
 	}
 
-	printf("\nH_r: %f\n", H_r);
+	printf("\n");
+	printf("H_r: %f\n", H_r);
 	printf("H_c: %f\n", H_c);
-	printf("H_I: %f\n\n", H_I);
+	printf("H_I: %f\n", H_I);
+	printf("\n");
 
 	if(min(H_r, H_c) < H_I/2.0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
 	else{
@@ -390,4 +397,5 @@ int main(int argc, char* argv[]){
 
 	free(cdata);
 	free_data(&data);
+	return 0;
 }

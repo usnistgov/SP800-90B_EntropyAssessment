@@ -3,9 +3,9 @@
 
 // Section 6.3.3 - Markov Estimate
 // data is assumed to be binary (e.g., bit string)
-double markov_test(byte* data, long len, const bool verbose){
+double markov_test(byte* data, long len, const int verbose, const char *label){
 	long i, C_0, C_1, C_00, C_01, C_10, C_11;
-	double H_min, tmp_min_entropy, P_0, P_1, P_00, P_01, P_10, P_11;
+	double H_min, tmp_min_entropy, P_0, P_1, P_00, P_01, P_10, P_11, entEst;
 
 	C_0 = 0.0;
 	C_00 = 0.0;
@@ -35,7 +35,15 @@ double markov_test(byte* data, long len, const bool verbose){
 	P_0 = C_0 / (double)len;
 	P_1 = 1.0 - P_0;
 
-	if(verbose) printf("Markov Estimate: P_0 = %.17g, P_1 = %.17g, P_0,0 = %.17g, P_0,1 = %.17g, P_1,0 = %.17g, P_1,1 = %.17g, ", P_0, P_1, P_00, P_01, P_10, P_11);
+	if(verbose == 1) printf("%s Markov Estimate: P_0 = %.17g, P_1 = %.17g, P_0,0 = %.17g, P_0,1 = %.17g, P_1,0 = %.17g, P_1,1 = %.17g, ", label, P_0, P_1, P_00, P_01, P_10, P_11);
+	else if(verbose == 2) {
+		printf("%s Markov Estimate: P_0 = %.17g\n", label, P_0);
+		printf("%s Markov Estimate: P_1 = %.17g\n", label, P_1);
+		printf("%s Markov Estimate: P_{0,0} = %.17g\n", label, P_00);
+		printf("%s Markov Estimate: P_{0,1} = %.17g\n", label, P_01);
+		printf("%s Markov Estimate: P_{1,0} = %.17g\n", label, P_10);
+		printf("%s Markov Estimate: P_{1,1} = %.17g\n", label, P_11);
+	}
 
 	H_min = 128.0;
 
@@ -75,7 +83,13 @@ double markov_test(byte* data, long len, const bool verbose){
        		if(tmp_min_entropy < H_min) H_min = tmp_min_entropy;
 	}
 
-	if(verbose) printf("p_max = %.17g\n", pow(2.0, -H_min));
+	entEst = fmin(H_min/128.0, 1.0);
 
-	return fmin(H_min/128.0, 1.0);
+	if(verbose == 1) printf("p_max = %.17g\n", pow(2.0, -H_min));
+	else if(verbose == 2) {
+		printf("%s Markov Estimate: p-hat_max = %.17g\n", label, pow(2.0, -H_min));
+		printf("%s Markov Estimate: min entropy = %.17g\n", label, entEst);
+	}
+
+	return entEst;
 }

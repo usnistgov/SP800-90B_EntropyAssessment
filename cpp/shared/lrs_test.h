@@ -63,7 +63,7 @@ void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_
  * This is described here:
  * http://www.untruth.org/~josh/sp80090b/Kaufer%20Further%20Improvements%20for%20SP%20800-90B%20Tuple%20Counts.pdf
  */
-void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &lrs_res, bool verbose) {
+void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &lrs_res, const int verbose, const char *label) {
 	vector <saidx_t> sa(n+1, -1); //each value is at most n-1
 	vector <saidx_t> L(n+2, -1); //each value is at most n-1
 
@@ -73,7 +73,6 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	long int j; //0 <= j <= v+1 <= n
 	saidx_t t; //Takes values from LCP array. 0 <= t < n
 
-	double curPmax;
 	double Pmax;
 	double pu;
 
@@ -190,21 +189,29 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	if(Pmax > 0.0) {
 		//We encountered a valid t, so we can run the test
 		pu = Pmax + ZALPHA*sqrt(Pmax*(1.0 - Pmax)/((double)(n - 1)));
-		if(verbose) printf("t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", u-1, Pmax, pu);
 		if(pu > 1.0) {
 			pu = 1.0;
 		}
 
 		t_tuple_res = -log2(pu);
+
+		if(verbose == 1) printf("%s t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", label, u-1, Pmax, pu);
+		else if(verbose == 2) {
+			printf("%s t-Tuple Estimate: t = %ld\n", label, u-1);
+			printf("%s t-Tuple Estimate: p-hat_max = %.17g\n", label, Pmax);
+			printf("%s t-Tuple Estimate: p_u = %.17g\n", label, pu);
+			printf("%s t-Tuple Estimate: min entropy = %.17g\n", label, t_tuple_res);
+		}
+
 	} else {
-		if(verbose) printf("t-Tuple Estimate: No strings are repeated 35 times. t-Tuple estimate failed.\n");
+		if(verbose > 0) printf("t-Tuple Estimate: No strings are repeated 35 times. t-Tuple estimate failed.\n");
 		t_tuple_res = -1.0;
 	}
 
 	//calculate the LRS estimate
 	if(v>=u) {
 		vector <long int> S(v+1, 0);
-		memset(A.data(), 0, sizeof(saidx_t)*sizeof((v+2)));
+		memset(A.data(), 0, sizeof(saidx_t)*((size_t)v+2));
 
 		for(long int i = 1; i <= n; i++) {
 			if((L[i-1] >= u) && (L[i] < L[i-1])) {
@@ -250,9 +257,18 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 		if(pu > 1.0) {
 			pu = 1.0;
 		}
-		if(verbose) printf("LRS Estimate: u = %ld, v = %ld, p-hat = %.17g, p_u = %.17g\n", u, v, Pmax, pu);
 
 		lrs_res = -log2(pu);
+
+		if(verbose == 1) printf("%s LRS Estimate: u = %ld, v = %ld, p-hat = %.17g, p_u = %.17g\n", label, u, v, Pmax, pu);
+		else if(verbose == 2) {
+			printf("%s LRS Estimate: u = %ld\n", label, u);
+			printf("%s LRS Estimate: v = %ld\n", label, v);
+			printf("%s LRS Estimate: p-hat = %.17g\n", label, Pmax);
+			printf("%s LRS Estimate: p_u = %.17g\n", label, pu);
+			printf("%s LRS Estimate: min entropy = %.17g\n", label, lrs_res);
+		}
+
 	} else {
 		printf("LRS Estimate: v<u. Can't Run LRS Test.\n");
 		lrs_res = -1.0;
@@ -295,7 +311,7 @@ void calc_collision_proportion(const vector<double> &p, double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_size, const bool verbose){
+bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_size, const int verbose, const char *label){
 
 	vector<double> p(alphabet_size, 0.0);
 	calc_proportions(data, p, sample_size);
@@ -309,8 +325,8 @@ bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_s
 
 	double pr_x = 1 - pow(1 - pow(p_col, lrs), overlap);
 
-	if(verbose){
-		cout << "Longest Repeated Substring results" << endl;
+	if(verbose > 0){
+		cout << label << "Longest Repeated Substring results" << endl;
 		cout << "\tP_col: " << p_col << endl;
 		cout << "\tLength of LRS: " << lrs << endl;
 		cout << "\tPr(X >= 1): " << pr_x << endl;

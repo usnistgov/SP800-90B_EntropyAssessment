@@ -4,7 +4,7 @@
 #define D_LAG 128
 
 // Section 6.3.8 - Lag Prediction Estimate
-double lag_test(byte *data, long len, int alph_size, const bool verbose){
+double lag_test(byte *data, long len, int alph_size, const int verbose, const char *label){
 	int winner; 
 	long i, d, N, C, run_len, max_run_len;
 	long scoreboard[D_LAG] = {0};
@@ -37,5 +37,5 @@ double lag_test(byte *data, long len, int alph_size, const bool verbose){
 		}
 	}
 
-	return(predictionEstimate(C, N, max_run_len, alph_size, "Lag", verbose));
+	return(predictionEstimate(C, N, max_run_len, alph_size, "Lag", verbose, label));
 }
