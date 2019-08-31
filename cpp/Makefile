@@ -30,7 +30,7 @@ restart_main.o: restart_main.cpp
 
 conditioning: conditioning_main.o
 conditioning_main.o: conditioning_main.cpp
-	$(CXX) $(CXXFLAGS) $(INC) conditioning_main.cpp -o ea_conditioning $(LIB)
+	$(CXX) $(CXXFLAGS) $(INC) conditioning_main.cpp -o ea_conditioning $(LIB) -lmpfr -lgmp
 
 transpose: transpose_main.o
 transpose_main.o: transpose_main.cpp

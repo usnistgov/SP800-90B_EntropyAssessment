@@ -14,7 +14,7 @@ Issues on this repository are strictly for problems or questions concerning the 
 
 This code package requires a C++11 compiler. The code uses OpenMP directives, so compiler support for OpenMP is expected. GCC is preferred (and the only platform tested). There is one method that involves a GCC built-in function (`chi_square_tests.h -> binary_goodness_of_fit() -> __builtin_popcount()`). To run this you will need some compiler that supplies this GCC built-in function (GCC and clang both do so).
 
-The resulting binary is linked with bzlib and divsufsort, so these libraries (and their associated include files) must be installed and accessible to the compiler.
+The resulting binary is linked with bzlib, divsufsort, GMP MP and GNU MPFR, so these libraries (and their associated include files) must be installed and accessible to the compiler.
 
 See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-libdivsufsort) for some distribution-specific instructions on installing divsufsort.
 
@@ -55,6 +55,7 @@ You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond t
 * Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.
 * `-l`: Reads (at most) `samples` data samples after indexing into the file by `index*samples` bytes.
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
+=======
 * bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
 
 To run the non-IID tests, use the Makefile to compile:
