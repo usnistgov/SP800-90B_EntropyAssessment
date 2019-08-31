@@ -2,12 +2,15 @@
 #include <cstdlib>
 #include <limits>
 #include <cmath>
+#include <math.h>
 #include <algorithm>
-
+#include <assert.h>
 #include <getopt.h>
 #include <mpfr.h>
+#include <errno.h>
+#include <fenv.h>
 
-[[ noreturn ]] void print_usage() {
+[[ noreturn ]] static void print_usage() {
 	printf("Usage is: ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>\n");
 	printf("\tor \n\tea_conditioning -n <n_in> <n_out> <nw> <h_in> <h'>\n\n");
 	printf("\t <n_in>: input number of bits to conditioning function.\n");
@@ -27,11 +30,76 @@
 	exit(-1);
 }
 
+static long double inputLongDoubleOption(const char *input, long double low, long double high, const char *label) {
+	char *nextoptchar;
+	long double indouble;
+
+	assert(input != NULL);
+	assert(!isnan(low));
+	assert(!isnan(high));
+
+	if(label == NULL) label="parameter";
+
+	indouble = strtold(input, &nextoptchar);
+	assert(nextoptchar != NULL);
+
+	if((nextoptchar == input) || (*nextoptchar != '\0')) {
+		printf("Non-numeric characters in %s: '%c'\n", label, *nextoptchar);
+		print_usage();
+	}
+
+	if((errno == ERANGE) || !isfinite(indouble)) {
+		printf("Provided value for %s is out of range of a long double or isn't a finite value\n", label);
+		print_usage();
+	}
+
+	if(indouble < low) {
+		printf("%s must be greater than or equal to %.22Lg.\n", label, low);
+		print_usage();
+	}
+
+	if(indouble > high) {
+		printf("%s must be less than or equal to %.22Lg.\n", label, high);
+		print_usage();
+	}
+
+	return indouble;
+}
+
+static unsigned int inputUnsignedOption(const char *input, unsigned int low, unsigned int high, const char *label) {
+	char *nextoptchar;
+	unsigned long inint;
+
+	assert(input != NULL);
+
+	if(label == NULL) label="parameter";
+
+	inint = strtoul(input, &nextoptchar, 0);
+	assert(nextoptchar != NULL);
+
+	if((nextoptchar == input) || (*nextoptchar != '\0')) {
+		printf("Non-integer characters in %s: '%c'\n", label, *nextoptchar);
+		print_usage();
+	}
+
+	if(inint < (unsigned long int)low) {
+		printf("%s must be greater than or equal to %u.\n", label, low);
+		print_usage();
+	}
+
+	if(inint > (unsigned long int)high) {
+		printf("%s must be less than or equal to %u.\n", label, high);
+		print_usage();
+	}
+
+	return (unsigned int)inint;
+}
+
 int main(int argc, char* argv[]) {
 	bool vetted;
-	long double h_p = -1.0;
+	long double h_p = -1.0L;
 	long double h_in, h_out; 
-	long double outputEntropy;
+	long double outputEntropy = -1.0L;
 	unsigned int n_in, n_out, nw, n;
 	mpfr_prec_t precision;
 	int opt;
@@ -39,10 +107,14 @@ int main(int argc, char* argv[]) {
 	bool closeToFullEntropy = false;
 	bool fullEntropy = false;
 	unsigned int maxval;
-	long double epsilonExp = -1.0;
+	long double epsilonExp = -1.0L;
+
 	mpfr_t ap_h_in, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_log2epsilon;
 
 	vetted = true;
+
+	//Setting this rounding method helps prevent us from overestimating the input parameters
+	fesetround(FE_TOWARDZERO);
 
         while ((opt = getopt(argc, argv, "vn")) != -1) {
                 switch(opt) {
@@ -64,34 +136,21 @@ int main(int argc, char* argv[]) {
 	if((vetted && (argc != 4)) || (!vetted && (argc != 5))){
 		printf("Incorrect usage.\n");
 		print_usage();
-	}
-	else{
+	} else{
                 // get n_in     
-                n_in = strtoul(argv[0], NULL, 0);
-		if(n_in < 1) {
-                        printf("n_in must be greater than 0.\n");
-                        print_usage();
-		}
+		n_in = inputUnsignedOption(argv[0], 1, UINT_MAX, "n_in");
 
 	    	// get n_out     
-                n_out = strtoul(argv[1], NULL, 0);
+                n_out = inputUnsignedOption(argv[1], 1, UINT_MAX, "n_out");
 
-                // get n_out     
-                nw = strtoul(argv[2], NULL, 0);
+                // get nw     
+                nw = inputUnsignedOption(argv[2], 1, UINT_MAX, "nw");
 
                 // get h_in     
-                h_in = strtold(argv[3], NULL);
-                if((h_in <= 0) || (h_in > (long double)n_in)){
-                        printf("h_in must be positive and at most n_in.\n");
-                        print_usage();
-                }
+		h_in = inputLongDoubleOption(argv[3], 0.0L, (long double) n_in, "h_in");
 
 		if(!vetted){
-			h_p = strtold(argv[4], NULL);
-			if((h_p <= 0) || (h_p > 1.0)){
-				printf("h' must be the interval (0 and 1].\n");
-				print_usage();
-			}
+			h_p = inputLongDoubleOption(argv[4], 0.0L, 1.0L, "h_p");
 		} 
 	}
 
@@ -120,55 +179,57 @@ int main(int argc, char* argv[]) {
 
 	while(!adaquatePrecision) {
 		adaquatePrecision = true;
-		//Initialize arbitrary precision versions of h_in and needed constants.
-		mpfr_set_ld(ap_h_in, h_in, MPFR_RNDN);
+		//Initialize arbitrary precision versions of h_in
+		mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ);
 
 		// compute Output Entropy (Section 3.1.5.1.2)
 		// Step 1.
 		// P_high
-		mpfr_neg(ap_h_in, ap_h_in, MPFR_RNDN);
-		mpfr_ui_pow(ap_p_high, 2UL, ap_h_in, MPFR_RNDN);
+		mpfr_neg(ap_h_in, ap_h_in, MPFR_RNDZ);
+		mpfr_ui_pow(ap_p_high, 2UL, ap_h_in, MPFR_RNDZ);
 
 		//P_low
-		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDN);
-		mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDN);
-		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDN);
-		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDN);
+		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDZ);
+		mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ);
+		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDZ);
+		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDZ);
 
 		//Prior to moving on, calculate a reused power term
-		mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDN);
+		mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDZ);
 
 		//Step 3: Calculate Psi
-		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDN);
-		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDN);
+		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDZ);
+		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDZ);
 
 		//Step 4: Calculate U (goes into the ap_omega variable)
-		mpfr_log_ui(ap_omega, 2UL, MPFR_RNDN);
-		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDN);
-		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDN);
-		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDN);
-		mpfr_add(ap_omega, ap_omega, ap_power_term,  MPFR_RNDN);
+		mpfr_log_ui(ap_omega, 2UL, MPFR_RNDZ);
+		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDZ);
+		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDZ);
+		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDZ);
+		mpfr_add(ap_omega, ap_omega, ap_power_term,  MPFR_RNDZ);
 
 		//Step 5: Calculate omega
-		mpfr_mul(ap_omega, ap_omega, ap_p_low, MPFR_RNDN);
+		mpfr_mul(ap_omega, ap_omega, ap_p_low, MPFR_RNDZ);
 
 		//Step 6: Compare the values
 		if(mpfr_cmp(ap_omega, ap_psi) > 0) {
 			//omega > psi
-			mpfr_log2(ap_outputEntropy, ap_omega, MPFR_RNDN);
+			mpfr_log2(ap_outputEntropy, ap_omega, MPFR_RNDZ);
 		} else {
 			//omega <= psi
-			mpfr_log2(ap_outputEntropy, ap_psi, MPFR_RNDN);
+			mpfr_log2(ap_outputEntropy, ap_psi, MPFR_RNDZ);
 		}
 
 		//Keep -outputEntropy for calculation of log2epsilon
-		mpfr_set(ap_log2epsilon, ap_outputEntropy, MPFR_RNDN);
+		mpfr_set(ap_log2epsilon, ap_outputEntropy, MPFR_RNDZ);
 
 		//finalize outputEntropy
-		mpfr_neg(ap_outputEntropy, ap_outputEntropy, MPFR_RNDN);
+		mpfr_neg(ap_outputEntropy, ap_outputEntropy, MPFR_RNDZ);
 
-
+		//Could outputEntropy be valid?
 		if(mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
+			//outputEntropy appears to be greater than or equal to n_out
+			//This can't happen, and suggests there was a precision problem.
 			//Double the precision of everything and try again
 			adaquatePrecision = false;
 			precision = 2*precision;
@@ -185,21 +246,21 @@ int main(int argc, char* argv[]) {
 			continue;
 		}
 
-		outputEntropy = mpfr_get_ld(ap_outputEntropy, MPFR_RNDN);
+		outputEntropy = mpfr_get_ld(ap_outputEntropy, MPFR_RNDZ);
 
-		if(outputEntropy > 0.999 * (long double)n_out) {
+		if(outputEntropy > 0.999L * (long double)n_out) {
 			closeToFullEntropy = true;
 			//Calculate -log2(epsilon)
-			mpfr_div_ui(ap_log2epsilon, ap_log2epsilon, n_out, MPFR_RNDN);
-			mpfr_log1p(ap_log2epsilon, ap_log2epsilon, MPFR_RNDN);
+			mpfr_div_ui(ap_log2epsilon, ap_log2epsilon, n_out, MPFR_RNDZ);
+			mpfr_log1p(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
 			//Reuse ap_denom to hold log(2)
-			mpfr_log_ui(ap_denom, 2UL, MPFR_RNDN);
-			mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_denom, MPFR_RNDN);
+			mpfr_log_ui(ap_denom, 2UL, MPFR_RNDZ);
+			mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_denom, MPFR_RNDZ);
 			//Make it positive
-			mpfr_neg(ap_log2epsilon, ap_log2epsilon, MPFR_RNDN);
+			mpfr_neg(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
 
 			//Now convert back to a long double
-			epsilonExp = mpfr_get_ld(ap_log2epsilon, MPFR_RNDN);
+			epsilonExp = mpfr_get_ld(ap_log2epsilon, MPFR_RNDZ);
 
 			//Should this qualify as "full entropy" under the 2012 draft of SP800-90B?
 			if(mpfr_cmp_ui(ap_log2epsilon, 64) >= 0) {
@@ -208,11 +269,13 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
+	assert((outputEntropy <= (long double)n_out) && (outputEntropy >= 0.0L));
+
 	//We're done with the calculation. Now print results.
 	if(vetted) {
 		printf("\n(Vetted) ");
 		if(closeToFullEntropy) {
-			if(outputEntropy == (long double)n_out) {
+			if(outputEntropy >= (long double)n_out) {
 				printf("h_out: Close to %.22Lg\n", outputEntropy);
 			} else {
 				printf("h_out: %.22Lg\n", outputEntropy);
