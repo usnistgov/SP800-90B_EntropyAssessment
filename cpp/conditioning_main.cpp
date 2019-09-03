@@ -289,11 +289,12 @@ int main(int argc, char* argv[]) {
 	if(vetted) {
 		printf("(Vetted) ");
 		if(closeToFullEntropy) {
-			if(outputEntropy >= (long double)n_out) {
-				printf("h_out: Close to %.22Lg\n", outputEntropy);
+			if((outputEntropy >= (long double)n_out) || (nextafterl(outputEntropy, (long double)n_out) >= (long double)n_out)) {
+				printf("h_out: Close to %u\n", n_out);
 			} else {
 				printf("h_out: %.22Lg\n", outputEntropy);
 			}
+
 			printf("epsilon: 2^(-%.22Lg)", epsilonExp);
 			if(fullEntropy) {
 				printf(": SP800-90B 2012 Full Entropy\n");
