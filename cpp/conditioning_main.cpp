@@ -168,7 +168,9 @@ int main(int argc, char* argv[]) {
 
 	// Establish the maximum precision that ought to be necessary
 	// If something goes wrong, we can increase this precision automatically.
-	maxval = (n_in>n_out)?n_in:n_out;
+	maxval = 64; // Always be large enough to faithfully represent h_in.
+	maxval = (maxval>n_in)?maxval:n_in;
+	maxval = (maxval>n_out)?maxval:n_out;
 	maxval = (maxval>nw)?maxval:nw;
 	precision = 2*maxval;
 
