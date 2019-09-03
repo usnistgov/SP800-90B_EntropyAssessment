@@ -178,40 +178,48 @@ int main(int argc, char* argv[]) {
 	adaquatePrecision = false;
 
 	while(!adaquatePrecision) {
+		//General goal: want to round to cause psi and omega to be as large as possible (to provide a conservative estimate)
 		adaquatePrecision = true;
 		//Initialize arbitrary precision versions of h_in
 		mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ);
 
 		// compute Output Entropy (Section 3.1.5.1.2)
 		// Step 1.
+		// Want to round so that both P_low and P_high are as large as possible.
 		// P_high
 		mpfr_neg(ap_h_in, ap_h_in, MPFR_RNDZ);
-		mpfr_ui_pow(ap_p_high, 2UL, ap_h_in, MPFR_RNDZ);
+		mpfr_ui_pow(ap_p_high, 2UL, ap_h_in, MPFR_RNDU);
 
 		//P_low
-		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDZ);
-		mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ);
+		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDU);
+		if(mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ)!=0) {
+			adaquatePrecision=false;
+		}
 		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDZ);
-		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDZ);
+		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDU);
 
 		//Prior to moving on, calculate a reused power term
-		mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDZ);
+		//Want to round so that this is as large as possible.
+		if(mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU)!=0) {
+			adaquatePrecision=false;
+		}
 
 		//Step 3: Calculate Psi
-		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDZ);
-		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDZ);
+		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDU);
+		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDU);
 
 		//Step 4: Calculate U (goes into the ap_omega variable)
-		mpfr_log_ui(ap_omega, 2UL, MPFR_RNDZ);
-		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDZ);
-		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDZ);
-		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDZ);
-		mpfr_add(ap_omega, ap_omega, ap_power_term,  MPFR_RNDZ);
+		mpfr_log_ui(ap_omega, 2UL, MPFR_RNDU);
+		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDU);
+		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDU);
+		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDU);
+		mpfr_add(ap_omega, ap_omega, ap_power_term,  MPFR_RNDU);
 
 		//Step 5: Calculate omega
-		mpfr_mul(ap_omega, ap_omega, ap_p_low, MPFR_RNDZ);
+		mpfr_mul(ap_omega, ap_omega, ap_p_low, MPFR_RNDU);
 
 		//Step 6: Compare the values
+		//we want to round so that the log is (in absolute value) as small as possible.
 		if(mpfr_cmp(ap_omega, ap_psi) > 0) {
 			//omega > psi
 			mpfr_log2(ap_outputEntropy, ap_omega, MPFR_RNDZ);
@@ -227,7 +235,7 @@ int main(int argc, char* argv[]) {
 		mpfr_neg(ap_outputEntropy, ap_outputEntropy, MPFR_RNDZ);
 
 		//Could outputEntropy be valid?
-		if(mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
+		if(!adaquatePrecision || (mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0)) {
 			//outputEntropy appears to be greater than or equal to n_out
 			//This can't happen, and suggests there was a precision problem.
 			//Double the precision of everything and try again
@@ -248,13 +256,17 @@ int main(int argc, char* argv[]) {
 
 		outputEntropy = mpfr_get_ld(ap_outputEntropy, MPFR_RNDZ);
 
+		//Check to see if meets the definition of "full entropy".
+		//iff -log2(epsilon) = - log(1 - (h_out)/n_out)/log(2) > 64
+		//To be conservative, round so that -log2(epsilon) epsilon is as small as possible
+		//(that is epsilon should be as large as possible)
 		if(outputEntropy > 0.999L * (long double)n_out) {
 			closeToFullEntropy = true;
 			//Calculate -log2(epsilon)
 			mpfr_div_ui(ap_log2epsilon, ap_log2epsilon, n_out, MPFR_RNDZ);
 			mpfr_log1p(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
 			//Reuse ap_denom to hold log(2)
-			mpfr_log_ui(ap_denom, 2UL, MPFR_RNDZ);
+			mpfr_log_ui(ap_denom, 2UL, MPFR_RNDU);
 			mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_denom, MPFR_RNDZ);
 			//Make it positive
 			mpfr_neg(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
@@ -273,14 +285,14 @@ int main(int argc, char* argv[]) {
 
 	//We're done with the calculation. Now print results.
 	if(vetted) {
-		printf("\n(Vetted) ");
+		printf("(Vetted) ");
 		if(closeToFullEntropy) {
 			if(outputEntropy >= (long double)n_out) {
 				printf("h_out: Close to %.22Lg\n", outputEntropy);
 			} else {
 				printf("h_out: %.22Lg\n", outputEntropy);
 			}
-			printf("epsilon = 2^(-%.22Lg)", epsilonExp);
+			printf("epsilon: 2^(-%.22Lg)", epsilonExp);
 			if(fullEntropy) {
 				printf(": SP800-90B 2012 Full Entropy\n");
 			} else {
@@ -290,7 +302,7 @@ int main(int argc, char* argv[]) {
 			printf("h_out: %.22Lg\n", outputEntropy);
 		}
 	} else {
-		printf("\n(Non-vetted) ");
+		printf("(Non-vetted) ");
 		h_out = std::min(outputEntropy, std::min(0.999L*((long double)n_out), h_p*(long double)n_out));
 		printf("h_out: %.22Lg\n", h_out);
 	}
