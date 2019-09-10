@@ -183,7 +183,10 @@ int main(int argc, char* argv[]) {
 		//General goal: want to round to cause psi and omega to be as large as possible (to provide a conservative estimate)
 		adaquatePrecision = true;
 		//Initialize arbitrary precision versions of h_in
-		mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ);
+		//We want to make sure not to lose precision here.
+		if(mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ) != 0) {
+			adaquatePrecision=false;
+		}
 
 		// compute Output Entropy (Section 3.1.5.1.2)
 		// Step 1.
@@ -194,14 +197,17 @@ int main(int argc, char* argv[]) {
 
 		//P_low
 		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDU);
+
+		//This is an integer value, and should be exact
 		if(mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ)!=0) {
 			adaquatePrecision=false;
 		}
+
 		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDZ);
 		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDU);
 
 		//Prior to moving on, calculate a reused power term
-		//Want to round so that this is as large as possible.
+		//This is an integer value, and should be exact
 		if(mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU)!=0) {
 			adaquatePrecision=false;
 		}
@@ -237,13 +243,50 @@ int main(int argc, char* argv[]) {
 		mpfr_neg(ap_outputEntropy, ap_outputEntropy, MPFR_RNDZ);
 
 		//Could outputEntropy be valid?
-		if(!adaquatePrecision || (mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0)) {
-			//outputEntropy appears to be greater than or equal to n_out
-			//This can't happen, and suggests there was a precision problem.
-			//Double the precision of everything and try again
+		//We know that n_out > ap_outputEntropy for all finite inputs...
+		if(mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
 			adaquatePrecision = false;
+		}
+
+		if(adaquatePrecision) {
+			//If we get here, then adequate precision was used
+			//Extract a value for display.
+			//Note, this may round up, but we'll deal with this later.
+			outputEntropy = mpfr_get_ld(ap_outputEntropy, MPFR_RNDN);
+
+			//Check to see if meets the definition of "full entropy".
+			//iff -log2(epsilon) = - log(1 - (h_out)/n_out)/log(2) > 64
+			//To be conservative, round so that -log2(epsilon) epsilon is as small as possible
+			//(that is epsilon should be as large as possible)
+			if(outputEntropy > 0.999L * (long double)n_out) {
+				closeToFullEntropy = true;
+				//Calculate -log2(epsilon)
+				mpfr_div_ui(ap_log2epsilon, ap_log2epsilon, n_out, MPFR_RNDZ);
+				mpfr_log1p(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
+				//Reuse ap_denom to hold log(2)
+				mpfr_log_ui(ap_denom, 2UL, MPFR_RNDU);
+				//Convert the result to log base 2
+				mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_denom, MPFR_RNDZ);
+				//Make the result positive
+				mpfr_neg(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
+
+				//We now have a (arbitrary precision) version of the exponent.
+				//Convert it back to a long double...
+				epsilonExp = mpfr_get_ld(ap_log2epsilon, MPFR_RNDZ);
+
+				//Should this qualify as "full entropy" under the 2012 draft of SP800-90B?
+				//Compare using the arbitrary precision version of the exponent.
+				if(mpfr_cmp_ui(ap_log2epsilon, 64) >= 0) {
+					fullEntropy = true;
+				}
+			}
+		} else {
+			//We either inappropriately rounded previously, or
+			//outputEntropy is greater than or equal to n_out
+			//In either case, there was a precision problem.
+			//Double the precision of everything and try again
 			precision = 2*precision;
-			fprintf(stderr, "Indeterminate result. Increasing precision to %ld bits and trying again.\n", precision);
+			fprintf(stderr, "Increasing precision to %ld bits and trying again.\n", precision);
 			mpfr_set_prec(ap_h_in, precision);
 			mpfr_set_prec(ap_p_high, precision);
 			mpfr_set_prec(ap_p_low, precision);
@@ -253,33 +296,6 @@ int main(int argc, char* argv[]) {
 			mpfr_set_prec(ap_omega, precision);
 			mpfr_set_prec(ap_outputEntropy, precision);
 			mpfr_set_prec(ap_log2epsilon, precision);
-			continue;
-		}
-
-		outputEntropy = mpfr_get_ld(ap_outputEntropy, MPFR_RNDZ);
-
-		//Check to see if meets the definition of "full entropy".
-		//iff -log2(epsilon) = - log(1 - (h_out)/n_out)/log(2) > 64
-		//To be conservative, round so that -log2(epsilon) epsilon is as small as possible
-		//(that is epsilon should be as large as possible)
-		if(outputEntropy > 0.999L * (long double)n_out) {
-			closeToFullEntropy = true;
-			//Calculate -log2(epsilon)
-			mpfr_div_ui(ap_log2epsilon, ap_log2epsilon, n_out, MPFR_RNDZ);
-			mpfr_log1p(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
-			//Reuse ap_denom to hold log(2)
-			mpfr_log_ui(ap_denom, 2UL, MPFR_RNDU);
-			mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_denom, MPFR_RNDZ);
-			//Make it positive
-			mpfr_neg(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
-
-			//Now convert back to a long double
-			epsilonExp = mpfr_get_ld(ap_log2epsilon, MPFR_RNDZ);
-
-			//Should this qualify as "full entropy" under the 2012 draft of SP800-90B?
-			if(mpfr_cmp_ui(ap_log2epsilon, 64) >= 0) {
-				fullEntropy = true;
-			}
 		}
 	}
 
@@ -289,12 +305,14 @@ int main(int argc, char* argv[]) {
 	if(vetted) {
 		printf("(Vetted) ");
 		if(closeToFullEntropy) {
-			if((outputEntropy >= (long double)n_out) || (nextafterl(outputEntropy, (long double)n_out) >= (long double)n_out)) {
+			if(outputEntropy == (long double)n_out) {
+				//outputEntropy rounded to full entropy, so the difference between this and full entropy is less than 1/2 ULP.
 				printf("h_out: Close to %u\n", n_out);
 			} else {
 				printf("h_out: %.22Lg\n", outputEntropy);
 			}
 
+			//h_out = (1 - epsilon) * n_out
 			printf("epsilon: 2^(-%.22Lg)", epsilonExp);
 			if(fullEntropy) {
 				printf(": SP800-90B 2012 Full Entropy\n");
@@ -305,6 +323,7 @@ int main(int argc, char* argv[]) {
 			printf("h_out: %.22Lg\n", outputEntropy);
 		}
 	} else {
+		//Note, we can't assess as full entropy in this case.
 		printf("(Non-vetted) ");
 		h_out = std::min(outputEntropy, std::min(0.999L*((long double)n_out), h_p*(long double)n_out));
 		printf("h_out: %.22Lg\n", h_out);
