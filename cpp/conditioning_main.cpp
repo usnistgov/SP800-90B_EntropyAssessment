@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <limits>
+#include <climits>
 #include <cmath>
 #include <math.h>
 #include <algorithm>
@@ -109,7 +110,7 @@ int main(int argc, char* argv[]) {
 	unsigned int maxval;
 	long double epsilonExp = -1.0L;
 
-	mpfr_t ap_h_in, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_log2epsilon;
+	mpfr_t ap_h_in, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_log2epsilon, ap_log2;
 
 	vetted = true;
 
@@ -175,7 +176,7 @@ int main(int argc, char* argv[]) {
 	precision = 2*maxval;
 
 	//Initialize all the arbitrary precision values
-	mpfr_inits2(precision, ap_h_in, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_log2epsilon, NULL);
+	mpfr_inits2(precision, ap_h_in, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_log2epsilon, ap_log2, NULL);
 
 	adaquatePrecision = false;
 
@@ -216,8 +217,14 @@ int main(int argc, char* argv[]) {
 		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDU);
 		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDU);
 
+		//We're going to need an arbitrary precision version of log(2)
+		if(mpfr_set_ui(ap_log2, 2U, MPFR_RNDZ) != 0) {
+			adaquatePrecision=false;
+		}
+		mpfr_log(ap_log2, ap_log2, MPFR_RNDU);
+
 		//Step 4: Calculate U (goes into the ap_omega variable)
-		mpfr_log_ui(ap_omega, 2UL, MPFR_RNDU);
+		mpfr_set(ap_omega, ap_log2, MPFR_RNDU);
 		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDU);
 		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDU);
 		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDU);
@@ -263,10 +270,8 @@ int main(int argc, char* argv[]) {
 				//Calculate -log2(epsilon)
 				mpfr_div_ui(ap_log2epsilon, ap_log2epsilon, n_out, MPFR_RNDZ);
 				mpfr_log1p(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
-				//Reuse ap_denom to hold log(2)
-				mpfr_log_ui(ap_denom, 2UL, MPFR_RNDU);
 				//Convert the result to log base 2
-				mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_denom, MPFR_RNDZ);
+				mpfr_div(ap_log2epsilon, ap_log2epsilon, ap_log2, MPFR_RNDZ);
 				//Make the result positive
 				mpfr_neg(ap_log2epsilon, ap_log2epsilon, MPFR_RNDZ);
 
@@ -296,6 +301,7 @@ int main(int argc, char* argv[]) {
 			mpfr_set_prec(ap_omega, precision);
 			mpfr_set_prec(ap_outputEntropy, precision);
 			mpfr_set_prec(ap_log2epsilon, precision);
+			mpfr_set_prec(ap_log2, precision);
 		}
 	}
 
