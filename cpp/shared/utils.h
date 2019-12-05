@@ -783,7 +783,7 @@ double divide(const int a, const int b) {
 double prediction_estimate_function(long double p, long r, long N){
 	long double q, x, xlast=0.0L;
 	assert(p > 0.0L); //In fact, it is >= 1/k
-	assert(p <= 1.0L);
+	assert(p < 1.0L);
 
 	q = 1.0L-p;
 	x = 1.0L;
