@@ -54,7 +54,7 @@ double collision_test(byte* data, long len, const int verbose, const char *label
 
 	// Directly calculate p
 	X -= ZALPHA * s/sqrt(v);
-	//p is the smallest meaninful value here.
+	//2 is the smallest meaninful value here.
 	if(X < 2.0) X = 2.0;
 
 	if(verbose == 2)

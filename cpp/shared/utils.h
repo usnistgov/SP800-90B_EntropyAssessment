@@ -797,6 +797,7 @@ double prediction_estimate_function(long double p, long r, long N){
 		x = 1.0L + q*powl(p, r)*powl(x, r+1.0L);
 		//We expect this convergence to be monotonic up.
 		assert(x >= xlast);
+		//We expect x<=1/p
 		assert(p*x <= 1.0L);
 	}
 
