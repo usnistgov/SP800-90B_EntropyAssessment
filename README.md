@@ -69,6 +69,8 @@ To run the restart testing, use the Makefile to compile:
 Running this is similar.
 	./ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>
 
+The file should be in the "row dataset" format described in SP800-90B Section 3.1.4.1.
+
 * `-i`: Indicates IID data.
 * `-n`: Indicates non-IID data.
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
