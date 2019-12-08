@@ -55,7 +55,6 @@ You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond t
 * Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.
 * `-l`: Reads (at most) `samples` data samples after indexing into the file by `index*samples` bytes.
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
-=======
 * bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
 
 To run the non-IID tests, use the Makefile to compile:
@@ -73,8 +72,6 @@ To run the restart testing, use the Makefile to compile:
 Running this is similar.
 	
 	./ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>
-
-The file should be in the "row dataset" format described in SP800-90B Section 3.1.4.1.
 
 * `-i`: Indicates IID data.
 * `-n`: Indicates non-IID data.
@@ -94,13 +91,11 @@ or
 
     ea_conditioning -n <n_in> <n_out> <nw> <h_in> <h'>
 
-* `-v`: The conditioning function is vetted.
-* `-n`: The conditioning function is non-vetted.
+* `-v`: Optional verbosity flag for more output. Can be used multiple times.
 * `n_in`: The number of bits entering the conditioning step per output.
 * `n_out`: The number of bits per conditioning step output.
 * `nw`: The narrowest width of the conditioning step.
 * `h_in`: The amount of entropy entering the conditioning step per output. Must be less than n_in.
-* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for '-n' option).
 
 ## Make
 

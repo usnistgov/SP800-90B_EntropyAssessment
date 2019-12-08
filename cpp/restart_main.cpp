@@ -16,8 +16,7 @@
 
 [[ noreturn ]] void print_usage(){
 	printf("Usage is: ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>\n\n");
-	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples),\n");
-	printf("\t and in the \"row dataset\" format described in SP800-90B Section 3.1.4.1.\n");
+	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
 	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
 	printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
