@@ -4,7 +4,7 @@
 // Section 6.3.3 - Markov Estimate
 // data is assumed to be binary (e.g., bit string)
 double markov_test(byte* data, long len, const int verbose, const char *label){
-	long i, C_0, C_1, C_00, C_01, C_10, C_11;
+	long i, C_0, C_1, C_00, C_10;
 	double H_min, tmp_min_entropy, P_0, P_1, P_00, P_01, P_10, P_11, entEst;
 
 	C_0 = 0;
@@ -26,8 +26,6 @@ double markov_test(byte* data, long len, const int verbose, const char *label){
 	if((C_0 == 0) || (C_0 == len - 1)) return 0.0;
 
 	C_1 = len - 1 - C_0; //C_1 is the number of 1 bits from S[0] to S[len-2]
-	C_01 = C_0 - C_00;
-	C_11 = C_1 - C_10;
 
 	P_00 = ((double)C_00) / ((double)C_0);
 	P_10 = ((double)C_10) / ((double)C_1);
