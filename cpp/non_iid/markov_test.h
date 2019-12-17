@@ -11,7 +11,8 @@ double markov_test(byte* data, long len, const int verbose, const char *label){
 	C_00 = 0;
 	C_10 = 0;
 
-	assert(len > 0);
+	//Less than 2 symbols don't make sense for a Markov model.
+	assert(len > 1);
 
 	// get counts for unconditional and transition probabilities
 	for(i = 0; i < len-1; i++){
