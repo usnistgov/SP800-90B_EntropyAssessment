@@ -11,6 +11,8 @@ double markov_test(byte* data, long len, const int verbose, const char *label){
 	C_00 = 0;
 	C_10 = 0;
 
+	assert(len > 0);
+
 	// get counts for unconditional and transition probabilities
 	for(i = 0; i < len-1; i++){
 		if(data[i] == 0){
@@ -22,17 +24,24 @@ double markov_test(byte* data, long len, const int verbose, const char *label){
 
 	//C_0 is now  the number of 0 bits from S[0] to S[len-2]
 	
-	//We can't get meaningful results if all but the last bit is the same.
-	if((C_0 == 0) || (C_0 == len - 1)) return 0.0;
-
 	C_1 = len - 1 - C_0; //C_1 is the number of 1 bits from S[0] to S[len-2]
 
-	P_00 = ((double)C_00) / ((double)C_0);
-	P_10 = ((double)C_10) / ((double)C_1);
-
 	//Note that P_X1 = C_X1 / C_X = (C_X - C_X0)/C_X = 1.0 - C_X0/C_X = 1.0 - P_X0 
-	P_01 = 1.0 - P_00;
-	P_11 = 1.0 - P_10;
+	if(C_0 > 0) {
+		P_00 = ((double)C_00) / ((double)C_0);
+		P_01 = 1.0 - P_00;
+	} else {
+		P_00 = 0.0;
+		P_01 = 0.0;
+	}
+
+	if(C_1 > 0) {
+		P_10 = ((double)C_10) / ((double)C_1);
+		P_11 = 1.0 - P_10;
+	} else {
+		P_10 = 0.0;
+		P_11 = 0.0;
+	}
 
 	// account for the last symbol
 	if(data[len-1] == 0) C_0++;

@@ -9,6 +9,8 @@ double most_common(byte* data, const long len, const int alph_size, const int ve
 	double pmax, ubound;
 	double entEst;
 
+	assert(len > 1);
+
 	for(i = 0; i < alph_size; i++) counts[i] = 0;
 	for (i = 0; i < len; i++) counts[data[i]]++;
 
