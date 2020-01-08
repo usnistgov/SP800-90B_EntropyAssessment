@@ -137,6 +137,7 @@ int main(int argc, char* argv[]){
 	}
 
 	if(!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
+	if(!all_bits && (data.len > MIN_SIZE)) data.len = MIN_SIZE;
 
 	if((verbose>0) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary Symbols: %ld\n", data.blen);
 	if(data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
