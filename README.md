@@ -53,7 +53,7 @@ You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond t
 * `-t`: Truncates the data used to calculate the `H_bitstring` assessment to the first one million bits.
 * Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.
 * `-l`: Reads (at most) `samples` data samples after indexing into the file by `index*samples` bytes.
-* `-v: Optional verbosity flag for more output. Can be used multiple times.
+* `-v`: Optional verbosity flag for more output. Can be used multiple times.
 * bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
 
 To run the non-IID tests, use the Makefile to compile:
