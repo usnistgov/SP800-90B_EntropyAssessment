@@ -18,7 +18,8 @@
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
 	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
 	printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
-	printf("\t [-a|-t]: '-a' tests all bits in bitstring, '-t' truncates bitstring to %d bits. Test all data by default.\n", MIN_SIZE);
+	printf("\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to %d bits. Test all data by default.\n", MIN_SIZE);
+	printf("\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n");
 	printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
 	printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
 	printf("\n");

@@ -45,12 +45,13 @@ Then you can run the program with
 
     ./ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples>] <file_name> [bits_per_symbol]
 
-You must specify either `-i` or `-c`, and either `-a` or `-t`. These correspond to the following:
+You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond to the following:
 
 * `-i`: Indicates the data is unconditioned and returns an initial entropy estimate. This is the default.
-* `-c`: Indicates the data is conditioned
-* `-a`: Estimates the entropy for all data in the binary file. This is the default.
-* `-t`: Truncates the created bitstring representation of data to the first one million bits.
+* `-c`: Indicates the data is conditioned, and should only be assessed as a bitstring.
+* `-a`: The calculated `H_bitstring` assessment is produced using all data that is read.
+* `-t`: Truncates the data used to calculate the `H_bitstring` assessment to the first one million bits.
+* Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.
 * `-l`: Reads (at most) `samples` data samples after indexing into the file by `index*samples` bytes.
 * `-v: Optional verbosity flag for more output. Can be used multiple times.
 * bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
