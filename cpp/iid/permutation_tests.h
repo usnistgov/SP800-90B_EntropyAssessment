@@ -282,17 +282,19 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 //
 // Can handle binary and non-binary data
 unsigned int compression(const byte data[], const int sample_size, const byte max_symbol){
-	// Build string of bytes
 	char buffer[5];
-	//Reserve the necessary size sample_size*(floor(log10(max_symbol))+2)
-	//This is "worst case" and accounts for the space at the end of the number, as well.
-	char *msg = new char[(size_t)(floor(log10(max_symbol))+2.0)*sample_size];
+	char *msg;
 	unsigned int curlen = 0;
 	char *curmsg;
-	msg[0] = '\0';
-	curmsg = msg;
 
 	assert(max_symbol > 0);
+
+	// Build string of bytes
+	// Reserve the necessary size sample_size*(floor(log10(max_symbol))+2)
+	// This is "worst case" and accounts for the space at the end of the number, as well.
+	msg = new char[(size_t)(floor(log10(max_symbol))+2.0)*sample_size];
+	msg[0] = '\0';
+	curmsg = msg;
 
 	for(int i = 0; i < sample_size; ++i) {
 		int res;
@@ -302,11 +304,13 @@ unsigned int compression(const byte data[], const int sample_size, const byte ma
 		curmsg += res;
 	}
 
-	// Remove the extra ' ' at the end
-	curmsg--;
-	*curmsg = '\0';
-	assert(curlen > 0);
-	curlen--;
+	if(curlen > 0) {
+		// Remove the extra ' ' at the end
+		assert(curmsg > msg);
+		curmsg--;
+		*curmsg = '\0';
+		curlen--;
+	}
 
 	// Set up structures for compression
 	unsigned int dest_len = ceil(1.01*curlen) + 600;
