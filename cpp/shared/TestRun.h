@@ -35,6 +35,9 @@ public:
         for (int i = 0; i < testCases.size(); i++) {
             TestCase tc = testCases[i];
             testCasesJson[i]["testcasenumber"] = tc.GetTestCaseNumber();
+            testCasesJson[i]["h_original"] = tc.GetH_original();
+            testCasesJson[i]["h_bitstring"] = tc.GetH_bitstring();
+            testCasesJson[i]["min"] = tc.GetMin();
             testCasesJson[i]["h_min"] = tc.GetH_min();
             testCasesJson[i]["p_max"] = tc.GetP_max();
         }
@@ -45,9 +48,11 @@ public:
         return styled.write(testRuns);
 
     }
-
-    void AddTestCase(string testCaseNumber, string h_min, string p_max) {
-        TestCase tc(testCaseNumber, h_min, p_max);
+ 
+    
+    
+    void AddTestCase(string testCaseNumber, string h_original, string h_bitstring, string min, string h_min, string p_max) {
+        TestCase tc(testCaseNumber, h_original, h_bitstring, min, h_min, p_max);
         testCases.push_back(tc);
     }
 

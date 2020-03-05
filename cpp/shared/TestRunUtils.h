@@ -14,7 +14,7 @@
 using namespace std;
 
 
-string currentTimestamp() {
+string getCurrentTimestamp() {
     
     string timestamp = "";
     

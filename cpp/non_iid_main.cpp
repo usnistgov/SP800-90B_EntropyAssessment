@@ -1,6 +1,8 @@
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
+#include "shared/TestRun.h"
+#include "shared/TestRunUtils.h"
 #include "non_iid/collision_test.h"
 #include "non_iid/lz78y_test.h"
 #include "non_iid/multi_mmc_test.h"
@@ -58,6 +60,9 @@ int main(int argc, char* argv[]){
 	unsigned long long inint;
 	char *nextOption;
 
+        TestRun testRun;
+        testRun.SetTimestamp(getCurrentTimestamp());
+        
 	data.word_size = 0;
 
         initial_entropy = true;
@@ -334,6 +339,9 @@ int main(int argc, char* argv[]){
 
 		printf("Assessed min entropy: %.17g\n", h_assessed);
 	}
+        testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","");    
+        cout << "JSON:\n";
+        cout << testRun.GetAsJson();
 
 	free_data(&data);
 	return 0;

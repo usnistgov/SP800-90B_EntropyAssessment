@@ -21,7 +21,7 @@ private:
     string h_min;
     string p_max;
     string h_original;
-    string h_bitstream;
+    string h_bitstring;
     string min;
 
 public:
@@ -72,12 +72,12 @@ public:
         return min;
     }
 
-    void SetH_bitstream(string h_bitstream) {
-        this->h_bitstream = h_bitstream;
+    void SetH_bitstring(string h_bitstring) {
+        this->h_bitstring = h_bitstring;
     }
 
-    string GetH_bitstream() const {
-        return h_bitstream;
+    string GetH_bitstring() const {
+        return h_bitstring;
     }
 
     void SetH_original(string h_original) {
