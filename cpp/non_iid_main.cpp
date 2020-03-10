@@ -14,6 +14,8 @@
 #include <getopt.h>
 #include <limits.h>
 
+#include <iostream>
+#include <fstream>
 
 [[ noreturn ]] void print_usage() {
 	printf("Usage is: ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
@@ -61,14 +63,16 @@ int main(int argc, char* argv[]){
 	char *nextOption;
 
         TestRun testRun;
-        testRun.SetTimestamp(getCurrentTimestamp());
+        string timestamp = getCurrentTimestamp();
+        testRun.SetTimestamp(timestamp);
+        string outputfilename = timestamp + ".json";
         
 	data.word_size = 0;
 
         initial_entropy = true;
         all_bits = true;
 
-        while ((opt = getopt(argc, argv, "icatvl:")) != -1) {
+        while ((opt = getopt(argc, argv, "icatvlo:")) != -1) {
                 switch(opt) {
                         case 'i':
                                 initial_entropy = true;
@@ -100,6 +104,9 @@ int main(int argc, char* argv[]){
 				}
 				subsetSize = inint;
 				break;
+                        case 'o':
+                                outputfilename = optarg;                     
+                                break;   
                         default:
                                 print_usage();
                 }
@@ -339,10 +346,16 @@ int main(int argc, char* argv[]){
 
 		printf("Assessed min entropy: %.17g\n", h_assessed);
 	}
+        
         testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","");    
-        cout << "JSON:\n";
-        cout << testRun.GetAsJson();
-
+        //cout << "JSON:\n";
+        //cout << testRun.GetAsJson();
+        
+        ofstream output;
+        output.open (outputfilename);
+        output << testRun.GetAsJson();
+        output.close();
+       
 	free_data(&data);
 	return 0;
 }
