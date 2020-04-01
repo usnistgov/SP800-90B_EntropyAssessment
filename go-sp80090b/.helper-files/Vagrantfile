@@ -1,0 +1,34 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.define "windows" do |win|
+    win.vm.box = "gusztavvargadr/windows-10"
+  end
+
+  config.vm.define "raspbian" do |raspbian|
+    raspbian.vm.box = "gvfoster/raspbian"
+  end
+
+  config.vm.define "centos" do |centos|
+    centos.vm.box = "centos/7 "
+  end
+
+  config.vm.define "ubuntu" do |ubuntu|
+    ubuntu.vm.box = "ubuntu/trusty64"
+  end
+
+  config.vm.define "mac" do |mac|
+    mac.vm.box = "AndrewDryga/vagrant-box-osx"
+  end
+
+  # Tuning
+  #
+  # config.vm.provider "virtualbox" do |vb|
+  #   # Display the VirtualBox GUI when booting the machine
+  #   vb.gui = true
+  #
+  #   # Customize the amount of memory on the VM:
+  #   vb.memory = "1024"
+  # end
+  #
+
+end

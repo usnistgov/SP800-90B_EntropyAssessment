@@ -1,0 +1,53 @@
+on: push
+name: qa
+jobs:
+  code-testing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@master
+        with:
+          go-version: 1.13.x
+
+      - name: Fetch Code
+        uses: actions/checkout@master
+
+      - name: Fetch Dependencies
+        run: go get -v -t -d ./...
+
+      - name: Run
+        run: go test ./...
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@master
+        with:
+          go-version: 1.13.x
+
+      - name: Fetch Code
+        uses: actions/checkout@master
+
+      - name: Fetch Dependencies
+        run: go get -v -t -d ./...
+
+      - name: Run
+        run: go test -cover ./...
+
+  code-benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@master
+        with:
+          go-version: 1.13.x
+
+      - name: Fetch Code
+        uses: actions/checkout@master
+
+      - name: Fetch Dependencies
+        run: go get -v -t -d ./...
+
+      - name: Run
+        run: go test -bench=. ./...
