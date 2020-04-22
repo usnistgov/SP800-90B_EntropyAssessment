@@ -321,7 +321,7 @@ int main(int argc, char* argv[]){
 			H_original = min(ret_min_entropy, H_original);
 		}
 	}
-
+        double h_assessed;
 	if(verbose <= 1) {
 		printf("\n");
 		if(initial_entropy){
@@ -332,7 +332,7 @@ int main(int argc, char* argv[]){
 			}
 		} else printf("h': %f\n", H_bitstring);
 	} else {
-		double h_assessed = data.word_size;
+		h_assessed = data.word_size;
 
 		if((data.alph_size > 2) || !initial_entropy) {
 			h_assessed = min(h_assessed, H_bitstring * data.word_size);
@@ -347,7 +347,7 @@ int main(int argc, char* argv[]){
 		printf("Assessed min entropy: %.17g\n", h_assessed);
 	}
         
-        testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","");    
+        testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","",to_string(h_assessed));    
         //cout << "JSON:\n";
         //cout << testRun.GetAsJson();
         

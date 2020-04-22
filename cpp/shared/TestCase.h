@@ -23,13 +23,14 @@ private:
     string h_original;
     string h_bitstring;
     string min;
+    string h_assessed;
 
 public:
 
     TestCase() {
     }
 
-    TestCase(string testCaseNumber, string h_original, string h_bitstring, string min, string h_min, string p_max) {
+    TestCase(string testCaseNumber, string h_original, string h_bitstring, string min, string h_min, string p_max, string h_assessed) {
 
         SetTestCaseNumber(testCaseNumber);
         SetH_original(h_original);
@@ -37,7 +38,7 @@ public:
         SetMin(min);
         SetH_min(h_min);
         SetP_max(p_max);
-
+        SetH_assessed(h_assessed);
     }
 
     void SetP_max(string p_max) {
@@ -87,6 +88,15 @@ public:
     string GetH_original() const {
         return h_original;
     }
+    
+    void SetH_assessed(string h_assessed) {
+        this->h_assessed = h_assessed;
+    }
+
+    string GetH_assessed() const {
+        return h_assessed;
+    }
+    
 };
 #endif /* TESTCASE_H */
 
