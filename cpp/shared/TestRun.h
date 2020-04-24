@@ -50,13 +50,16 @@ public:
 
     }
  
+    void AddTestCase(TestCase tc) {
+        testCases.push_back(tc);
+    }
     
-    
+    /*
     void AddTestCase(string testCaseNumber, string h_original, string h_bitstring, string min, string h_min, string p_max, string h_assessed) {
         TestCase tc(testCaseNumber, h_original, h_bitstring, min, h_min, p_max, h_assessed);
         testCases.push_back(tc);
     }
-
+    */
     void SetTestCases(vector<TestCase> testCases) {
         this->testCases = testCases;
     }

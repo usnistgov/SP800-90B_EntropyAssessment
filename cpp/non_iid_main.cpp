@@ -181,6 +181,11 @@ int main(int argc, char* argv[]){
 
 	if(verbose <= 1) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
+        TestCase tc631;
+        tc631.SetRet_min_entropy(ret_min_entropy);
+        tc631.GetData_word_size(data.word_size);
+        testRun.AddTestCase(tc631);
+        
 	// Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = collision_test(data.bsymbols, data.blen, verbose, "Bitstring");
@@ -194,6 +199,10 @@ int main(int argc, char* argv[]){
 		H_original = min(ret_min_entropy, H_original);
 	}
 
+        TestCase tc632;
+        tc632.SetRet_min_entropy(ret_min_entropy);
+        TestRun.AddTestCase(tc632);
+        
 	// Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = markov_test(data.bsymbols, data.blen, verbose, "Bitstring");
@@ -256,7 +265,9 @@ int main(int argc, char* argv[]){
 	if(verbose <= 1) printf("\nRunning Predictor Estimates...\n");
 
 	if(((data.alph_size > 2) || !initial_entropy)) {
+            
 		// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
+            
 		ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
 		if(ret_min_entropy >= 0){
 			if(verbose == 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
@@ -347,7 +358,14 @@ int main(int argc, char* argv[]){
 		printf("Assessed min entropy: %.17g\n", h_assessed);
 	}
         
-        testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","",to_string(h_assessed));    
+        TestCase tcSummary;
+        tcSummary.SetTestCaseNumber("summary");
+        tcSummary.SetH_original(to_string(H_original));
+        tcSummary.SetH_bitstring(to_string(H_bitstring));
+        tcSummary.SetH_assessed(to_string(h_assessed));        
+        
+        testRun.AddTestCase(tcSummary);
+        // testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","",to_string(h_assessed));    
         //cout << "JSON:\n";
         //cout << testRun.GetAsJson();
         
