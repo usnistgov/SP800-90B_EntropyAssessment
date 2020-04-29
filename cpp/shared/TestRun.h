@@ -19,6 +19,8 @@ using namespace std;
 class TestRun {
 private:
     string timestamp;
+    string sha256;
+    string filename;
     vector<TestCase> testCases;
 
 
@@ -29,7 +31,9 @@ public:
         
         //TODO: Make the name of the name/value a const
         Json::Value testRuns;
-        testRuns["timestamp"] = GetTimestamp();
+        testRuns["datetimestamp"] = GetTimestamp();
+        testRuns["filename"] = GetFilename();
+        testRuns["sha256"] = GetSha256();
         Json::Value testCasesJson;
         
         for (int i = 0; i < testCases.size(); i++) {
@@ -41,6 +45,12 @@ public:
             testCasesJson[i]["h_min"] = tc.GetH_min();
             testCasesJson[i]["p_max"] = tc.GetP_max();
             testCasesJson[i]["h_assessed"] = tc.GetH_assessed();
+            testCasesJson[i]["ret_min_entropy"] = tc.GetRet_min_entropy();
+            testCasesJson[i]["data_word_size"] = tc.GetData_word_size();
+            testCasesJson[i]["bin_t_tuple_res"] = tc.GetBin_t_tuple_res();
+            testCasesJson[i]["t_tuple_res"] = tc.GetT_tuple_res();
+            testCasesJson[i]["bin_lrs_res"] = tc.GetBin_lrs_res();
+            testCasesJson[i]["lrs_res"] = tc.GetLrs_res();
         }
 
         testRuns["testcases"] = testCasesJson;
@@ -76,7 +86,21 @@ public:
         return timestamp;
     }
 
+    void SetSha256(string sha256) {
+        this->sha256 = sha256;
+    }
 
+    string GetSha256() const {
+        return sha256;
+    }
+
+    void SetFilename(string filename) {
+        this->filename = filename;
+    }
+
+    string GetFilename() const {
+        return filename;
+    }
 
 };
 

@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 
+
 [[ noreturn ]] void print_usage() {
 	printf("Usage is: ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
@@ -62,11 +63,8 @@ int main(int argc, char* argv[]){
 	unsigned long long inint;
 	char *nextOption;
 
-        TestRun testRun;
         string timestamp = getCurrentTimestamp();
-        testRun.SetTimestamp(timestamp);
         string outputfilename = timestamp + ".json";
-        
 	data.word_size = 0;
 
         initial_entropy = true;
@@ -123,6 +121,11 @@ int main(int argc, char* argv[]){
 	// get filename
 	file_path = argv[0];
 
+        
+        char hash[65];
+        sha256_file(file_path, hash);
+      
+         
 	if(argc == 2) {
 		// get bits per word
 		inint = atoi(argv[1]);
@@ -166,6 +169,11 @@ int main(int argc, char* argv[]){
 		printf("Running Most Common Value Estimate...\n");
 	}
 
+        TestRun testRun;
+        testRun.SetTimestamp(timestamp);
+        testRun.SetSha256(hash);
+        testRun.SetFilename(file_path);
+        
 	// Section 6.3.1 - Estimate entropy with Most Common Value
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
@@ -182,8 +190,11 @@ int main(int argc, char* argv[]){
 	if(verbose <= 1) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
         TestCase tc631;
-        tc631.SetRet_min_entropy(ret_min_entropy);
-        tc631.GetData_word_size(data.word_size);
+        tc631.SetH_bitstring(to_string(H_bitstring));
+        tc631.SetH_original(to_string(H_original));
+        tc631.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc631.SetData_word_size(to_string(data.word_size));
+        tc631.SetTestCaseNumber("TestCase6.3.1");
         testRun.AddTestCase(tc631);
         
 	// Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
@@ -200,8 +211,11 @@ int main(int argc, char* argv[]){
 	}
 
         TestCase tc632;
-        tc632.SetRet_min_entropy(ret_min_entropy);
-        TestRun.AddTestCase(tc632);
+        tc632.SetH_bitstring(to_string(H_bitstring));
+        tc632.SetH_original(to_string(H_original));
+        tc632.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc632.SetTestCaseNumber("TestCase6.3.2");
+        testRun.AddTestCase(tc632);
         
 	// Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
 	if(((data.alph_size > 2) || !initial_entropy)) {
@@ -215,7 +229,14 @@ int main(int argc, char* argv[]){
 		if(verbose == 1) printf("\tMarkov Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
 		H_original = min(ret_min_entropy, H_original);
 	}
-
+        
+        TestCase tc633;
+        tc633.SetH_bitstring(to_string(H_bitstring));
+        tc633.SetH_original(to_string(H_original));
+        tc633.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc633.SetTestCaseNumber("TestCase6.3.3");
+        testRun.AddTestCase(tc633);
+        
 	// Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = compression_test(data.bsymbols, data.blen, verbose, "Bitstring");
@@ -233,6 +254,13 @@ int main(int argc, char* argv[]){
 
 	if(verbose <= 1) printf("\nRunning Tuple Estimates...\n");
 
+        TestCase tc634;
+        tc634.SetH_bitstring(to_string(H_bitstring));
+        tc634.SetH_original(to_string(H_original));
+        tc634.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc634.SetTestCaseNumber("TestCase6.3.4");
+        testRun.AddTestCase(tc634);
+        
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
 
 	if(((data.alph_size > 2) || !initial_entropy)) {
@@ -250,7 +278,15 @@ int main(int argc, char* argv[]){
 			H_original = min(t_tuple_res, H_original);
 			}
 	}
-
+        TestCase tc635;
+        tc635.SetH_bitstring(to_string(H_bitstring));
+        tc635.SetH_original(to_string(H_original));
+        tc635.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc635.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc635.SetT_tuple_res(to_string(t_tuple_res));
+        tc635.SetData_word_size(to_string(data.word_size));
+        tc635.SetTestCaseNumber("TestCase6.3.5");
+        testRun.AddTestCase(tc635);
 	// Section 6.3.6 - Estimate entropy with LRS Test
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		if(verbose == 1) printf("\tLRS Test Estimate (bit string) = %f / 1 bit(s)\n", bin_lrs_res);
@@ -264,8 +300,10 @@ int main(int argc, char* argv[]){
 
 	if(verbose <= 1) printf("\nRunning Predictor Estimates...\n");
 
+        
 	if(((data.alph_size > 2) || !initial_entropy)) {
             
+                      
 		// Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
             
 		ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
@@ -273,6 +311,17 @@ int main(int argc, char* argv[]){
 			if(verbose == 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
 			H_bitstring = min(ret_min_entropy, H_bitstring);
 		}
+                
+                TestCase tc637;
+                tc637.SetH_bitstring(to_string(H_bitstring));
+                tc637.SetH_original(to_string(H_original));
+                tc637.SetRet_min_entropy(to_string(ret_min_entropy));
+                tc637.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+                tc637.SetT_tuple_res(to_string(t_tuple_res));
+                tc637.SetData_word_size(to_string(data.word_size));
+                tc637.SetTestCaseNumber("TestCase6.3.7");
+                testRun.AddTestCase(tc637);
+                
 	}
 
 	if(initial_entropy){
@@ -283,6 +332,17 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+    
+        TestCase tc636;
+        tc636.SetH_bitstring(to_string(H_bitstring));
+        tc636.SetH_original(to_string(H_original));
+        tc636.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc636.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc636.SetT_tuple_res(to_string(t_tuple_res));
+        tc636.SetData_word_size(to_string(data.word_size));
+        tc636.SetTestCaseNumber("TestCase6.3.6");
+        testRun.AddTestCase(tc636);
+        
 	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = lag_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
@@ -300,6 +360,16 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+        TestCase tc638;
+        tc638.SetH_bitstring(to_string(H_bitstring));
+        tc638.SetH_original(to_string(H_original));
+        tc638.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc638.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc638.SetT_tuple_res(to_string(t_tuple_res));
+        tc638.SetData_word_size(to_string(data.word_size));
+        tc638.SetTestCaseNumber("TestCase6.3.8");
+        testRun.AddTestCase(tc638);
+        
 	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = multi_mmc_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
@@ -316,6 +386,16 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+        TestCase tc639;
+        tc639.SetH_bitstring(to_string(H_bitstring));
+        tc639.SetH_original(to_string(H_original));
+        tc639.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc639.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc639.SetT_tuple_res(to_string(t_tuple_res));
+        tc639.SetData_word_size(to_string(data.word_size));
+        tc639.SetTestCaseNumber("TestCase6.3.9");
+        testRun.AddTestCase(tc639);
+        
 	// Section 6.3.10 - Estimate entropy with LZ78Y Test
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		ret_min_entropy = LZ78Y_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
@@ -358,13 +438,16 @@ int main(int argc, char* argv[]){
 		printf("Assessed min entropy: %.17g\n", h_assessed);
 	}
         
-        TestCase tcSummary;
-        tcSummary.SetTestCaseNumber("summary");
-        tcSummary.SetH_original(to_string(H_original));
-        tcSummary.SetH_bitstring(to_string(H_bitstring));
-        tcSummary.SetH_assessed(to_string(h_assessed));        
-        
-        testRun.AddTestCase(tcSummary);
+        TestCase tc6310;
+        tc6310.SetH_bitstring(to_string(H_bitstring));
+        tc6310.SetH_original(to_string(H_original));
+        tc6310.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc6310.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc6310.SetT_tuple_res(to_string(t_tuple_res));
+        tc6310.SetData_word_size(to_string(data.word_size));
+        tc6310.SetTestCaseNumber("TestCase6.3.10");
+        tc6310.SetH_assessed(to_string(h_assessed));              
+        testRun.AddTestCase(tc6310);
         // testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","",to_string(h_assessed));    
         //cout << "JSON:\n";
         //cout << testRun.GetAsJson();
