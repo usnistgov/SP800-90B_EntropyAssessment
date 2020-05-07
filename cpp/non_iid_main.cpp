@@ -214,6 +214,7 @@ int main(int argc, char* argv[]){
         tc632.SetH_bitstring(to_string(H_bitstring));
         tc632.SetH_original(to_string(H_original));
         tc632.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc632.SetData_word_size(to_string(data.word_size));
         tc632.SetTestCaseNumber("TestCase6.3.2");
         testRun.AddTestCase(tc632);
         
@@ -234,6 +235,7 @@ int main(int argc, char* argv[]){
         tc633.SetH_bitstring(to_string(H_bitstring));
         tc633.SetH_original(to_string(H_original));
         tc633.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc633.SetData_word_size(to_string(data.word_size));
         tc633.SetTestCaseNumber("TestCase6.3.3");
         testRun.AddTestCase(tc633);
         
@@ -258,6 +260,7 @@ int main(int argc, char* argv[]){
         tc634.SetH_bitstring(to_string(H_bitstring));
         tc634.SetH_original(to_string(H_original));
         tc634.SetRet_min_entropy(to_string(ret_min_entropy));
+        tc634.SetData_word_size(to_string(data.word_size));
         tc634.SetTestCaseNumber("TestCase6.3.4");
         testRun.AddTestCase(tc634);
         
@@ -283,6 +286,7 @@ int main(int argc, char* argv[]){
         tc635.SetH_original(to_string(H_original));
         tc635.SetRet_min_entropy(to_string(ret_min_entropy));
         tc635.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc635.SetBin_lrs_res(to_string(bin_lrs_res));
         tc635.SetT_tuple_res(to_string(t_tuple_res));
         tc635.SetData_word_size(to_string(data.word_size));
         tc635.SetTestCaseNumber("TestCase6.3.5");
@@ -318,6 +322,7 @@ int main(int argc, char* argv[]){
                 tc637.SetRet_min_entropy(to_string(ret_min_entropy));
                 tc637.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
                 tc637.SetT_tuple_res(to_string(t_tuple_res));
+                tc637.SetBin_lrs_res(to_string(bin_lrs_res));
                 tc637.SetData_word_size(to_string(data.word_size));
                 tc637.SetTestCaseNumber("TestCase6.3.7");
                 testRun.AddTestCase(tc637);
@@ -338,6 +343,7 @@ int main(int argc, char* argv[]){
         tc636.SetH_original(to_string(H_original));
         tc636.SetRet_min_entropy(to_string(ret_min_entropy));
         tc636.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
+        tc636.SetBin_lrs_res(to_string(bin_lrs_res));
         tc636.SetT_tuple_res(to_string(t_tuple_res));
         tc636.SetData_word_size(to_string(data.word_size));
         tc636.SetTestCaseNumber("TestCase6.3.6");
@@ -366,6 +372,7 @@ int main(int argc, char* argv[]){
         tc638.SetRet_min_entropy(to_string(ret_min_entropy));
         tc638.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
         tc638.SetT_tuple_res(to_string(t_tuple_res));
+        tc638.SetBin_lrs_res(to_string(bin_lrs_res));
         tc638.SetData_word_size(to_string(data.word_size));
         tc638.SetTestCaseNumber("TestCase6.3.8");
         testRun.AddTestCase(tc638);
@@ -392,6 +399,7 @@ int main(int argc, char* argv[]){
         tc639.SetRet_min_entropy(to_string(ret_min_entropy));
         tc639.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
         tc639.SetT_tuple_res(to_string(t_tuple_res));
+        tc639.SetBin_lrs_res(to_string(bin_lrs_res));
         tc639.SetData_word_size(to_string(data.word_size));
         tc639.SetTestCaseNumber("TestCase6.3.9");
         testRun.AddTestCase(tc639);
@@ -444,6 +452,7 @@ int main(int argc, char* argv[]){
         tc6310.SetRet_min_entropy(to_string(ret_min_entropy));
         tc6310.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
         tc6310.SetT_tuple_res(to_string(t_tuple_res));
+        tc6310.SetBin_lrs_res(to_string(bin_lrs_res));
         tc6310.SetData_word_size(to_string(data.word_size));
         tc6310.SetTestCaseNumber("TestCase6.3.10");
         tc6310.SetH_assessed(to_string(h_assessed));              
