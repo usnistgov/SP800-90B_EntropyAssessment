@@ -190,12 +190,12 @@ int main(int argc, char* argv[]){
 	if(verbose <= 1) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
         TestCase tc631;
-        tc631.SetH_bitstring(to_string(H_bitstring));
-        tc631.SetH_original(to_string(H_original));
-        tc631.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc631.SetData_word_size(to_string(data.word_size));
-        tc631.SetLrs_res(to_string(lrs_res));
-        tc631.SetTestCaseNumber("TestCase6.3.1");
+        tc631.SetH_bitstring(H_bitstring);
+        tc631.SetH_original(H_original);
+        tc631.SetRet_min_entropy(ret_min_entropy);
+        tc631.SetData_word_size(data.word_size);
+        tc631.SetLrs_res(lrs_res);
+        tc631.SetTestCaseNumber("Estimate entropy with Most Common Value");
         testRun.AddTestCase(tc631);
         
 	// Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
@@ -212,12 +212,12 @@ int main(int argc, char* argv[]){
 	}
 
         TestCase tc632;
-        tc632.SetH_bitstring(to_string(H_bitstring));
-        tc632.SetH_original(to_string(H_original));
-        tc632.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc632.SetData_word_size(to_string(data.word_size));
-        tc632.SetLrs_res(to_string(lrs_res));
-        tc632.SetTestCaseNumber("TestCase6.3.2");
+        tc632.SetH_bitstring(H_bitstring);
+        tc632.SetH_original(H_original);
+        tc632.SetRet_min_entropy(ret_min_entropy);
+        tc632.SetData_word_size(data.word_size);
+        tc632.SetLrs_res(lrs_res);
+        tc632.SetTestCaseNumber("Estimate entropy with Collision Test (for bit strings only)");
         testRun.AddTestCase(tc632);
         
 	// Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
@@ -234,12 +234,12 @@ int main(int argc, char* argv[]){
 	}
         
         TestCase tc633;
-        tc633.SetH_bitstring(to_string(H_bitstring));
-        tc633.SetH_original(to_string(H_original));
-        tc633.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc633.SetData_word_size(to_string(data.word_size));
-        tc633.SetLrs_res(to_string(lrs_res));
-        tc633.SetTestCaseNumber("TestCase6.3.3");
+        tc633.SetH_bitstring(H_bitstring);
+        tc633.SetH_original(H_original);
+        tc633.SetRet_min_entropy(ret_min_entropy);
+        tc633.SetData_word_size(data.word_size);
+        tc633.SetLrs_res(lrs_res);
+        tc633.SetTestCaseNumber("Estimate entropy with Markov Test (for bit strings only)");
         testRun.AddTestCase(tc633);
         
 	// Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
@@ -260,12 +260,12 @@ int main(int argc, char* argv[]){
 	if(verbose <= 1) printf("\nRunning Tuple Estimates...\n");
 
         TestCase tc634;
-        tc634.SetH_bitstring(to_string(H_bitstring));
-        tc634.SetH_original(to_string(H_original));
-        tc634.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc634.SetData_word_size(to_string(data.word_size));
-        tc634.SetLrs_res(to_string(lrs_res));
-        tc634.SetTestCaseNumber("TestCase6.3.4");
+        tc634.SetH_bitstring(H_bitstring);
+        tc634.SetH_original(H_original);
+        tc634.SetRet_min_entropy(ret_min_entropy);
+        tc634.SetData_word_size(data.word_size);
+        tc634.SetLrs_res(lrs_res);
+        tc634.SetTestCaseNumber("Estimate entropy with Compression Test (for bit strings only)");
         testRun.AddTestCase(tc634);
         
 	// Section 6.3.5 - Estimate entropy with t-Tuple Test
@@ -286,15 +286,14 @@ int main(int argc, char* argv[]){
 			}
 	}
         TestCase tc635;
-        tc635.SetH_bitstring(to_string(H_bitstring));
-        tc635.SetH_original(to_string(H_original));
-        tc635.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc635.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
-        tc635.SetBin_lrs_res(to_string(bin_lrs_res));
-        tc635.SetT_tuple_res(to_string(t_tuple_res));
-        tc635.SetData_word_size(to_string(data.word_size));
-        tc635.SetLrs_res(to_string(lrs_res));
-        tc635.SetTestCaseNumber("TestCase6.3.5");
+        tc635.SetH_bitstring(H_bitstring);
+        tc635.SetH_original(H_original);
+        tc635.SetRet_min_entropy(ret_min_entropy);
+        tc635.SetBin_t_tuple_res(bin_t_tuple_res);
+        tc635.SetT_tuple_res(t_tuple_res);
+        tc635.SetData_word_size(data.word_size);
+        tc635.SetLrs_res(lrs_res);
+        tc635.SetTestCaseNumber("Estimate entropy with t-Tuple Test");
         testRun.AddTestCase(tc635);
 	// Section 6.3.6 - Estimate entropy with LRS Test
 	if(((data.alph_size > 2) || !initial_entropy)) {
@@ -322,15 +321,15 @@ int main(int argc, char* argv[]){
 		}
                 
                 TestCase tc637;
-                tc637.SetH_bitstring(to_string(H_bitstring));
-                tc637.SetH_original(to_string(H_original));
-                tc637.SetRet_min_entropy(to_string(ret_min_entropy));
-                tc637.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
-                tc637.SetT_tuple_res(to_string(t_tuple_res));
-                tc637.SetBin_lrs_res(to_string(bin_lrs_res));
-                tc637.SetData_word_size(to_string(data.word_size));
-                tc637.SetLrs_res(to_string(lrs_res));
-                tc637.SetTestCaseNumber("TestCase6.3.7");
+                tc637.SetH_bitstring(H_bitstring);
+                tc637.SetH_original(H_original);
+                tc637.SetRet_min_entropy(ret_min_entropy);
+                tc637.SetBin_t_tuple_res(bin_t_tuple_res);
+                tc637.SetT_tuple_res(t_tuple_res);
+                tc637.SetBin_lrs_res(bin_lrs_res);
+                tc637.SetData_word_size(data.word_size);
+                tc637.SetLrs_res(lrs_res);
+                tc637.SetTestCaseNumber("Estimate entropy with Multi Most Common in Window Test");
                 testRun.AddTestCase(tc637);
                 
 	}
@@ -345,15 +344,15 @@ int main(int argc, char* argv[]){
 
     
         TestCase tc636;
-        tc636.SetH_bitstring(to_string(H_bitstring));
-        tc636.SetH_original(to_string(H_original));
-        tc636.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc636.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
-        tc636.SetBin_lrs_res(to_string(bin_lrs_res));
-        tc636.SetT_tuple_res(to_string(t_tuple_res));
-        tc636.SetData_word_size(to_string(data.word_size));
-        tc636.SetLrs_res(to_string(lrs_res));
-        tc636.SetTestCaseNumber("TestCase6.3.6");
+        tc636.SetH_bitstring(H_bitstring);
+        tc636.SetH_original(H_original);
+        tc636.SetRet_min_entropy(ret_min_entropy);
+        tc636.SetBin_t_tuple_res(bin_t_tuple_res);
+        tc636.SetBin_lrs_res(bin_lrs_res);
+        tc636.SetT_tuple_res(t_tuple_res);
+        tc636.SetData_word_size(data.word_size);
+        tc636.SetLrs_res(lrs_res);
+        tc636.SetTestCaseNumber("Estimate entropy with LRS Test");
         testRun.AddTestCase(tc636);
         
 	// Section 6.3.8 - Estimate entropy with Lag Prediction Test
@@ -374,15 +373,15 @@ int main(int argc, char* argv[]){
 	}
 
         TestCase tc638;
-        tc638.SetH_bitstring(to_string(H_bitstring));
-        tc638.SetH_original(to_string(H_original));
-        tc638.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc638.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
-        tc638.SetT_tuple_res(to_string(t_tuple_res));
-        tc638.SetBin_lrs_res(to_string(bin_lrs_res));
-        tc638.SetData_word_size(to_string(data.word_size));
-        tc638.SetLrs_res(to_string(lrs_res));
-        tc638.SetTestCaseNumber("TestCase6.3.8");
+        tc638.SetH_bitstring(H_bitstring);
+        tc638.SetH_original(H_original);
+        tc638.SetRet_min_entropy(ret_min_entropy);
+        tc638.SetBin_t_tuple_res(bin_t_tuple_res);
+        tc638.SetT_tuple_res(t_tuple_res);
+        tc638.SetBin_lrs_res(bin_lrs_res);
+        tc638.SetData_word_size(data.word_size);
+        tc638.SetLrs_res(lrs_res);
+        tc638.SetTestCaseNumber("Estimate entropy with Lag Prediction Test");
         testRun.AddTestCase(tc638);
         
 	// Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
@@ -402,15 +401,15 @@ int main(int argc, char* argv[]){
 	}
 
         TestCase tc639;
-        tc639.SetH_bitstring(to_string(H_bitstring));
-        tc639.SetH_original(to_string(H_original));
-        tc639.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc639.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
-        tc639.SetT_tuple_res(to_string(t_tuple_res));
-        tc639.SetBin_lrs_res(to_string(bin_lrs_res));
-        tc639.SetData_word_size(to_string(data.word_size));
-        tc639.SetLrs_res(to_string(lrs_res));
-        tc639.SetTestCaseNumber("TestCase6.3.9");
+        tc639.SetH_bitstring(H_bitstring);
+        tc639.SetH_original(H_original);
+        tc639.SetRet_min_entropy(ret_min_entropy);
+        tc639.SetBin_t_tuple_res(bin_t_tuple_res);
+        tc639.SetT_tuple_res(t_tuple_res);
+        tc639.SetBin_lrs_res(bin_lrs_res);
+        tc639.SetData_word_size(data.word_size);
+        tc639.SetLrs_res(lrs_res);
+        tc639.SetTestCaseNumber("Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)");
         testRun.AddTestCase(tc639);
         
 	// Section 6.3.10 - Estimate entropy with LZ78Y Test
@@ -456,18 +455,18 @@ int main(int argc, char* argv[]){
 	}
         
         TestCase tc6310;
-        tc6310.SetH_bitstring(to_string(H_bitstring));
-        tc6310.SetH_original(to_string(H_original));
-        tc6310.SetRet_min_entropy(to_string(ret_min_entropy));
-        tc6310.SetBin_t_tuple_res(to_string(bin_t_tuple_res));
-        tc6310.SetT_tuple_res(to_string(t_tuple_res));
-        tc6310.SetBin_lrs_res(to_string(bin_lrs_res));
-        tc6310.SetData_word_size(to_string(data.word_size));
-        tc6310.SetTestCaseNumber("TestCase6.3.10");
-        tc6310.SetH_assessed(to_string(h_assessed));   
-        tc6310.SetLrs_res(to_string(lrs_res));
+        tc6310.SetH_bitstring(H_bitstring);
+        tc6310.SetH_original(H_original);
+        tc6310.SetRet_min_entropy(ret_min_entropy);
+        tc6310.SetBin_t_tuple_res(bin_t_tuple_res);
+        tc6310.SetT_tuple_res(t_tuple_res);
+        tc6310.SetBin_lrs_res(bin_lrs_res);
+        tc6310.SetData_word_size(data.word_size);
+        tc6310.SetTestCaseNumber("Estimate entropy with LZ78Y Test");
+        tc6310.SetH_assessed(h_assessed);   
+        tc6310.SetLrs_res(lrs_res);
         testRun.AddTestCase(tc6310);
-        // testRun.AddTestCase("testcase1", to_string(H_original), to_string(H_bitstring), to_string(data.word_size*H_bitstring),"","",to_string(h_assessed));    
+        // testRun.AddTestCase("testcase1", H_original), H_bitstring), data.word_size*H_bitstring),"","",h_assessed));    
         //cout << "JSON:\n";
         //cout << testRun.GetAsJson();
         

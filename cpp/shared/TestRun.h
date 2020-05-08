@@ -31,41 +31,43 @@ public:
 
         //TODO: Make the name of the name/value a const
         Json::Value testRuns;
-        testRuns["datetimestamp"] = GetTimestamp();
-        testRuns["filename"] = GetFilename();
-        testRuns["sha256"] = GetSha256();
+        testRuns["DateTimeStamp"] = GetTimestamp();
+        testRuns["Filename"] = GetFilename();
+        testRuns["Sha256"] = GetSha256();
         Json::Value testCasesJson;
 
         for (int i = 0; i < testCases.size(); i++) {
             TestCase tc = testCases[i];
-            testCasesJson[i]["testcasenumber"] = tc.GetTestCaseNumber();
-            if (tc.GetH_original() != "")
-                testCasesJson[i]["h_original"] = tc.GetH_original();
-            if (tc.GetH_bitstring() != "")
-                testCasesJson[i]["h_bitstring"] = tc.GetH_bitstring();
+            testCasesJson[i]["TestCase"] = tc.GetTestCaseNumber();
+            if (tc.GetH_original() != -1)
+                testCasesJson[i]["HOriginal"] = tc.GetH_original();
+            if (tc.GetH_bitstring() !=-1)
+                testCasesJson[i]["HBitstring"] = tc.GetH_bitstring();
+            /*
             if (tc.GetMin() != "")
-                testCasesJson[i]["min"] = tc.GetMin();
+                testCasesJson[i]["Min"] = tc.GetMin();
             if (tc.GetH_min() != "")
-                testCasesJson[i]["h_min"] = tc.GetH_min();
+                testCasesJson[i]["HMin"] = tc.GetH_min();
             if (tc.GetP_max() != "")
-                testCasesJson[i]["p_max"] = tc.GetP_max();
-            if (tc.GetH_assessed() != "")
-                testCasesJson[i]["h_assessed"] = tc.GetH_assessed();
-            if (tc.GetRet_min_entropy()!= "")
-                testCasesJson[i]["ret_min_entropy"] = tc.GetRet_min_entropy();
-            if (tc.GetData_word_size() != "")
-                testCasesJson[i]["data_word_size"] = tc.GetData_word_size();
-            if (tc.GetBin_t_tuple_res()!= "")
-                testCasesJson[i]["bin_t_tuple_res"] = tc.GetBin_t_tuple_res();
-            if (tc.GetT_tuple_res() != "")
-                testCasesJson[i]["t_tuple_res"] = tc.GetT_tuple_res();
-            if (tc.GetBin_lrs_res() != "")
-                testCasesJson[i]["bin_lrs_res"] = tc.GetBin_lrs_res();
-            if (tc.GetLrs_res() != "")
-                testCasesJson[i]["lrs_res"] = tc.GetLrs_res();
+                testCasesJson[i]["PMax"] = tc.GetP_max();
+            */
+            if (tc.GetH_assessed() != -1)
+                testCasesJson[i]["HAssessed"] = tc.GetH_assessed();
+            if (tc.GetRet_min_entropy()!= -1)
+                testCasesJson[i]["RetMinEntropy"] = tc.GetRet_min_entropy();
+            if (tc.GetData_word_size() != -1)
+                testCasesJson[i]["DataWordSize"] = tc.GetData_word_size();
+            if (tc.GetBin_t_tuple_res()!= -1)
+                testCasesJson[i]["BinTTupleRes"] = tc.GetBin_t_tuple_res();
+            if (tc.GetT_tuple_res() != -1)
+                testCasesJson[i]["TTupleRes"] = tc.GetT_tuple_res();
+            if (tc.GetBin_lrs_res() != -1)
+                testCasesJson[i]["BinLrsRes"] = tc.GetBin_lrs_res();
+            if (tc.GetLrs_res() != -1)
+                testCasesJson[i]["LrsRes"] = tc.GetLrs_res();
         }
 
-        testRuns["testcases"] = testCasesJson;
+        testRuns["TestCases"] = testCasesJson;
 
         Json::StyledWriter styled;
         return styled.write(testRuns);
