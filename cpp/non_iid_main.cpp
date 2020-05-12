@@ -428,6 +428,19 @@ int main(int argc, char* argv[]){
 			H_original = min(ret_min_entropy, H_original);
 		}
 	}
+        
+        TestCase tc6310;
+        tc6310.SetH_bitstring(H_bitstring);
+        tc6310.SetH_original(H_original);
+        tc6310.SetRet_min_entropy(ret_min_entropy);
+        tc6310.SetBin_t_tuple_res(bin_t_tuple_res);
+        tc6310.SetT_tuple_res(t_tuple_res);
+        tc6310.SetBin_lrs_res(bin_lrs_res);
+        tc6310.SetData_word_size(data.word_size);
+        tc6310.SetTestCaseNumber("Estimate entropy with LZ78Y Test");
+        tc6310.SetLrs_res(lrs_res);
+        testRun.AddTestCase(tc6310);
+         
         double h_assessed;
 	if(verbose <= 1) {
 		printf("\n");
@@ -453,19 +466,21 @@ int main(int argc, char* argv[]){
 
 		printf("Assessed min entropy: %.17g\n", h_assessed);
 	}
-        
-        TestCase tc6310;
-        tc6310.SetH_bitstring(H_bitstring);
-        tc6310.SetH_original(H_original);
-        tc6310.SetRet_min_entropy(ret_min_entropy);
-        tc6310.SetBin_t_tuple_res(bin_t_tuple_res);
-        tc6310.SetT_tuple_res(t_tuple_res);
-        tc6310.SetBin_lrs_res(bin_lrs_res);
-        tc6310.SetData_word_size(data.word_size);
-        tc6310.SetTestCaseNumber("Estimate entropy with LZ78Y Test");
-        tc6310.SetH_assessed(h_assessed);   
-        tc6310.SetLrs_res(lrs_res);
-        testRun.AddTestCase(tc6310);
+    
+        TestCase tcOverall;
+        tcOverall.SetH_bitstring(H_bitstring);
+        tcOverall.SetH_original(H_original);
+        tcOverall.SetRet_min_entropy(ret_min_entropy);
+        tcOverall.SetBin_t_tuple_res(bin_t_tuple_res);
+        tcOverall.SetT_tuple_res(t_tuple_res);
+        tcOverall.SetBin_lrs_res(bin_lrs_res);
+        tcOverall.SetData_word_size(data.word_size);
+        tcOverall.SetTestCaseNumber("Overall");
+        tcOverall.SetH_assessed(h_assessed);   
+        tcOverall.SetLrs_res(lrs_res);
+        testRun.AddTestCase(tcOverall);
+    
+
         // testRun.AddTestCase("testcase1", H_original), H_bitstring), data.word_size*H_bitstring),"","",h_assessed));    
         //cout << "JSON:\n";
         //cout << testRun.GetAsJson();
