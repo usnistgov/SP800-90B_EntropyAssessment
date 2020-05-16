@@ -32,6 +32,7 @@ One can make all the binaries using:
 	make
 
 After compiling, one can test that your compilation behaves as expected by using the self-test functionality:
+	
 	cd selftest
 	./selftest
 
@@ -64,9 +65,11 @@ Running this works the same way. This looks like
 	./ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]
 
 To run the restart testing, use the Makefile to compile:
+    
     make restart
 
 Running this is similar.
+	
 	./ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>
 
 * `-i`: Indicates IID data.
@@ -76,10 +79,12 @@ Running this is similar.
 * `H_I` is the assessed entropy.
 
 To calculate the entropy reduction due to conditioning, use the Makefile to compile:
+    
     make conditioning
 
 Running this is similar.
-	./ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>
+	
+    ./ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>
 
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
 * `n_in`: The number of bits entering the conditioning step per output.
