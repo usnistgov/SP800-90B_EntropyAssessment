@@ -4,6 +4,7 @@
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
 #include <assert.h>
+#include <unistd.h>
 
 // The tests used
 const unsigned int num_tests = 19;
@@ -473,7 +474,10 @@ void print_results(int C[][3]){
 
 bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose){
 	uint64_t xoshiro256starstarMainSeed[4];
+	bool istty;
 
+	// Progress
+	size_t completed = 0;
 
 	// Counters for the pass/fail of each statistic
 	int C[num_tests][3];
@@ -481,6 +485,8 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	// Original test results (t) 
 	long double t[num_tests];
 	bool test_status[num_tests];
+
+	istty = (isatty(STDOUT_FILENO)==1);
 
 	// Build map of results
 	for(unsigned int i = 0; i < num_tests; ++i){
@@ -521,7 +527,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		data = new byte[dp->len];
 		rawdata = new byte[dp->len];
 
-		// Build map of results
+		// Init results
 		for(unsigned int i = 0; i < num_tests; ++i){
 			tp[i] = -1;
 		}
@@ -538,11 +544,10 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 
 		#pragma omp for
 		for(int i = 0; i < PERMS; ++i) {
-			if(verbose && (passed_count != 19)){
-				cout << "\rPermutation Test (core " << omp_get_thread_num() << "): " << passed_count <<  " tests passed" << endl;
-			}
-
 			if(passed_count < 19) {
+				char statusMessage[1024];
+				size_t statusMessageLength = 0;
+
 				FYshuffle(data, rawdata, dp->len, xoshiro256starstarSeed);
 				run_tests(dp, data, rawdata, rawmean, median, tp, test_status);
 
@@ -565,12 +570,57 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 					}
 					passed_count = 0;
 					for(unsigned int j=0; j < num_tests; j++) if(!test_status[j]) passed_count++;
+					completed ++;
+				} // end resultUpdate
+
+				if(verbose){
+					int res;
+					/* Construct pretty output regardless of whether on terminal (tty) or 
+					* redirected to another file descriptor (eg. redirect to file).
+					* Note that if using something like 'tee' to replicate the output
+					* then it might be handy to use 'unbuffer' to fake the call into
+					* thinking it is still being sent to a tty.
+					*/
+					if(istty) {
+						statusMessage[0] = '\r';
+						statusMessage[1] = '\0';
+						statusMessageLength = 1;
+					} else {
+						statusMessage[0] = '\0';
+						statusMessageLength = 0;
+					}
+
+					res = snprintf(statusMessage+statusMessageLength, sizeof(statusMessage)-statusMessageLength, "%6.02f%% of Permutuation test rounds, %6.02f%% of Permutuation tests", (100.0*((float)completed)/((float)PERMS)), (100.0*((float)passed_count)/19.0));
+					assert(res>0);
+					statusMessageLength += res;
+					assert(statusMessageLength < sizeof(statusMessage));
+
+					/* If not diplaying to screen, then we can print even more information. Ultimately
+					* we want the '\n' however printed when not printing to terminal so that the redirected
+					* output looks nicer. 
+					*/
+					if(!istty)  {
+						res = snprintf(statusMessage+statusMessageLength, sizeof(statusMessage)-statusMessageLength, " (Core %d/%d, passed_count %d)\n", omp_get_thread_num(), omp_get_num_threads()-1, passed_count);
+						assert(res>0);
+						statusMessageLength += res;
+						assert(statusMessageLength < sizeof(statusMessage));
+					}
+					#pragma omp critical(verboseOutput)
+					{
+						fputs(statusMessage, stdout);
+						fflush(stdout);
+					}
 				}
+			} else {
+				//We don't have a lock for this branch, so make one to update the complted count.
+				#pragma omp atomic
+				completed ++;
 			}
+
 		}
-	delete[](data);
-	delete[](rawdata);
-	}
+        	delete[](data);
+        	delete[](rawdata);
+	} //end parallel
 
 	if(verbose) print_results(C);
 
