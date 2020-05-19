@@ -1,6 +1,8 @@
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
+#include "shared/TestRun.h"
+#include "shared/TestRunUtils.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
 #include <omp.h>
@@ -50,11 +52,14 @@ int main(int argc, char* argv[]){
 	unsigned long long inint;
 	char *nextOption;
 
+        string timestamp = getCurrentTimestamp();
+        string outputfilename = timestamp + ".json";
+        
 	data.word_size = 0;
 	initial_entropy = true;
 	all_bits = true;
 
-	while ((opt = getopt(argc, argv, "icatvl:")) != -1) {
+	while ((opt = getopt(argc, argv, "icatvlo:")) != -1) {
 		switch(opt) {
 			case 'i':
 				initial_entropy = true;
@@ -86,6 +91,9 @@ int main(int argc, char* argv[]){
                                 }
                                 subsetSize = inint;
                                 break;
+                        case 'o':
+                                outputfilename = optarg;                     
+                                break; 
 			default:
 				print_usage();
 		}
