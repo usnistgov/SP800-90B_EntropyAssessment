@@ -9,7 +9,8 @@
 #include <getopt.h>
 #include <limits.h>
 
-
+#include <iostream>
+#include <fstream>
 
 [[ noreturn ]] void print_usage(){
 	printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
@@ -128,6 +129,15 @@ int main(int argc, char* argv[]){
 		printf("Opening file: '%s'\n", file_path);
 	}
 
+        char hash[65];
+        sha256_file(file_path, hash);
+        
+        TestRun testRun;
+        testRun.SetTimestamp(timestamp);
+        testRun.SetSha256(hash);
+        testRun.SetFilename(file_path);
+        
+        
 	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
 		printf("Error reading file.\n");
 		print_usage();
@@ -161,18 +171,27 @@ int main(int argc, char* argv[]){
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
 	}
 
+        TestCase tc;
+        tc.SetMean(rawmean);
+        tc.SetMedian(median);
+        tc.SetBinary( (alphabet_size == 2 ? 1 : 0 ));
+        
+        printf("TEST CAST MEAN  %f", tc.GetMean());
+        
 	double H_original = data.word_size;
 	double H_bitstring = 1.0;
 
 	// Compute the min-entropy of the dataset
 	if(initial_entropy) {
-		H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal");
+		H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal",tc);
 	}
-
+        
+        tc.SetH_original(H_original);
+        
 	if(((data.alph_size > 2) || !initial_entropy)) {
-		H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+		H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring", tc);
 	}
-
+        tc.SetH_bitstring(H_bitstring);
         if(verbose <= 1) {
                 if(initial_entropy){
                         printf("H_original: %f\n", H_original);
@@ -196,12 +215,15 @@ int main(int argc, char* argv[]){
 
                 printf("Assessed min entropy: %.17g\n", h_assessed);
         }
-
+       
+        
 	printf("\n");
 
 	// Compute chi square stats
 	bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
 
+        tc.SetPassed_chi_square_tests(chi_square_test_pass);
+        
 	if(chi_square_test_pass){
 		printf("** Passed chi square tests\n\n");
 	}else{
@@ -211,6 +233,8 @@ int main(int argc, char* argv[]){
 	// Compute length of the longest repeated substring stats
 	bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
 
+        tc.SetPassed_length_longest_repeated_substring_test(len_LRS_test_pass);
+        
 	if(len_LRS_test_pass){
 		printf("** Passed length of longest repeated substring test\n\n");
 	}else{
@@ -218,14 +242,21 @@ int main(int argc, char* argv[]){
 	}
 
 	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose);
+	bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
 
 	if(perm_test_pass){
 		printf("** Passed IID permutation tests\n\n");
 	}else{
 		printf("** Failed IID permutation tests\n\n");
 	}
-
+        
+        testRun.AddTestCase(tc);
+        
+        ofstream output;
+        output.open (outputfilename);
+        output << testRun.GetAsJson();
+        output.close();
+        
 	free_data(&data);
 	return 0;
 }

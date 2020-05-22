@@ -10,7 +10,9 @@
 
 #include <cstdlib>
 #include <string>
-
+#include <vector> 
+#include "TestResult.h"
+#include <jsoncpp/json/json.h>
 
 
 using namespace std;
@@ -57,8 +59,11 @@ private:
     double longest_repeated_substring_pr_x_1 = -1.0;
     
     int passed_length_longest_repeated_substring_test = -1;
-    
 
+    int passed_iid_permutation_tests = -1;
+
+    
+    vector<TestResult> testResults;
     
     
 public:
@@ -341,6 +346,26 @@ public:
 
     double GetMean() const {
         return mean;
+    }
+
+    void SetTestResults(vector<TestResult> testResults) {
+        this->testResults = testResults;
+    }
+
+    vector<TestResult> GetTestResults() const {
+        return testResults;
+    }
+    
+    void AddTestResult(TestResult tr) {
+        testResults.push_back(tr);
+    }
+
+    void SetPassed_iid_permutation_tests(int passed_iid_permutation_tests) {
+        this->passed_iid_permutation_tests = passed_iid_permutation_tests;
+    }
+
+    int GetPassed_iid_permutation_tests() const {
+        return passed_iid_permutation_tests;
     }
     
 };

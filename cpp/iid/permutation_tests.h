@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
+#include "../shared/TestCase.h"
+#include "../shared/TestResult.h"
 #include <assert.h>
 #include <unistd.h>
 
@@ -472,7 +474,101 @@ void print_results(int C[][3]){
 	cout << endl;
 }
 
-bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose){
+void populateTestCase(TestCase tc, int C[][3]){
+
+    TestResult tr0;
+    TestResult tr1;
+    TestResult tr2;
+    
+    tr0.SetIteration("0");
+    tr1.SetIteration("1");
+    tr2.SetIteration("2");
+    
+    tr0.SetExcursion(C[0][0]);
+    tr1.SetExcursion(C[0][1]);
+    tr2.SetExcursion(C[0][2]);
+
+    tr0.SetNumDirectionalRuns(C[1][0]);
+    tr1.SetNumDirectionalRuns(C[1][1]);
+    tr2.SetNumDirectionalRuns(C[1][2]);
+       
+    tr0.SetLenDirectionalRuns(C[2][0]);
+    tr1.SetLenDirectionalRuns(C[2][1]);
+    tr2.SetLenDirectionalRuns(C[2][2]);
+    
+    tr0.SetNumIncreasesDecreases(C[3][0]);
+    tr1.SetNumIncreasesDecreases(C[3][1]);
+    tr2.SetNumIncreasesDecreases(C[3][2]);
+    
+    tr0.SetNumRunsMedian(C[4][0]);
+    tr1.SetNumRunsMedian(C[4][1]);
+    tr2.SetNumRunsMedian(C[4][2]);
+    
+    tr0.SetLenRunsMedian(C[5][0]);
+    tr1.SetLenRunsMedian(C[5][1]);
+    tr2.SetLenRunsMedian(C[5][2]);
+    
+    tr0.SetAvgCollision(C[6][0]);
+    tr1.SetAvgCollision(C[6][1]);
+    tr2.SetAvgCollision(C[6][2]);
+    
+    tr0.SetMaxCollision(C[7][0]);
+    tr1.SetMaxCollision(C[7][1]);
+    tr2.SetMaxCollision(C[7][2]);
+    
+    tr0.SetPeriodicity1(C[8][0]);
+    tr1.SetPeriodicity1(C[8][1]);
+    tr2.SetPeriodicity1(C[8][2]);
+    
+    tr0.SetPeriodicity2(C[9][0]);
+    tr1.SetPeriodicity2(C[9][1]);
+    tr2.SetPeriodicity2(C[9][2]);
+    
+    tr0.SetPeriodicity8(C[10][0]);
+    tr1.SetPeriodicity8(C[10][1]);
+    tr2.SetPeriodicity8(C[10][2]);
+
+    tr0.SetPeriodicity16(C[11][0]);
+    tr1.SetPeriodicity16(C[11][1]);
+    tr2.SetPeriodicity16(C[11][2]);
+
+    tr0.SetPeriodicity32(C[12][0]);
+    tr1.SetPeriodicity32(C[12][1]);
+    tr2.SetPeriodicity32(C[12][2]);
+
+    tr0.SetCovariance1(C[13][0]);
+    tr1.SetCovariance1(C[13][1]);
+    tr2.SetCovariance1(C[13][2]);
+
+    tr0.SetCovariance2(C[13][0]);
+    tr1.SetCovariance2(C[13][1]);
+    tr2.SetCovariance2(C[13][2]);
+
+    tr0.SetCovariance8(C[13][0]);
+    tr1.SetCovariance8(C[13][1]);
+    tr2.SetCovariance8(C[13][2]);
+    
+    tr0.SetCovariance16(C[13][0]);
+    tr1.SetCovariance16(C[13][1]);
+    tr2.SetCovariance16(C[13][2]);
+
+    tr0.SetCovariance32(C[13][0]);
+    tr1.SetCovariance32(C[13][1]);
+    tr2.SetCovariance32(C[13][2]);
+
+    tr0.SetCompression(C[14][0]);
+    tr1.SetCompression(C[14][1]);
+    tr2.SetCompression(C[14][2]);
+    
+    tc.AddTestResult(tr0);
+    tc.AddTestResult(tr1);
+    tc.AddTestResult(tr2);
+            
+}
+
+
+
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose, TestCase tc){
 	uint64_t xoshiro256starstarMainSeed[4];
 	bool istty;
 
@@ -623,7 +719,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	} //end parallel
 
 	if(verbose) print_results(C);
-
+        populateTestCase(tc, C);
 	for(unsigned int i = 0; i < num_tests; ++i){
 		if((C[i][0] + C[i][1] <= 5) || (C[i][1] + C[i][2] <= 5)){
 			return false;

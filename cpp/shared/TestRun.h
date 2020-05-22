@@ -12,6 +12,7 @@
 #include <cstdlib>
 #include <vector> 
 #include "TestCase.h"
+#include "TestResult.h"
 #include <jsoncpp/json/json.h>
 
 using namespace std;
@@ -43,14 +44,6 @@ public:
                 testCasesJson[i]["HOriginal"] = tc.GetH_original();
             if (tc.GetH_bitstring() != -1)
                 testCasesJson[i]["HBitstring"] = tc.GetH_bitstring();
-            /*
-            if (tc.GetMin() != "")
-                testCasesJson[i]["Min"] = tc.GetMin();
-            if (tc.GetH_min() != "")
-                testCasesJson[i]["HMin"] = tc.GetH_min();
-            if (tc.GetP_max() != "")
-                testCasesJson[i]["PMax"] = tc.GetP_max();
-             */
             if (tc.GetH_assessed() != -1)
                 testCasesJson[i]["HAssessed"] = tc.GetH_assessed();
             if (tc.GetRet_min_entropy() != -1)
@@ -87,21 +80,21 @@ public:
             if (tc.GetBitstring_mcv_estimate_p_u() != -1)
                 testCasesJson[i]["BitStringMCVEstimatePU"] = tc.GetBitstring_mcv_estimate_p_u();
 
-            if (tc.GetChi_square_independence_score != -1)
+            if (tc.GetChi_square_independence_score() != -1)
                 testCasesJson[i]["ChiSquareIndependenceScore"] = tc.GetChi_square_independence_score();
-            if (tc.GetChi_square_independence_degress_of_freedom != -1)
+            if (tc.GetChi_square_independence_degress_of_freedom() != -1)
                 testCasesJson[i]["ChiSquareIndependenceDegressOfFreedom"] = tc.GetChi_square_independence_degress_of_freedom();
-            if (tc.GetChi_square_independence_p_value != -1)
+            if (tc.GetChi_square_independence_p_value() != -1)
                 testCasesJson[i]["ChiSquareIndependencePValue"] = tc.GetChi_square_independence_p_value();
 
-            if (tc.GetChi_square_goodness_of_fit_score != -1)
+            if (tc.GetChi_square_goodness_of_fit_score() != -1)
                 testCasesJson[i]["ChiSquareGoodnessOfFitScore"] = tc.GetChi_square_goodness_of_fit_score();
-            if (tc.GetChi_square_goodness_of_fit_degress_of_freedom != -1)
+            if (tc.GetChi_square_goodness_of_fit_degress_of_freedom() != -1)
                 testCasesJson[i]["ChiSquareGoodnessOfFitDegressOfFreedom"] = tc.GetChi_square_goodness_of_fit_degress_of_freedom();
-            if (tc.GetChi_square_goodness_of_fit_p_value != -1)
+            if (tc.GetChi_square_goodness_of_fit_p_value() != -1)
                 testCasesJson[i]["ChiSquareGoodnessOfFitPValue"] = tc.GetChi_square_goodness_of_fit_p_value();
 
-            if (tc.GetPassed_chi_square_tests == 0)
+            if (tc.GetPassed_chi_square_tests() == 0)
                 testCasesJson[i]["PassedChiSquareTests"] = false;
             else if (tc.GetPassed_chi_square_tests() == 1)
                 testCasesJson[i]["PassedChiSquareTests"] = true;
@@ -109,7 +102,7 @@ public:
             if (tc.GetLongest_repeated_substring_p_col() != -1)
                 testCasesJson[i]["LongestRepeatedSubstringPCol"] = tc.GetLongest_repeated_substring_p_col();
             if (tc.GetLongest_repeated_substring_length_of_lrs() != -1)
-                testCasesJson[i]["LongestRepeatedSubstringLengthOfLrs"] = tc.GetLongest_repeated_substring_length_of_lrs;
+                testCasesJson[i]["LongestRepeatedSubstringLengthOfLrs"] = tc.GetLongest_repeated_substring_length_of_lrs();
             if (tc.GetLongest_repeated_substring_pr_x_1() != -1)
                 testCasesJson[i]["LongestRepeatedSubstringPRX1"] = tc.GetLongest_repeated_substring_pr_x_1();
 
@@ -118,8 +111,61 @@ public:
             else if (tc.GetPassed_length_longest_repeated_substring_test() == 1)
                 testCasesJson[i]["PassedLengthLongestRepeatedSubstring"] = true;
 
-        }
+            if (tc.GetPassed_iid_permutation_tests() == 0)
+                testCasesJson[i]["PassedIidPermutationTests"] = false;
+            else if (tc.GetPassed_iid_permutation_tests() == 1)
+                testCasesJson[i]["PassedIidPermutationTests"] = true;
 
+            
+            Json::Value testResultsJson;
+            for (int j = 0; i < tc.GetTestResults().size() ; j++) {
+                TestResult tr = tc.GetTestResults()[j];
+                testResultsJson[j]["Iteration"] = tr.GetIteration();
+                
+                if (tr.GetExcursion() != -1)
+                    testResultsJson[j]["Excursion"] = tr.GetExcursion();
+                
+                if (tr.GetNumDirectionalRuns() != -1)
+                    testResultsJson[j]["NumDirectionalRuns"] = tr.GetNumDirectionalRuns();
+                if (tr.GetLenDirectionalRuns() != -1)
+                    testResultsJson[j]["LenDirectionalRuns"] = tr.GetLenDirectionalRuns();
+                if (tr.GetNumIncreasesDecreases() != -1)
+                    testResultsJson[j]["NumIncreasesDecreases"] = tr.GetNumIncreasesDecreases();
+                if (tr.GetNumRunsMedian() != -1)
+                    testResultsJson[j]["NumRunsMedian"] = tr.GetNumRunsMedian();
+                if (tr.GetLenRunsMedian() != -1)
+                    testResultsJson[j]["LenRunsMedian"] = tr.GetLenRunsMedian();
+                if (tr.GetAvgCollision() != -1)
+                    testResultsJson[j]["AvgCollision"] = tr.GetAvgCollision();
+                if (tr.GetMaxCollision() != -1)
+                    testResultsJson[j]["MaxCollision"] = tr.GetMaxCollision();
+                if (tr.GetPeriodicity1() != -1)
+                    testResultsJson[j]["Periodicity1"] = tr.GetPeriodicity1();
+                if (tr.GetPeriodicity2() != -1)
+                    testResultsJson[j]["Periodicity2"] = tr.GetPeriodicity2();
+                if (tr.GetPeriodicity8() != -1)
+                    testResultsJson[j]["Periodicity8"] = tr.GetPeriodicity8();
+                if (tr.GetPeriodicity16() != -1)
+                    testResultsJson[j]["Periodicity16"] = tr.GetPeriodicity16();
+                if (tr.GetPeriodicity32() != -1)
+                    testResultsJson[j]["Periodicity32"] = tr.GetPeriodicity32();
+
+                if (tr.GetCovariance1() != -1)
+                    testResultsJson[j]["Covariance1"] = tr.GetCovariance1();
+                if (tr.GetCovariance2() != -1)
+                    testResultsJson[j]["Covariance2"] = tr.GetCovariance2();
+                if (tr.GetCovariance8() != -1)
+                    testResultsJson[j]["Covariance8"] = tr.GetCovariance8();
+                if (tr.GetCovariance16() != -1)
+                    testResultsJson[j]["Covariance16"] = tr.GetCovariance16();
+                if (tr.GetCovariance32() != -1)
+                    testResultsJson[j]["Covariance32"] = tr.GetCovariance32();
+                if (tr.GetCompression() != -1)
+                    testResultsJson[j]["Compression"] = tr.GetCompression();
+            }
+            testCasesJson[i]["TestResults"] = testResultsJson;
+        }
+        
         testRuns["TestCases"] = testCasesJson;
 
         Json::StyledWriter styled;

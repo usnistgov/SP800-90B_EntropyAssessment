@@ -176,21 +176,21 @@ int main(int argc, char* argv[]){
         testRun.SetFilename(file_path);
         
 	// Section 6.3.1 - Estimate entropy with Most Common Value
+        TestCase tc631;
 	if(((data.alph_size > 2) || !initial_entropy)) {
-		ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+		ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring", tc631);
 		if(verbose == 1) printf("\tMost Common Value Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
 		H_bitstring = min(ret_min_entropy, H_bitstring);
 	}
 
 	if(initial_entropy) {
-		ret_min_entropy = most_common(data.symbols, data.len, data.alph_size, verbose, "Literal");
+		ret_min_entropy = most_common(data.symbols, data.len, data.alph_size, verbose, "Literal", tc631);
 		if(verbose == 1) printf("\tMost Common Value Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
 		H_original = min(ret_min_entropy, H_original);
 	}
 
 	if(verbose <= 1) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
-        TestCase tc631;
         tc631.SetH_bitstring(H_bitstring);
         tc631.SetH_original(H_original);
         tc631.SetRet_min_entropy(ret_min_entropy);

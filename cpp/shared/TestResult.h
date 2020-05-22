@@ -22,7 +22,32 @@
 using namespace std;
 
 class TestResult {
+private:
+    
+    string iteration;
 
+    double excursion = -1.0;
+    double numDirectionalRuns = -1.0;
+    double lenDirectionalRuns = -1.0;
+    double numIncreasesDecreases = -1.0;
+    double numRunsMedian = -1.0;
+    double lenRunsMedian = -1.0;
+    double avgCollision = -1.0;
+    double maxCollision = -1.0;
+    double periodicity1 = -1.0;
+    double periodicity2 = -1.0;
+    double periodicity8 = -1.0;
+    double periodicity16 = -1.0;
+    double periodicity32 = -1.0;
+    double covariance1 = -1.0;
+    double covariance2 = -1.0;
+    double covariance8 = -1.0;
+    double covariance16 = -1.0;
+    double covariance32 = -1.0;
+    double compression = -1.0;
+
+public:
+    
 void SetCompression(double compression) {
     this->compression = compression;
 }
@@ -182,28 +207,6 @@ void SetIteration(string iteration) {
 string GetIteration() const {
     return iteration;
 }
-private:
-    string iteration;
-
-    double excursion = -1.0;
-    double numDirectionalRuns = -1.0;
-    double lenDirectionalRuns = -1.0;
-    double numIncreasesDecreases = -1.0;
-    double numRunsMedian = -1.0;
-    double lenRunsMedian = -1.0;
-    double avgCollision = -1.0;
-    double maxCollision = -1.0;
-    double periodicity1 = -1.0;
-    double periodicity2 = -1.0;
-    double periodicity8 = -1.0;
-    double periodicity16 = -1.0;
-    double periodicity32 = -1.0;
-    double covariance1 = -1.0;
-    double covariance2 = -1.0;
-    double covariance8 = -1.0;
-    double covariance16 = -1.0;
-    double covariance32 = -1.0;
-    double compression = -1.0;
 
 
 
