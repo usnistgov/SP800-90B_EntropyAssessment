@@ -136,6 +136,7 @@ int main(int argc, char* argv[]){
         testRun.SetTimestamp(timestamp);
         testRun.SetSha256(hash);
         testRun.SetFilename(file_path);
+        testRun.SetCategory("IID");
         
         
 	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
@@ -176,8 +177,6 @@ int main(int argc, char* argv[]){
         tc.SetMedian(median);
         tc.SetBinary( (alphabet_size == 2 ? 1 : 0 ));
         
-        printf("TEST CAST MEAN  %f", tc.GetMean());
-        
 	double H_original = data.word_size;
 	double H_bitstring = 1.0;
 
@@ -192,6 +191,8 @@ int main(int argc, char* argv[]){
 		H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring", tc);
 	}
         tc.SetH_bitstring(H_bitstring);
+        
+        double h_assessed = data.word_size;
         if(verbose <= 1) {
                 if(initial_entropy){
                         printf("H_original: %f\n", H_original);
@@ -201,7 +202,7 @@ int main(int argc, char* argv[]){
                         }
                 } else printf("h': %f\n", H_bitstring);
         } else {
-                double h_assessed = data.word_size;
+                h_assessed = data.word_size;
 
                 if((data.alph_size > 2) || !initial_entropy) {
                         h_assessed = min(h_assessed, H_bitstring * data.word_size);
@@ -215,7 +216,7 @@ int main(int argc, char* argv[]){
 
                 printf("Assessed min entropy: %.17g\n", h_assessed);
         }
-       
+        tc.SetH_assessed(h_assessed);
         
 	printf("\n");
 

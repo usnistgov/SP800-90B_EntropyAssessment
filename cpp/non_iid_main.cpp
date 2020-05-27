@@ -174,6 +174,7 @@ int main(int argc, char* argv[]){
         testRun.SetTimestamp(timestamp);
         testRun.SetSha256(hash);
         testRun.SetFilename(file_path);
+        testRun.SetCategory("NonIID");
         
 	// Section 6.3.1 - Estimate entropy with Most Common Value
         TestCase tc631;

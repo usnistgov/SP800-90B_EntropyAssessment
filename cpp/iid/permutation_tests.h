@@ -474,7 +474,7 @@ void print_results(int C[][3]){
 	cout << endl;
 }
 
-void populateTestCase(TestCase tc, int C[][3]){
+void populateTestCase(TestCase &tc, int C[][3]){
 
     TestResult tr0;
     TestResult tr1;
@@ -563,12 +563,12 @@ void populateTestCase(TestCase tc, int C[][3]){
     tc.AddTestResult(tr0);
     tc.AddTestResult(tr1);
     tc.AddTestResult(tr2);
-            
+    
 }
 
 
 
-bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose, TestCase tc){
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose, TestCase &tc){
 	uint64_t xoshiro256starstarMainSeed[4];
 	bool istty;
 
@@ -719,8 +719,10 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	} //end parallel
 
 	if(verbose) print_results(C);
+        
         populateTestCase(tc, C);
-	for(unsigned int i = 0; i < num_tests; ++i){
+	
+        for(unsigned int i = 0; i < num_tests; ++i){
 		if((C[i][0] + C[i][1] <= 5) || (C[i][1] + C[i][2] <= 5)){
 			return false;
 	 	}

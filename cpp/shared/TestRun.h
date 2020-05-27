@@ -19,6 +19,7 @@ using namespace std;
 
 class TestRun {
 private:
+    string category;
     string timestamp;
     string sha256;
     string filename;
@@ -32,6 +33,7 @@ public:
 
         //TODO: Make the name of the name/value a const
         Json::Value testRuns;
+        testRuns["Category"] = GetCategory();
         testRuns["DateTimeStamp"] = GetTimestamp();
         testRuns["Filename"] = GetFilename();
         testRuns["Sha256"] = GetSha256();
@@ -39,7 +41,9 @@ public:
 
         for (int i = 0; i < testCases.size(); i++) {
             TestCase tc = testCases[i];
-            testCasesJson[i]["TestCase"] = tc.GetTestCaseNumber();
+            
+            if (tc.GetTestCaseNumber() != "")
+                testCasesJson[i]["TestCase"] = tc.GetTestCaseNumber();
             if (tc.GetH_original() != -1)
                 testCasesJson[i]["HOriginal"] = tc.GetH_original();
             if (tc.GetH_bitstring() != -1)
@@ -118,10 +122,9 @@ public:
 
             
             Json::Value testResultsJson;
-            for (int j = 0; i < tc.GetTestResults().size() ; j++) {
+            for (int j = 0; j < tc.GetTestResults().size() ; j++) {
                 TestResult tr = tc.GetTestResults()[j];
                 testResultsJson[j]["Iteration"] = tr.GetIteration();
-                
                 if (tr.GetExcursion() != -1)
                     testResultsJson[j]["Excursion"] = tr.GetExcursion();
                 
@@ -140,22 +143,22 @@ public:
                 if (tr.GetMaxCollision() != -1)
                     testResultsJson[j]["MaxCollision"] = tr.GetMaxCollision();
                 if (tr.GetPeriodicity1() != -1)
-                    testResultsJson[j]["Periodicity1"] = tr.GetPeriodicity1();
+                    testResultsJson[j]["Periodicity01"] = tr.GetPeriodicity1();
                 if (tr.GetPeriodicity2() != -1)
-                    testResultsJson[j]["Periodicity2"] = tr.GetPeriodicity2();
+                    testResultsJson[j]["Periodicity02"] = tr.GetPeriodicity2();
                 if (tr.GetPeriodicity8() != -1)
-                    testResultsJson[j]["Periodicity8"] = tr.GetPeriodicity8();
+                    testResultsJson[j]["Periodicity08"] = tr.GetPeriodicity8();
                 if (tr.GetPeriodicity16() != -1)
                     testResultsJson[j]["Periodicity16"] = tr.GetPeriodicity16();
                 if (tr.GetPeriodicity32() != -1)
                     testResultsJson[j]["Periodicity32"] = tr.GetPeriodicity32();
 
                 if (tr.GetCovariance1() != -1)
-                    testResultsJson[j]["Covariance1"] = tr.GetCovariance1();
+                    testResultsJson[j]["Covariance01"] = tr.GetCovariance1();
                 if (tr.GetCovariance2() != -1)
-                    testResultsJson[j]["Covariance2"] = tr.GetCovariance2();
+                    testResultsJson[j]["Covariance02"] = tr.GetCovariance2();
                 if (tr.GetCovariance8() != -1)
-                    testResultsJson[j]["Covariance8"] = tr.GetCovariance8();
+                    testResultsJson[j]["Covariance08"] = tr.GetCovariance8();
                 if (tr.GetCovariance16() != -1)
                     testResultsJson[j]["Covariance16"] = tr.GetCovariance16();
                 if (tr.GetCovariance32() != -1)
@@ -213,6 +216,14 @@ public:
 
     string GetFilename() const {
         return filename;
+    }
+
+    void SetCategory(string category) {
+        this->category = category;
+    }
+
+    string GetCategory() const {
+        return category;
     }
 
 };
