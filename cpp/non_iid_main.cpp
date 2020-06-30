@@ -125,7 +125,12 @@ int main(int argc, char* argv[]){
         
         char hash[65];
         sha256_file(file_path, hash);
-      
+
+        TestRun testRun;
+        testRun.SetTimestamp(timestamp);
+        testRun.SetSha256(hash);
+        testRun.SetFilename(file_path);
+        testRun.SetCategory("NonIID");      
          
 	if(argc == 2) {
 		// get bits per word
@@ -141,13 +146,30 @@ int main(int argc, char* argv[]){
 	if(verbose>0) printf("Opening file: '%s'\n", file_path);
 
 	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
+
+                testRun.SetErrorLevel(-1);
+                testRun.SetErrorMsg("Error reading file.");
+                ofstream output;
+                output.open (outputfilename);
+                output << testRun.GetAsJson();
+                output.close();
+
 		printf("Error reading file.\n");
 		print_usage();
+                
 	}
 	if(verbose > 0) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
 	if(data.alph_size <= 1){
 		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
+                
+                testRun.SetErrorLevel(-1);
+                testRun.SetErrorMsg("Symbol alphabet consists of 1 symbol. No entropy awarded...");
+                ofstream output;
+                output.open (outputfilename);
+                output << testRun.GetAsJson();
+                output.close();
+                
 		free_data(&data);
 		exit(-1);
 	}
@@ -170,11 +192,6 @@ int main(int argc, char* argv[]){
 		printf("Running Most Common Value Estimate...\n");
 	}
 
-        TestRun testRun;
-        testRun.SetTimestamp(timestamp);
-        testRun.SetSha256(hash);
-        testRun.SetFilename(file_path);
-        testRun.SetCategory("NonIID");
         
 	// Section 6.3.1 - Estimate entropy with Most Common Value
         TestCase tc631;
@@ -481,7 +498,7 @@ int main(int argc, char* argv[]){
         tcOverall.SetH_assessed(h_assessed);   
         tcOverall.SetLrs_res(lrs_res);
         testRun.AddTestCase(tcOverall);
-    
+        testRun.SetErrorLevel(0);
 
         // testRun.AddTestCase("testcase1", H_original), H_bitstring), data.word_size*H_bitstring),"","",h_assessed));    
         //cout << "JSON:\n";

@@ -23,6 +23,8 @@ private:
     string timestamp;
     string sha256;
     string filename;
+    int errorLevel = 0;
+    string errorMsg;
     vector<TestCase> testCases;
 
 
@@ -37,6 +39,9 @@ public:
         testRuns["DateTimeStamp"] = GetTimestamp();
         testRuns["Filename"] = GetFilename();
         testRuns["Sha256"] = GetSha256();
+        testRuns["ErrorLevel"] = GetErrorLevel();
+         if (GetErrorMsg() != "")
+            testRuns["ErrorMessage"] = GetErrorMsg();
         Json::Value testCasesJson;
 
         for (int i = 0; i < testCases.size(); i++) {
@@ -224,6 +229,22 @@ public:
 
     string GetCategory() const {
         return category;
+    }
+
+    void SetErrorMsg(string errorMsg) {
+        this->errorMsg = errorMsg;
+    }
+
+    string GetErrorMsg() const {
+        return errorMsg;
+    }
+
+    void SetErrorLevel(int errorLevel) {
+        this->errorLevel = errorLevel;
+    }
+
+    int GetErrorLevel() const {
+        return errorLevel;
     }
 
 };
