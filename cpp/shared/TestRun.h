@@ -48,7 +48,7 @@ public:
             TestCase tc = testCases[i];
             
             if (tc.GetTestCaseNumber() != "")
-                testCasesJson[i]["TestCase"] = tc.GetTestCaseNumber();
+                testCasesJson[i]["TestCaseDesc"] = tc.GetTestCaseNumber();
             if (tc.GetH_original() != -1)
                 testCasesJson[i]["HOriginal"] = tc.GetH_original();
             if (tc.GetH_bitstring() != -1)
@@ -72,9 +72,9 @@ public:
             if (tc.GetMedian() != -1)
                 testCasesJson[i]["Median"] = tc.GetMedian();
             if (tc.GetBinary() == 0)
-                testCasesJson[i]["Binary"] = false;
+                testCasesJson[i]["Binary"] = 0;
             else if (tc.GetBinary() == 1)
-                testCasesJson[i]["Binary"] = true;
+                testCasesJson[i]["Binary"] = 1;
             if (tc.GetLiteral_mcv_estimate_mode() != -1)
                 testCasesJson[i]["LiteralMCVEstimateMode"] = tc.GetLiteral_mcv_estimate_mode();
             if (tc.GetLiteral_mcv_estimate_p_hat() != -1)
@@ -104,9 +104,9 @@ public:
                 testCasesJson[i]["ChiSquareGoodnessOfFitPValue"] = tc.GetChi_square_goodness_of_fit_p_value();
 
             if (tc.GetPassed_chi_square_tests() == 0)
-                testCasesJson[i]["PassedChiSquareTests"] = false;
+                testCasesJson[i]["PassedChiSquareTests"] = 0;
             else if (tc.GetPassed_chi_square_tests() == 1)
-                testCasesJson[i]["PassedChiSquareTests"] = true;
+                testCasesJson[i]["PassedChiSquareTests"] = 1;
 
             if (tc.GetLongest_repeated_substring_p_col() != -1)
                 testCasesJson[i]["LongestRepeatedSubstringPCol"] = tc.GetLongest_repeated_substring_p_col();
@@ -116,14 +116,14 @@ public:
                 testCasesJson[i]["LongestRepeatedSubstringPRX1"] = tc.GetLongest_repeated_substring_pr_x_1();
 
             if (tc.GetPassed_length_longest_repeated_substring_test() == 0)
-                testCasesJson[i]["PassedLengthLongestRepeatedSubstring"] = false;
+                testCasesJson[i]["PassedLengthLongestRepeatedSubstring"] = 0;
             else if (tc.GetPassed_length_longest_repeated_substring_test() == 1)
-                testCasesJson[i]["PassedLengthLongestRepeatedSubstring"] = true;
+                testCasesJson[i]["PassedLengthLongestRepeatedSubstring"] = 1;
 
             if (tc.GetPassed_iid_permutation_tests() == 0)
-                testCasesJson[i]["PassedIidPermutationTests"] = false;
+                testCasesJson[i]["PassedIidPermutationTests"] = 0;
             else if (tc.GetPassed_iid_permutation_tests() == 1)
-                testCasesJson[i]["PassedIidPermutationTests"] = true;
+                testCasesJson[i]["PassedIidPermutationTests"] = 1;
 
             
             Json::Value testResultsJson;
