@@ -7,26 +7,30 @@
 #include <getopt.h>
 #include <limits.h>
 
+
+
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples>] <file_name> [bits_per_sample]\n\n");
+	printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
-	printf("\t [bits_per_sample]: Must be between 1-8, inclusive.\n");
+	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
 	printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
-	printf("\t [-a|-t]: '-a' tests all bits in bitstring, '-t' truncates bitstring to %d bits. Test all data by default.\n", MIN_SIZE);
+	printf("\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to %d bits. Test all data by default.\n", MIN_SIZE);
+	printf("\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n");
 	printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
 	printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
 	printf("\n");
-	printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_sample'\n");
-	printf("\t bits constitute the sample.\n");
+	printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n");
+	printf("\t bits constitute the symbol.\n");
 	printf("\n");
 	printf("\t -i: Initial Entropy Estimate (Section 3.1.3)\n");
 	printf("\n");
 	printf("\t\t Computes the initial entropy estimate H_I as described in Section 3.1.3\n");
 	printf("\t\t (not accounting for H_submitter) using the entropy estimators specified in\n");
-	printf("\t\t Section 6.3.  If 'bits_per_sample' is greater than 1, the samples are also\n");
-	printf("\t\t converted to bitstrings to produce H_bitstring. \n");
-	printf("\t\tTwo entropy estimates are computed: H_original and H_bitstring.\n");
-	printf("\t\t Note that if 'bits_per_sample' is 1, only H_original is computed.\n"); 
+	printf("\t\t Section 6.3.  If 'bits_per_symbol' is greater than 1, the samples are also\n");
+	printf("\t\t converted to bitstrings and assessed to create H_bitstring; for multi-bit symbols,\n");
+	printf("\t\t two entropy estimates are computed: H_original and H_bitstring.\n");
+	printf("\t\t Returns min(H_original, bits_per_symbol X H_bitstring). The initial entropy\n");
+	printf("\t\t estimate H_I = min(H_submitter, H_original, bits_per_symbol X H_bitstring).\n");
 	printf("\n");
 	printf("\t -c: Conditioned Sequential Dataset Entropy Estimate (Section 3.1.5.2)\n");
 	printf("\n");
