@@ -6,7 +6,7 @@
 
 using namespace std;
 
-class TestResult {
+class PermutationTestResult {
 public:
     
     string iteration;

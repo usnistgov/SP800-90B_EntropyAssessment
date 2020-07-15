@@ -1,7 +1,7 @@
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
-#include "shared/TestRun.h"
+#include "iid/iid_test_run.h"
 #include "shared/TestRunUtils.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
@@ -41,6 +41,9 @@
     printf("\t\t conditioning function is non-vetted. The samples are converted to a bitstring.\n");
     printf("\t\t Returns h' = min(H_bitstring).\n");
     printf("\n");
+    printf("\t -o: Set Output Type to JSON\n");
+    printf("\n");
+    printf("\t\t Changes the output format to JSON and sets the file location for the output file.\n");
     exit(-1);
 }
 
@@ -57,8 +60,9 @@ int main(int argc, char* argv[]) {
     unsigned long long inint;
     char *nextOption;
 
+    bool jsonOutput = false;
     string timestamp = getCurrentTimestamp();
-    string outputfilename = timestamp + ".json";
+    string outputfilename;
 
     data.word_size = 0;
     initial_entropy = true;
@@ -97,6 +101,7 @@ int main(int argc, char* argv[]) {
                 subsetSize = inint;
                 break;
             case 'o':
+            	jsonOutput = true;
                 outputfilename = optarg;
                 break;
             default:
@@ -116,24 +121,26 @@ int main(int argc, char* argv[]) {
     // get filename
     file_path = argv[0];
 
-    TestRun testRun;
-    testRun.SetTimestamp(timestamp);
-    testRun.SetSha256(hash);
-    testRun.SetFilename(file_path);
-    testRun.SetCategory("IID");
+    IidTestRun testRun;
+    testRun.timestamp = timestamp;
+    testRun.filename = file_path;
 
     if (argc == 2) {
+
         // get bits per word
         data.word_size = atoi(argv[1]);
         if (data.word_size < 1 || data.word_size > 8) {
 
-            testRun.SetErrorLevel(-1);
-            testRun.SetErrorMsg("Invalid bits per symbol.");
-            ofstream output;
-            output.open(outputfilename);
-            output << testRun.GetAsJson();
-            output.close();
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "Invalid bits per symbol.";
 
+            if (jsonOutput){
+	            ofstream output;
+	            output.open(outputfilename);
+	            output << testRun.GetAsJson();
+	            output.close();
+            }
+            
             printf("Invalid bits per symbol.\n");
             print_usage();
         }
@@ -143,35 +150,41 @@ int main(int argc, char* argv[]) {
         printf("Opening file: '%s'\n", file_path);
     }
 
+    // Record hash of input file
     char hash[65];
     sha256_file(file_path, hash);
-
-
-
+    testRun.sha256 = hash;
 
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
 
-        testRun.SetErrorLevel(-1);
-        testRun.SetErrorMsg("Error reading file.");
-        ofstream output;
-        output.open(outputfilename);
-        output << testRun.GetAsJson();
-        output.close();
+        testRun.errorLevel = -1;
+        testRun.errorMsg = "Error reading file.";
 
+        if (jsonOutput){
+	        ofstream output;
+	        output.open(outputfilename);
+	        output << testRun.GetAsJson();
+	        output.close();	
+        }
+        
         printf("Error reading file.\n");
         print_usage();
     }
+
     if (verbose > 0) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
     if (data.alph_size <= 1) {
 
-        testRun.SetErrorLevel(-1);
-        testRun.SetErrorMsg("Symbol alphabet consists of 1 symbol. No entropy awarded...");
-        ofstream output;
-        output.open(outputfilename);
-        output << testRun.GetAsJson();
-        output.close();
+        testRun.errorLevel = -1;
+        testRun.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
 
+        if (jsonOutput){
+	        ofstream output;
+	        output.open(outputfilename);
+	        output << testRun.GetAsJson();
+	        output.close();	
+        }
+        
         printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
         free_data(&data);
         exit(-1);
@@ -198,10 +211,10 @@ int main(int argc, char* argv[]) {
         printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
     }
 
-    TestCase tc;
-    tc.SetMean(rawmean);
-    tc.SetMedian(median);
-    tc.SetBinary((alphabet_size == 2 ? 1 : 0));
+    IidTestCase tc;
+    tc.mean = rawmean;
+    tc.median = median;
+    tc.binary = (alphabet_size == 2);
 
     double H_original = data.word_size;
     double H_bitstring = 1.0;
@@ -210,13 +223,12 @@ int main(int argc, char* argv[]) {
     if (initial_entropy) {
         H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal", tc);
     }
-
-    tc.SetH_original(H_original);
+    tc.h_original = H_original;
 
     if (((data.alph_size > 2) || !initial_entropy)) {
         H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring", tc);
     }
-    tc.SetH_bitstring(H_bitstring);
+    tc.h_bitstring = H_bitstring;
 
     double h_assessed = data.word_size;
     if (verbose <= 1) {
@@ -242,14 +254,13 @@ int main(int argc, char* argv[]) {
 
         printf("Assessed min entropy: %.17g\n", h_assessed);
     }
-    tc.SetH_assessed(h_assessed);
+    tc.h_assessed = h_assessed;
 
     printf("\n");
 
     // Compute chi square stats
     bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
-
-    tc.SetPassed_chi_square_tests(chi_square_test_pass);
+    tc.passed_chi_square_tests = chi_square_test_pass;
 
     if (chi_square_test_pass) {
         printf("** Passed chi square tests\n\n");
@@ -259,8 +270,7 @@ int main(int argc, char* argv[]) {
 
     // Compute length of the longest repeated substring stats
     bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
-
-    tc.SetPassed_length_longest_repeated_substring_test(len_LRS_test_pass);
+    tc.passed_longest_repeated_substring_test = len_LRS_test_pass;
 
     if (len_LRS_test_pass) {
         printf("** Passed length of longest repeated substring test\n\n");
@@ -277,15 +287,16 @@ int main(int argc, char* argv[]) {
         printf("** Failed IID permutation tests\n\n");
     }
 
-    testRun.AddTestCase(tc);
+    testRun.testCases.push_back(tc);
+    testRun.errorLevel = 0;
 
-    testRun.SetErrorLevel(0);
+	if (jsonOutput){
+		ofstream output;
+	    output.open(outputfilename);
+	    output << testRun.GetAsJson();
+	    output.close();	
+	}    
     
-    ofstream output;
-    output.open(outputfilename);
-    output << testRun.GetAsJson();
-    output.close();
-
     free_data(&data);
     return 0;
 }

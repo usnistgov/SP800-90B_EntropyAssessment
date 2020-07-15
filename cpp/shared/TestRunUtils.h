@@ -1,10 +1,3 @@
-/* 
- * File:   TestRunUtils.h
- * Author: mccaffrey
- *
- * Created on March 4, 2020, 4:59 PM
- */
-
 #ifndef TESTRUNUTILS_H
 #define TESTRUNUTILS_H
 
@@ -71,7 +64,6 @@ void sha256_hash_string (unsigned char hash[SHA256_DIGEST_LENGTH], char outputBu
     outputBuffer[64] = 0;
 }
 
-
 void sha256_string(char *string, char outputBuffer[65])
 {
     unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -86,7 +78,6 @@ void sha256_string(char *string, char outputBuffer[65])
     }
     outputBuffer[64] = 0;
 }
-
 
 int sha256_file(char *path, char outputBuffer[65])
 {
@@ -111,6 +102,4 @@ int sha256_file(char *path, char outputBuffer[65])
     free(buffer);
     return 0;
 }
-
 #endif /* TESTRUNUTILS_H */
-
