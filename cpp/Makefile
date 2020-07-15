@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++11 -fopenmp -O2 -msse2 -ffloat-store -march=native
 #CXXFLAGS = -Wno-padded -Wno-disabled-macro-expansion -Wno-gnu-statement-expression -Wno-bad-function-cast -fopenmp -O1 -fsanitize=address -fsanitize=undefined -fdenormal-fp-math=ieee -msse2 -march=native
 #static analysis in clang using
 #scan-build-8 --use-c++=/usr/bin/clang++-8 make
-LIB = -lbz2 -lpthread -ldivsufsort
+LIB = -lbz2 -lpthread -ldivsufsort -ljsoncpp -lssl -lcrypto
 INC=
 
 ######
