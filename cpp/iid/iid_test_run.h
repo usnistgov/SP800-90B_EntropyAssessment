@@ -11,7 +11,18 @@ using namespace std;
 class IidTestRun : public TestRunBase {
 public:
     string GetAsJson() {
-        return "";
+        Json::Value json = TestRunBase::GetBaseJson();
+        json["category"] = category;
+
+        Json::Value testCasesJson;
+        for (int i = 0; i < testCases.size(); i++){
+            testCasesJson[i] = testCases[i].GetAsJson();
+        }
+
+        json["testCases"] = testCasesJson;
+
+        Json::StyledWriter styled;
+        return styled.write(json);
     }
 
     const string category = "IID";

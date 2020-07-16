@@ -281,6 +281,7 @@ int main(int argc, char* argv[]) {
 
     // Compute permutation stats
     bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
+    tc.passed_iid_permutation_tests = perm_test_pass;
 
     if (perm_test_pass) {
         printf("** Passed IID permutation tests\n\n");

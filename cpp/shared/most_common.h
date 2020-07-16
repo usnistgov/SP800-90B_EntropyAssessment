@@ -40,11 +40,11 @@ double most_common(byte* data, const long len, const int alph_size, const int ve
 	return entEst;
 }
 
-// Wrapper method needed because some runs do not get output as JSON currently
-// and therefore do not have a TestCase object to send
-//double most_common(byte* data, const long len, const int alph_size, const int verbose, const char *label){
-//    
-//    IidTestCase dummy;
-//    return most_common(data, len, alph_size, verbose, label, dummy);    
-//    
-//}
+//Wrapper method needed because some runs do not get output as JSON currently
+//and therefore do not have a TestCase object to send (restart tests)
+double most_common(byte* data, const long len, const int alph_size, const int verbose, const char *label){
+   
+   TestCaseBase dummy;
+   return most_common(data, len, alph_size, verbose, label, dummy);    
+   
+}
