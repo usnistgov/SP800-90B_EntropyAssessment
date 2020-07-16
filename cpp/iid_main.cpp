@@ -44,6 +44,7 @@
     printf("\t -o: Set Output Type to JSON\n");
     printf("\n");
     printf("\t\t Changes the output format to JSON and sets the file location for the output file.\n");
+    printf("\n");
     exit(-1);
 }
 

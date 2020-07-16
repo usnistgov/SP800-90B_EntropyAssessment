@@ -11,3 +11,4 @@ ea_transpose
 .vscode
 *.json
 .DS_Store
+*.res
