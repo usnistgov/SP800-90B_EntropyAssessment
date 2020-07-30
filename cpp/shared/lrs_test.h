@@ -322,8 +322,9 @@ bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_s
 	int lrs = len_LRS(data, sample_size);
 	int n = sample_size - lrs + 1;
 	long int overlap = n_choose_2(n);
+	long double pr_success = pow(p_col, lrs);
 
-	double pr_x = 1 - pow(1 - pow(p_col, lrs), overlap);
+	double pr_x = 1 - pow(1 - pr_success, overlap);
 
 	if(verbose > 0){
 		cout << label << "Longest Repeated Substring results" << endl;
