@@ -242,7 +242,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 		//We now have a complete set of numerators in S
 		Pmax = 0.0;
 		for(long int i=u; i<=v; i++) {
-			double curP = ((double)S[i]) / (double)(((n-i)*(n-i+1))>>1);
+			double curP = ((double)S[i]) / (double)(((uint64_t)(n-i)*(uint64_t)(n-i+1))>>1);
 			double curPMax = pow(curP, 1.0/((double)i));
 			 //fprintf(stderr, "LRS Estimate: P_%ld = %.17g ( %zu / %zu )\n", i, curP, S[i], ((n-i)*(n-i+1))>>1);
 			 //fprintf(stderr, "LRS Estimate: P_{max,%ld} = %.17g\n", i, curPMax);
