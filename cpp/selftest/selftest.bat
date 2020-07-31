@@ -1,0 +1,11 @@
+..\ea_non_iid -vv ..\..\bin\biased-random-bits.bin > result\biased-random-bits.res
+..\ea_non_iid -vv ..\..\bin\biased-random-bytes.bin > result\biased-random-bytes.res
+..\ea_non_iid -vv ..\..\bin\data.pi.bin > result\data.pi.res
+..\ea_non_iid -vv ..\..\bin\normal.bin > result\normal.res
+..\ea_non_iid -vv ..\..\bin\rand1_short.bin > result\rand1_short.res
+..\ea_non_iid -vv ..\..\bin\rand4_short.bin > result\rand4_short.res
+..\ea_non_iid -vv ..\..\bin\rand8_short.bin > result\rand8_short.res
+..\ea_non_iid -vv ..\..\bin\ringOsc-nist.bin > result\ringOsc-nist.res
+..\ea_non_iid -vv ..\..\bin\truerand_1bit.bin > result\truerand_1bit.res
+..\ea_non_iid -vv ..\..\bin\truerand_4bit.bin > result\truerand_4bit.res
+..\ea_non_iid -vv ..\..\bin\truerand_8bit.bin > result\truerand_8bit.res
