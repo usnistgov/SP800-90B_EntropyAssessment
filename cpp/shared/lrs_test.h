@@ -298,10 +298,12 @@ int len_LRS(const byte text[], const int sample_size){
 * ---------------------------------------------
 */
 
-void calc_collision_proportion(const vector<double> &p, double &p_col){
+void calc_collision_proportion(const vector<double> &p, long double &p_col){
+
+	p_col = 0.0L;
 	
 	for(unsigned int i = 0; i < p.size(); i++){
-		p_col += pow(p[i], 2);
+		p_col += powl((long double)(p[i]), 2.0L);
 	}
 }
 
@@ -311,26 +313,59 @@ void calc_collision_proportion(const vector<double> &p, double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_size, const int verbose, const char *label){
-
+bool len_LRS_test(const byte data[], const int L, const int alphabet_size, const int verbose, const char *label){
+	// p_col is the probability of collision on a per-symbol basis under an IID assumption (this is related to the collision entropy).
 	vector<double> p(alphabet_size, 0.0);
-	calc_proportions(data, p, sample_size);
-
-	double p_col = 0.0;
+	calc_proportions(data, p, L);
+	long double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
 
-	int lrs = len_LRS(data, sample_size);
-	int n = sample_size - lrs + 1;
-	long int overlap = n_choose_2(n);
+	// The length of the longest repeated substring (LRS) for the supplied data is W.
+	int W = len_LRS(data, L);
 
-	double pr_x = 1 - pow(1 - pow(p_col, lrs), overlap);
+	//(L - W + 1) is the number of overlapping contiguous substrings of length W in a string of length L.
+	// The number of pairs of such overlapping substrings is N = (L - W + 1) choose 2.
+	// This is the number of ways of choosing 2 substrings of length W from a string of length L.
+	long int N = n_choose_2(L - W + 1);
+
+	// Calculate p_col^W; this may be quite close to 0.
+	// p_col is the probability of collision of a W-length string under an IID assumption.
+	long double p_colPower = powl(p_col, (long double)W);
+	assert(p_colPower >= LDBL_MIN);
+	assert(p_colPower <= 1.0L-LDBL_EPSILON);
+
+	// There is some delicacy in calculating P(X>=1), as the values may be quite close to 0 or 1.
+	// We first calculate the log of the probability of not having a collision of length W for a single pair
+	// of W-length strings.
+	// Recall that log1p(x) = log(1+x); this form is useful when |x| is small.
+	long double logProbNoColsPerPair = log1pl(-p_colPower);
+	assert(logProbNoColsPerPair < 0.0L);
 
 	if(verbose > 0){
 		cout << label << "Longest Repeated Substring results" << endl;
 		cout << "\tP_col: " << p_col << endl;
-		cout << "\tLength of LRS: " << lrs << endl;
-		cout << "\tPr(X >= 1): " << pr_x << endl;
+		cout << "\tLength of LRS: " << W << endl;
+
+		//This probability may not be representable in the precision that we have to work with,
+		//but if it is, we may as well output it.
+		//Calculate the probability of not encountering a collision after N sets of pairs
+		long double probNoCols = expl(N*logProbNoColsPerPair);
+		if((probNoCols <= 1.0L - LDBL_EPSILON) && (probNoCols >= LDBL_MIN)) {
+			// 1 - pnocols^N is the probability of seeing at least 1 collision.
+			cout << "\tPr(X >= 1): " << 1.0L - probNoCols << endl;
+		} else {
+			cout << "\tThe calculation of Pr(X >= 1) experienced an underflow" << endl;
+		}
 	}
 
-	return (pr_x >= 0.001);
+	//We don't need the above to have worked to come to a conclusion on the test, however:
+	// The LRS test is considered a "Pass"
+	// iff P(X>=1) >= 1/1000
+	// iff 1 - P(X=0) >= 1/1000
+	// iff 1 - (1-p_col^W)^N >= 1/1000
+	// iff 0.999 >= (1-p_col^W)^N
+	// iff log(0.999) >= N*log(1-p_col^W)
+	// iff log(0.999) >= N*log1p(-p_col^W)
+	// iff log(0.999)/log1p(-p_col^W) <= N
+	return logl(0.999L) / logProbNoColsPerPair <= (long double)N;
 }
