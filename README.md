@@ -1,4 +1,4 @@
-	# EntropyAssessment
+# EntropyAssessment
 
 Cryptographic random bit generators (RBGs), also known as random number generators (RNGs), require a noise source that produces digital outputs with some level of unpredictability, expressed as min-entropy. [SP 800-90B](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90B.pdf) provides a standardized means of estimating the quality of a source of entropy.
 
@@ -93,13 +93,13 @@ or
 
     ea_conditioning -n <n_in> <n_out> <nw> <h_in> <h'>
 
- * `-v`: The conditioning function is vetted.
- * `-n`: The conditioning function is non-vetted.
- * `n_in`: The number of bits entering the conditioning step per output.
- * `n_out`: The number of bits per conditioning step output.
- * `nw`: The narrowest width of the conditioning step.
- * `h_in`: The amount of entropy entering the conditioning step per output. Must be less than n_in.
- * `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for '-n' option).
+* `-v`: The conditioning function is vetted.
+* `-n`: The conditioning function is non-vetted.
+* `n_in`: The number of bits entering the conditioning step per output.
+* `n_out`: The number of bits per conditioning step output.
+* `nw`: The narrowest width of the conditioning step.
+* `h_in`: The amount of entropy entering the conditioning step per output. Must be less than n_in.
+* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for '-n' option).
 
 ## Make
 
