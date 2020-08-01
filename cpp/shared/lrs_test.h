@@ -313,12 +313,25 @@ void calc_collision_proportion(const vector<double> &p, long double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[], const int L, const int alphabet_size, const int verbose, const char *label){
+bool len_LRS_test(const byte data[], const int L, const int k, const int verbose, const char *label){
 	// p_col is the probability of collision on a per-symbol basis under an IID assumption (this is related to the collision entropy).
-	vector<double> p(alphabet_size, 0.0);
+	// p_col >= 1/k, which bounds this.
+	// Note, for SP 800-90B k<=256, so we can bound p_col >= 2^-8. 
+	vector<double> p(k, 0.0);
 	calc_proportions(data, p, L);
 	long double p_col = 0.0;
 	calc_collision_proportion(p, p_col);
+
+	assert(p_col >= 1.0L / ((long double) k));
+	assert(p_col <= 1.0L);
+
+	// It is possible for p_col to be exactly 1 (e.g., if the input data is all one symbol)
+	// In this instance, a collision of any length up to L-1 has probability 1.
+	if(p_col > 1.0L - LDBL_EPSILON) {
+		if(verbose > 0) cout << "\tPr(X >= 1) = 1.0" << endl;
+		return true;
+	}
+	assert(p_col < 1.0L);
 
 	// The length of the longest repeated substring (LRS) for the supplied data is W.
 	int W = len_LRS(data, L);
@@ -328,15 +341,22 @@ bool len_LRS_test(const byte data[], const int L, const int alphabet_size, const
 	// This is the number of ways of choosing 2 substrings of length W from a string of length L.
 	long int N = n_choose_2(L - W + 1);
 
-	// Calculate p_col^W; this may be quite close to 0.
-	// p_col is the probability of collision of a W-length string under an IID assumption.
+	// p_col^W is the probability of collision of a W-length string under an IID assumption;
+	// this may be quite close to 0
+	// We know that p_col >= 2^-8, but if W is sufficiently large, then the result will be smaller than LDBL_MIN 
+	// (2^-16382 on modern Intel platforms); if this happens then we can't represent p_col^W directly as a long double.
+	// There isn't anything we can do about this error condition (without moving to an arbitrary precision calculation), so
+	// for now, we'll just detect this condition and abort the calculation.
 	long double p_colPower = powl(p_col, (long double)W);
 	assert(p_colPower >= LDBL_MIN);
 	assert(p_colPower <= 1.0L-LDBL_EPSILON);
 
-	// There is some delicacy in calculating P(X>=1), as the values may be quite close to 0 or 1.
-	// We first calculate the log of the probability of not having a collision of length W for a single pair
-	// of W-length strings.
+	// There is some delicacy in calculating Pr(X>=1) as some of the intermediary values may be quite close to 0 or 1.
+	// We first want to calculate the probability of not having a collision of length W for a single pair of W-length strings.
+	// This quantity is (1-p_col^W).
+	// We know that p_col >= 2^-8, but if W is sufficiently large, then the result will be smaller than 
+	// LDBL_EPSILON (2^-63 on modern Intel platforms); if this happens then we can't represent (1-p_col^W) directly as a long double.
+	// We instead calculate the log of the probability of not having a collision of length W for a single pair of W-length strings.
 	// Recall that log1p(x) = log(1+x); this form is useful when |x| is small.
 	long double logProbNoColsPerPair = log1pl(-p_colPower);
 	assert(logProbNoColsPerPair < 0.0L);
@@ -349,9 +369,10 @@ bool len_LRS_test(const byte data[], const int L, const int alphabet_size, const
 		//This probability may not be representable in the precision that we have to work with,
 		//but if it is, we may as well output it.
 		//Calculate the probability of not encountering a collision after N sets of pairs
+		// Note, this N is O(L^2), so use of this as an exponent will tend to cause underflows here.
+		// probNoCols = 1 - Pr (X = 0) = 1 - (1 - p_col^W)^N is the probability of seeing at least 1 collision.
 		long double probNoCols = expl(N*logProbNoColsPerPair);
 		if((probNoCols <= 1.0L - LDBL_EPSILON) && (probNoCols >= LDBL_MIN)) {
-			// 1 - pnocols^N is the probability of seeing at least 1 collision.
 			cout << "\tPr(X >= 1): " << 1.0L - probNoCols << endl;
 		} else {
 			cout << "\tThe calculation of Pr(X >= 1) experienced an underflow" << endl;
@@ -360,8 +381,8 @@ bool len_LRS_test(const byte data[], const int L, const int alphabet_size, const
 
 	//We don't need the above to have worked to come to a conclusion on the test, however:
 	// The LRS test is considered a "Pass"
-	// iff P(X>=1) >= 1/1000
-	// iff 1 - P(X=0) >= 1/1000
+	// iff Pr(X>=1) >= 1/1000
+	// iff 1 - Pr(X=0) >= 1/1000
 	// iff 1 - (1-p_col^W)^N >= 1/1000
 	// iff 0.999 >= (1-p_col^W)^N
 	// iff log(0.999) >= N*log(1-p_col^W)
