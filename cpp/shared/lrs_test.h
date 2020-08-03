@@ -5,7 +5,7 @@
 
 #define SAINDEX_MAX INT32_MAX
 
-//Using the Kasai (et. al) O(n) time "13n space" algorithm.
+//Using the Kasai (et al.) O(n) time "13n space" algorithm.
 //"Linear-Time Longest-Common-Prefix Computation in Suffix Arrays and Its Applications", by Kasai, Lee, Arimura, Arikawa, and Park
 //https://doi.org/10.1007/3-540-48194-X_17
 //http://web.cs.iastate.edu/~cs548/references/linear_lcp.pdf
@@ -313,7 +313,7 @@ void calc_collision_proportion(const vector<double> &p, long double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[], const int L, const int k, const int verbose, const char *label){
+bool len_LRS_test(const byte data[], const int L, const int k, const int verbose, const char *label) {
 	// p_col is the probability of collision on a per-symbol basis under an IID assumption (this is related to the collision entropy).
 	// p_col >= 1/k, which bounds this.
 	// Note, for SP 800-90B k<=256, so we can bound p_col >= 2^-8. 
@@ -336,46 +336,55 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 	// The length of the longest repeated substring (LRS) for the supplied data is W.
 	int W = len_LRS(data, L);
 
-	//(L - W + 1) is the number of overlapping contiguous substrings of length W in a string of length L.
-	// The number of pairs of such overlapping substrings is N = (L - W + 1) choose 2.
-	// This is the number of ways of choosing 2 substrings of length W from a string of length L.
-	long int N = n_choose_2(L - W + 1);
-
 	// p_col^W is the probability of collision of a W-length string under an IID assumption;
-	// this may be quite close to 0
+	// this may be quite close to 0.
 	// We know that p_col >= 2^-8, but if W is sufficiently large, then the result will be smaller than LDBL_MIN 
 	// (2^-16382 on modern Intel platforms); if this happens then we can't represent p_col^W directly as a long double.
-	// There isn't anything we can do about this error condition (without moving to an arbitrary precision calculation), so
+	// There isn't anything we can do about this error condition without moving to an arbitrary precision calculation, so
 	// for now, we'll just detect this condition and abort the calculation.
 	long double p_colPower = powl(p_col, (long double)W);
 	assert(p_colPower >= LDBL_MIN);
 	assert(p_colPower <= 1.0L-LDBL_EPSILON);
 
 	// There is some delicacy in calculating Pr(X>=1) as some of the intermediary values may be quite close to 0 or 1.
-	// We first want to calculate the probability of not having a collision of length W for a single pair of W-length strings.
-	// This quantity is (1-p_col^W).
+	// We first want to calculate the probability of not having a collision of length W for a single pair of independent 
+	// W-length strings.  This quantity is (1-p_col^W).
 	// We know that p_col >= 2^-8, but if W is sufficiently large, then the result will be smaller than 
 	// LDBL_EPSILON (2^-63 on modern Intel platforms); if this happens then we can't represent (1-p_col^W) directly as a long double.
-	// We instead calculate the log of the probability of not having a collision of length W for a single pair of W-length strings.
-	// Recall that log1p(x) = log(1+x); this form is useful when |x| is small.
+	// We instead calculate the log of the probability of not having a collision of length W for a single pair of independent W-length strings.
+	// Recall that log1p(x) = log(1+x); this form is useful when |x| is small. We are particularly concerned with the case where p_col^W is a small 
+	// positive value, which would make log1p(-p_col^W) a negative value quite close to 0.
 	long double logProbNoColsPerPair = log1pl(-p_colPower);
 	assert(logProbNoColsPerPair < 0.0L);
+
+	//(L - W + 1) is the number of overlapping contiguous substrings of length W in a string of length L.
+	// The number of pairs of such overlapping substrings is N = (L - W + 1) choose 2.
+	// This is the number of ways of choosing 2 substrings of length W from a string of length L.
+	long int N = n_choose_2(L - W + 1);
 
 	if(verbose > 0){
 		cout << label << "Longest Repeated Substring results" << endl;
 		cout << "\tP_col: " << p_col << endl;
 		cout << "\tLength of LRS: " << W << endl;
 
-		//This probability may not be representable in the precision that we have to work with,
-		//but if it is, we may as well output it.
-		//Calculate the probability of not encountering a collision after N sets of pairs
-		// Note, this N is O(L^2), so use of this as an exponent will tend to cause underflows here.
-		// probNoCols = 1 - Pr (X = 0) = 1 - (1 - p_col^W)^N is the probability of seeing at least 1 collision.
-		long double probNoCols = expl(N*logProbNoColsPerPair);
-		if((probNoCols <= 1.0L - LDBL_EPSILON) && (probNoCols >= LDBL_MIN)) {
+		// Calculate the probability of not encountering a collision after N sets of independent pairs;
+		// this is an application of the Binomial Distribution.
+		// Using the CDF at X=0 (or equivalently, the PDF at X=0), we find the probability of seeing at least 1 collision,
+		// under the assumption that each substring is independent of every other substring (i.e., under the per-round independence 
+		// assumption required by the Binomial Distribution), is:
+		// probNoCols = 1 - Pr (X = 0) = 1 - (1 - p_col^W)^N. 
+		// Unfortunately, if W>1, many of these substrings are not independent! In the case that two strings overlap, then
+		// there is clearly a dependency between the trials. As such, this test has some statistical construction problems.  
+		// Empirical testing has shown that, for ideal looking data, the observed failure rate is under the desired 
+		// threshold of 1/1000.
+		// Note, this N is O(L^2), so use of this value as an exponent tends to cause underflows here;
+		// in this case, this probability isn't accurately representable using the precision that we have to work with, but it is expected to
+		// round reasonably.
+		long double probNoCols = expl(((long double)N)*logProbNoColsPerPair);
+		if((probNoCols <= 1.0L - LDBL_EPSILON) && (probNoCols >= LDBL_EPSILON)) {
 			cout << "\tPr(X >= 1): " << 1.0L - probNoCols << endl;
 		} else {
-			cout << "\tThe calculation of Pr(X >= 1) experienced an underflow" << endl;
+			cout << "\tPr(X >= 1) rounds to " << 1.0L - probNoCols << ", but there is precision loss. The test verdict is still expected to be valid." << endl;
 		}
 	}
 
@@ -387,6 +396,5 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 	// iff 0.999 >= (1-p_col^W)^N
 	// iff log(0.999) >= N*log(1-p_col^W)
 	// iff log(0.999) >= N*log1p(-p_col^W)
-	// iff log(0.999)/log1p(-p_col^W) <= N
-	return logl(0.999L) / logProbNoColsPerPair <= (long double)N;
+	return logl(0.999L) >= ((long double)N)* logProbNoColsPerPair;
 }
