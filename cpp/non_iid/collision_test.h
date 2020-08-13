@@ -52,104 +52,26 @@ double collision_test(byte* data, long len, const int verbose, const char *label
 		printf("%s Collision Estimate: sigma-hat = %.17g\n", label, s);
 	}
 
-	// binary search for p
+	// Directly calculate p
 	X -= ZALPHA * s/sqrt(v);
+	//2 is the smallest meaninful value here.
+	if(X < 2.0) X = 2.0;
 
 	if(verbose == 2)
 		printf("%s Collision Estimate: X-bar' = %.17g\n", label, X);
 
-	if(col_exp(0.5) > X) {
-
-		ldomain = 0.5;
-		hdomain = 1.0;
-
-		lbound = ldomain;
-		hbound = hdomain;
-
-		lvalue = DBL_INFINITY;
-		hvalue = -DBL_INFINITY;
-
-		//Note that the bounds are in [0,1], so overflows aren't an issue
-		//But underflows are.
-		p = (lbound + hbound) / 2.0;
-		pVal = col_exp(p);
-
-		//We don't need the initial pVal invariant, as our initial bounds are infinite.
-		//We don't need the initial bounds, as they are set to the domain bounds
-		for(j=0; j<ITERMAX; j++) {
-			//Have we reached "equality"?
-			if(relEpsilonEqual(pVal, X, ABSEPSILON, RELEPSILON, 4)) break;
-
-			//Now update based on the found pVal
-			if(X < pVal) {
-				lbound = p;
-				lvalue = pVal;
-			} else {
-				hbound = p;
-				hvalue = pVal;
-			}
-
-			//We now verify that ldomain <= lbound < p < hbound <= hdomain
-			//and that target in [ lvalue, hvalue ]
-			if(lbound >= hbound) {
-				p = fmin(fmax(lbound, hbound),hdomain);
-				break;
-			}
-
-			//invariant. If this isn't true, then we can't evaluate here.
-			if(!(INCLOSEDINTERVAL(lbound, ldomain, hdomain) && INCLOSEDINTERVAL(hbound,  ldomain, hdomain))) {
-				//This is a search failure. We need to return "full entropy"  (as directed in step #8).
-				p = ldomain;
-				break;
-			}
-
-			//invariant. If this isn't true, then seeking the value within this interval doesn't make sense.
-			if(!INCLOSEDINTERVAL(X, lvalue, hvalue)) {
-				//This is a search failure. We need to return "full entropy"  (as directed in step #8).
-				p = ldomain;
-				break;
-			}
-
-			//Update p
-			lastP = p;
-			p = (lbound + hbound) / 2.0;
-
-			//invariant. If this isn't true, then further calculation isn't really meaningful.
-			if(!INOPENINTERVAL(p,  lbound, hbound)) {
-				p = hbound;
-				break;
-			}
-
-
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wfloat-equal"
-			//Look for a cycle
-			if(lastP == p) {
-				p = hbound;
-				break;
-			}
-	#pragma GCC diagnostic pop
-
-			pVal = col_exp(p);
-
-			//invariant: If this isn't true, then this isn't loosly monotonic
-			if(!INCLOSEDINTERVAL(pVal, lvalue, hvalue)) {
-				p = hbound;
-				break;
-			}
-		}//for loop
-	} else {
-		p = -1.0;
-	}
-
-	if(p > 0.5) {
+	//Uyen Dinh observed that (with the simpler F function described in UL comments) we can simplify the entire expression much further than in 90B.
+	//The whole mess in 90B step 7 reduces to X'-bar = -2p^2 + 2p + 2, which we can solve using the quadratic formula.
+	//We only care about the root greater than 0.5, so we only care about the "+" branch.
+	//If the meanbound > 2.5, then the roots become complex, so this isn't well defined (and is processed as per the error handling specified in 90B).
+	if(X < 2.5) {
+		p = 0.5 + sqrt(1.25 - 0.5 * X);
 		entEst = -log2(p);
-
 		if(verbose == 2) printf("%s Collision Estimate: Found p.\n", label);
 	} else {
+		if(verbose == 2) printf("%s Collision Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
 		p = 0.5;
 		entEst = 1.0;
-		if(verbose == 2) printf("%s Collision Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
 	}
 
 	if(verbose == 1) printf("p = %.17g\n", p);
