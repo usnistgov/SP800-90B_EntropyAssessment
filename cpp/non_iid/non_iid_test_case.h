@@ -16,6 +16,9 @@ public:
     double t_tuple_res = -1.0;
     double bin_lrs_res = -1.0;
     double lrs_res = -1.0;
+    double h_r = -1.0;
+    double h_c = -1.0;
+    double h_i = -1.0;
 
     Json::Value GetAsJson() {
         Json::Value json = TestCaseBase::GetBaseJson();
@@ -25,6 +28,9 @@ public:
         json["tTupleRes"] = t_tuple_res;
         json["binLrsRes"] = bin_lrs_res;
         json["lrsRes"] = lrs_res;
+        json["h_r"] = h_r;
+        json["h_c"] = h_c;
+        json["h_i"] = h_i;
 
         return json;
     }

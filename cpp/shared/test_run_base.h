@@ -13,6 +13,7 @@ public:
     string filename;
     int errorLevel = 0;
     string errorMsg;
+    string type;
 
 protected:
     Json::Value GetBaseJson() {
@@ -21,6 +22,7 @@ protected:
         baseJson["filename"] = filename;
         baseJson["sha256"] = sha256;
         baseJson["errorLevel"] = errorLevel;
+        baseJson["type"] = type;
 
         if (errorLevel != 0){
             baseJson["errorMessage"] = errorMsg;

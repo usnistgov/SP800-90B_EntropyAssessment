@@ -19,6 +19,10 @@ public:
     bool passed_chi_square_tests = false;
     bool passed_longest_repeated_substring_test = false;
     bool passed_iid_permutation_tests = false;
+    
+    double h_r = -1.0;
+    double h_c = -1.0;
+    double h_i = -1.0;
 
     vector<PermutationTestResult> testResults;
 
@@ -31,6 +35,10 @@ public:
         json["passedLongestRepeatedSubstringTest"] = passed_longest_repeated_substring_test;
         json["passedIidPermutationTests"] = passed_iid_permutation_tests;
 
+        json["h_r"] = h_r;
+        json["h_c"] = h_c;
+        json["h_i"] = h_i;
+        
         Json::Value permutationTestResults;
         for (int i = 0; i < testResults.size(); i++){
             permutationTestResults[i] = testResults[i].GetAsJson();
