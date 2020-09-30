@@ -19,7 +19,14 @@ public:
     double h_r = -1.0;
     double h_c = -1.0;
     double h_i = -1.0;
-
+    double n_in = -1.0;
+    double n_out = -1.0;
+    double nw = -1.0;
+    double h_in = -1.0;
+    double h_out = -1.0;
+    double h_p = -1.0;
+    bool vetted = true;
+    
     Json::Value GetAsJson() {
         Json::Value json = TestCaseBase::GetBaseJson();
         json["retMinEntropy"] = ret_min_entropy;
@@ -31,7 +38,14 @@ public:
         json["h_r"] = h_r;
         json["h_c"] = h_c;
         json["h_i"] = h_i;
-
+        json["n_in"] = n_in;
+        json["n_out"] = n_out;
+        json["nw"] = nw;
+        json["h_in"] = h_in;
+        json["h_out"] = h_out;
+        json["h_p"] = h_p;
+        json["vetted"] = vetted;
+        
         return json;
     }
 };

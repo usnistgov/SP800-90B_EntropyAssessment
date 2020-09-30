@@ -514,15 +514,7 @@ int main(int argc, char* argv[]) {
     printf("H_I: %f\n", H_I);
     printf("\n");
 
-    NonIidTestCase tcOverallnonIid;
-    tcOverallnonIid.ret_min_entropy = ret_min_entropy;
-    tcOverallnonIid.data_word_size = data.word_size;
-    tcOverallnonIid.h_r = H_r;
-    tcOverallnonIid.h_c = H_c;
-    tcOverallnonIid.h_i = H_I;
-    tcOverallnonIid.testCaseNumber = "Overall";
-    testRunNonIid.testCases.push_back(tcOverallnonIid);
-    testRunNonIid.errorLevel = 0;
+    c++
 
     IidTestCase tcOverallIid;
     tcOverallIid.h_r = H_r;
