@@ -599,7 +599,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	}
 
 	// Run initial tests
-	cout << "Beginning initial tests..." << endl;
+	if(verbose) cout << "Beginning initial tests..." << endl;
 	seed(xoshiro256starstarMainSeed);
 
 	run_tests(dp, dp->symbols, dp->rawsymbols, rawmean, median, t, test_status);
@@ -613,7 +613,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		cout << endl;
 	}
 	
-	cout << "Beginning permutation tests... these may take some time" << endl;
+	if(verbose) cout << "Beginning permutation tests... these may take some time" << endl;
 
 	#pragma omp parallel
 	{

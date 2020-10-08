@@ -21,13 +21,14 @@
 #define SIMULATION_ROUNDS 5000000
 
 [[ noreturn ]] void print_usage() {
-    printf("Usage is: ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>\n\n");
+    printf("Usage is: ea_restart [-i|-n] [-v] [-q] <file_name> [bits_per_symbol] <H_I>\n\n");
     printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples),\n");
     printf("\t and in the \"row dataset\" format described in SP800-90B Section 3.1.4.1.\n");
     printf("\t [bits_per_symbol]: Must be between 1-8, inclusive.\n");
     printf("\t <H_I>: Initial entropy estimate.\n");
     printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
     printf("\t -v: Optional verbosity flag for more output.\n");
+    printf("\t -q: Quiet mode, less output to screen.\n");
     printf("\n");
     printf("\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_symbol'\n");
     printf("\t bits constitute the sample.\n");
@@ -132,6 +133,7 @@ long int simulateBound(double alpha, int k, double H_I) {
 int main(int argc, char* argv[]) {
     bool iid;
     int verbose = 0;
+    bool quietMode = false;
     char *file_path;
     int r = 1000, c = 1000;
     int counts[256];
@@ -149,7 +151,7 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename = timestamp + ".json";
 
-    while ((opt = getopt(argc, argv, "invo:")) != -1) {
+    while ((opt = getopt(argc, argv, "invqo:")) != -1) {
         switch (opt) {
             case 'i':
                 iid = true;
@@ -159,6 +161,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 'v':
                 verbose++;
+                break;
+            case 'q':
+                quietMode = true;
                 break;
             case 'o':
                 jsonOutput = true;
@@ -244,7 +249,7 @@ int main(int argc, char* argv[]) {
 
     alpha = 1 - exp(log(0.99) / (r + c));
     X_cutoff = simulateBound(alpha, data.alph_size, H_I);
-    printf("ALPHA: %.17g, X_cutoff: %ld\n", alpha, X_cutoff);
+    if (!quietMode) printf("ALPHA: %.17g, X_cutoff: %ld\n", alpha, X_cutoff);
 
     // get maximum row count
     X_r = 0;
@@ -275,7 +280,7 @@ int main(int argc, char* argv[]) {
 
     // perform sanity check on rows and columns of restart data (Section 3.1.4.3)
     X_max = max(X_r, X_c);
-    printf("X_max: %ld\n", X_max);
+    if (!quietMode) printf("X_max: %ld\n", X_max);
     if (X_max > X_cutoff) {
         printf("\n*** Restart Sanity Check Failed ***\n");
         exit(-1);
@@ -284,12 +289,12 @@ int main(int argc, char* argv[]) {
     // The maximum min-entropy is -log2(1/2^word_size) = word_size
     H_c = data.word_size;
     H_r = data.word_size;
+    if (!quietMode) {
+        if (iid) printf("\nRunning IID tests...\n\n");
+        else printf("\nRunning non-IID tests...\n\n");
 
-    if (iid) printf("\nRunning IID tests...\n\n");
-    else printf("\nRunning non-IID tests...\n\n");
-
-    printf("Running Most Common Value Estimate...\n");
-
+        printf("Running Most Common Value Estimate...\n");
+    }
     char hash[65];
     sha256_file(file_path, hash);
 
@@ -332,7 +337,7 @@ int main(int argc, char* argv[]) {
     if (!iid) {
 
         if (data.alph_size == 2) {
-            printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
+            if (!quietMode) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
             // Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
             ret_min_entropy = collision_test(rdata, data.len, verbose, "Literal");
@@ -388,7 +393,7 @@ int main(int argc, char* argv[]) {
 
         }
 
-        printf("\nRunning Tuple Estimates...\n");
+        if (!quietMode) printf("\nRunning Tuple Estimates...\n");
 
         // Section 6.3.5 - Estimate entropy with t-Tuple Test
         double row_t_tuple_res, row_lrs_res;
@@ -425,7 +430,7 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc636);
 
 
-        printf("\nRunning Predictor Estimates...\n");
+        if (!quietMode) printf("\nRunning Predictor Estimates...\n");
 
         // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
         ret_min_entropy = multi_mcw_test(rdata, data.len, data.alph_size, verbose, "Literal");
@@ -507,14 +512,14 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc6310);
 
     }
+    if (!quietMode) {
+        printf("\n");
+        printf("H_r: %f\n", H_r);
+        printf("H_c: %f\n", H_c);
+        printf("H_I: %f\n", H_I);
+        printf("\n");
+    }
 
-    printf("\n");
-    printf("H_r: %f\n", H_r);
-    printf("H_c: %f\n", H_c);
-    printf("H_I: %f\n", H_I);
-    printf("\n");
-
-    c++
 
     IidTestCase tcOverallIid;
     tcOverallIid.h_r = H_r;
@@ -535,13 +540,13 @@ int main(int argc, char* argv[]) {
         output.close();
 
     }
-
-    if (min(H_r, H_c) < H_I / 2.0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
-    else {
-        printf("Validation Test Passed...\n\n");
-        printf("min(H_r, H_c, H_I): %f\n\n", min(min(H_r, H_c), H_I));
+    if (!quietMode) {
+        if (min(H_r, H_c) < H_I / 2.0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
+        else {
+            printf("Validation Test Passed...\n\n");
+            printf("min(H_r, H_c, H_I): %f\n\n", min(min(H_r, H_c), H_I));
+        }
     }
-
     free(cdata);
     free_data(&data);
     return 0;

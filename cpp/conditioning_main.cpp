@@ -14,7 +14,7 @@
 #include <fstream>
 
 [[ noreturn ]] void print_usage() {
-    printf("Usage is: ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>\n");
+    printf("Usage is: ea_conditioning [-v] [-q] <n_in> <n_out> <nw> <h_in>\n");
     printf("\tor \n\tea_conditioning -n <n_in> <n_out> <nw> <h_in> <h'>\n\n");
     printf("\t <n_in>: input number of bits to conditioning function.\n");
     printf("\t <n_out>: output number of bits from conditioning function.\n");
@@ -22,6 +22,7 @@
     printf("\t <h_in>: input entropy to conditioning function.\n");
     printf("\t <-v|-n>: '-v' for vetted conditioning function, '-n' for non-vetted conditioning function. Vetted conditioning is the default.\n");
     printf("\t <h'>: entropy estimate per bit of conditioned sequential dataset (only for '-n' option).\n");
+    printf("\t -q: Quiet mode, less output to screen.\n");
     printf("\n");
     printf("\t This program computes the entropy of the output of a conditioning function 'h_out' (Section 3.1.5).\n");
     printf("\t If the conditioning function is vetted, then\n\n");
@@ -35,6 +36,7 @@
 
 int main(int argc, char* argv[]) {
     bool vetted;
+    bool quietMode = false;
     double h_p = -1.0;
     double h_in, h_out, n_in, n_out, nw, n, p_high, p_low, psi, omega, output_entropy, power_term;
     int opt;
@@ -45,13 +47,16 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename = timestamp + ".json";
 
-    while ((opt = getopt(argc, argv, "vno:")) != -1) {
+    while ((opt = getopt(argc, argv, "vnqo:")) != -1) {
         switch (opt) {
             case 'v':
                 vetted = true;
                 break;
             case 'n':
                 vetted = false;
+                break;
+            case 'q':
+                quietMode = true;
                 break;
             case 'o':
                 jsonOutput = true;
@@ -66,10 +71,10 @@ int main(int argc, char* argv[]) {
     argv += optind;
 
     // Parse args
-    if ((vetted && (argc != 4)) || (!vetted && (argc != 5))) {
-        printf("Incorrect usage.\n");
-        print_usage();
-    } else {
+   // if ((vetted && (argc != 4)) || (!vetted && (argc != 5))) {
+   //     printf("Incorrect usage.\n");
+   //     print_usage();
+   // } else {
         // get n_in     
         n_in = atof(argv[0]);
         if ((n_in <= 0) || (floor(n_in) != n_in)) {
@@ -105,7 +110,7 @@ int main(int argc, char* argv[]) {
                 print_usage();
             }
         }
-    }
+    //}
 
 
     NonIidTestRun testRunNonIid;
@@ -114,12 +119,13 @@ int main(int argc, char* argv[]) {
 
     if (nw > n_in) nw = n_in;
 
-    printf("n_in: %f\n", n_in);
-    printf("n_out: %f\n", n_out);
-    printf("nw: %f\n", nw);
-    printf("h_in: %f\n", h_in);
-    if (!vetted) printf("h': %f\n", h_p);
-
+    //if (!quietMode) {
+        printf("n_in: %f\n", n_in);
+        printf("n_out: %f\n", n_out);
+        printf("nw: %f\n", nw);
+        printf("h_in: %f\n", h_in);
+        if (!vetted) printf("h': %f\n", h_p);
+   // }
     // compute Output Entropy (Section 3.1.5.1.2)
     p_high = pow(2.0, -h_in);
     p_low = (1.0 - p_high) / (pow(2.0, n_in) - 1);
@@ -130,17 +136,17 @@ int main(int argc, char* argv[]) {
     output_entropy = -log2(std::max(psi, omega));
     if (output_entropy > n_out) output_entropy = n_out;
     if (output_entropy < 0) output_entropy = 0;
+    //if (!quietMode) {
+        if (vetted) {
+            printf("\n(Vetted) ");
+            h_out = output_entropy;
+        } else {
+            printf("\n(Non-vetted) ");
+            h_out = std::min(output_entropy, std::min(0.999 * n_out, h_p * n_out));
+        }
 
-    if (vetted) {
-        printf("\n(Vetted) ");
-        h_out = output_entropy;
-    } else {
-        printf("\n(Non-vetted) ");
-        h_out = std::min(output_entropy, std::min(0.999 * n_out, h_p * n_out));
-    }
-
-    printf("h_out: %f\n", h_out);
-
+        printf("h_out: %f\n", h_out);
+    //}
     NonIidTestCase tcOverallnonIid;
 
     tcOverallnonIid.testCaseNumber = "Overall";

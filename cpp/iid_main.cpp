@@ -13,13 +13,14 @@
 #include <fstream>
 
 [[ noreturn ]] void print_usage() {
-    printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
+    printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-q] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
     printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
     printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
     printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
     printf("\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to %d bits. Test all data by default.\n", MIN_SIZE);
     printf("\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n");
     printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
+    printf("\t -q: Quiet mode, less output to screen.\n");
     printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
     printf("\n");
     printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n");
@@ -52,6 +53,7 @@ int main(int argc, char* argv[]) {
 
     bool initial_entropy, all_bits;
     int verbose = 0;
+    bool quietMode = false;
     double rawmean, median;
     char* file_path;
     data_t data;
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]) {
     initial_entropy = true;
     all_bits = true;
 
-    while ((opt = getopt(argc, argv, "icatvlo:")) != -1) {
+    while ((opt = getopt(argc, argv, "icatvlqo:")) != -1) {
         switch (opt) {
             case 'i':
                 initial_entropy = true;
@@ -85,6 +87,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 'v':
                 verbose++;
+                break;
+            case 'q':
+                quietMode = true;
                 break;
             case 'l':
                 inint = strtoull(optarg, &nextOption, 0);
@@ -102,7 +107,7 @@ int main(int argc, char* argv[]) {
                 subsetSize = inint;
                 break;
             case 'o':
-            	jsonOutput = true;
+                jsonOutput = true;
                 outputfilename = optarg;
                 break;
             default:
@@ -135,13 +140,13 @@ int main(int argc, char* argv[]) {
             testRun.errorLevel = -1;
             testRun.errorMsg = "Invalid bits per symbol.";
 
-            if (jsonOutput){
-	            ofstream output;
-	            output.open(outputfilename);
-	            output << testRun.GetAsJson();
-	            output.close();
+            if (jsonOutput) {
+                ofstream output;
+                output.open(outputfilename);
+                output << testRun.GetAsJson();
+                output.close();
             }
-            
+
             printf("Invalid bits per symbol.\n");
             print_usage();
         }
@@ -161,13 +166,13 @@ int main(int argc, char* argv[]) {
         testRun.errorLevel = -1;
         testRun.errorMsg = "Error reading file.";
 
-        if (jsonOutput){
-	        ofstream output;
-	        output.open(outputfilename);
-	        output << testRun.GetAsJson();
-	        output.close();	
+        if (jsonOutput) {
+            ofstream output;
+            output.open(outputfilename);
+            output << testRun.GetAsJson();
+            output.close();
         }
-        
+
         printf("Error reading file.\n");
         print_usage();
     }
@@ -179,13 +184,13 @@ int main(int argc, char* argv[]) {
         testRun.errorLevel = -1;
         testRun.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
 
-        if (jsonOutput){
-	        ofstream output;
-	        output.open(outputfilename);
-	        output << testRun.GetAsJson();
-	        output.close();	
+        if (jsonOutput) {
+            ofstream output;
+            output.open(outputfilename);
+            output << testRun.GetAsJson();
+            output.close();
         }
-        
+
         printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
         free_data(&data);
         exit(-1);
@@ -194,7 +199,7 @@ int main(int argc, char* argv[]) {
     if (!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
 
     if ((verbose > 0) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary samples: %ld\n", data.blen);
-    if (data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
+    if (data.len < MIN_SIZE && !quietMode) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
     if (verbose > 0) {
         if (data.alph_size < (1 << data.word_size)) printf("\nSamples have been translated\n");
     }
@@ -203,7 +208,7 @@ int main(int argc, char* argv[]) {
     int alphabet_size = data.alph_size;
     int sample_size = data.len;
 
-    printf("Calculating baseline statistics...\n");
+    if(!quietMode) printf("Calculating baseline statistics...\n");
     calc_stats(&data, rawmean, median);
 
     if (verbose > 0) {
@@ -232,7 +237,7 @@ int main(int argc, char* argv[]) {
     tc.h_bitstring = H_bitstring;
 
     double h_assessed = data.word_size;
-    if (verbose <= 1) {
+    if (verbose >= 1) {
         if (initial_entropy) {
             printf("H_original: %f\n", H_original);
             if (data.alph_size > 2) {
@@ -257,7 +262,7 @@ int main(int argc, char* argv[]) {
     }
     tc.h_assessed = h_assessed;
 
-    printf("\n");
+    if(!quietMode) printf("\n");
 
     // Compute chi square stats
     bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
@@ -292,13 +297,13 @@ int main(int argc, char* argv[]) {
     testRun.testCases.push_back(tc);
     testRun.errorLevel = 0;
 
-	if (jsonOutput){
-		ofstream output;
-	    output.open(outputfilename);
-	    output << testRun.GetAsJson();
-	    output.close();	
-	}    
-    
+    if (jsonOutput) {
+        ofstream output;
+        output.open(outputfilename);
+        output << testRun.GetAsJson();
+        output.close();
+    }
+
     free_data(&data);
     return 0;
 }
