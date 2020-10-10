@@ -70,62 +70,104 @@ int main(int argc, char* argv[]) {
     argc -= optind;
     argv += optind;
 
-    // Parse args
-   // if ((vetted && (argc != 4)) || (!vetted && (argc != 5))) {
-   //     printf("Incorrect usage.\n");
-   //     print_usage();
-   // } else {
-        // get n_in     
-        n_in = atof(argv[0]);
-        if ((n_in <= 0) || (floor(n_in) != n_in)) {
-            printf("n_in must be a positive integer.\n");
-            print_usage();
-        }
-
-        // get n_out     
-        n_out = atof(argv[1]);
-        if ((n_out <= 0) || (floor(n_out) != n_out)) {
-            printf("n_out must be a positive integer.\n");
-            print_usage();
-        }
-
-        // get n_out     
-        nw = atof(argv[2]);
-        if ((nw <= 0) || (floor(nw) != nw)) {
-            printf("n_out must be a positive integer.\n");
-            print_usage();
-        }
-
-        // get h_in     
-        h_in = atof(argv[3]);
-        if ((h_in <= 0) || (h_in > n_in)) {
-            printf("h_in must be positive and at most n_in.\n");
-            print_usage();
-        }
-
-        if (!vetted) {
-            h_p = atof(argv[4]);
-            if ((h_p < 0) || (h_p > 1.0)) {
-                printf("h' must be between 0 and 1 inclusive.\n");
-                print_usage();
-            }
-        }
-    //}
-
-
     NonIidTestRun testRunNonIid;
     testRunNonIid.type = "Conditioning";
     testRunNonIid.timestamp = timestamp;
 
+    // Parse args
+    // if ((vetted && (argc != 4)) || (!vetted && (argc != 5))) {
+    //     printf("Incorrect usage.\n");
+    //     print_usage();
+    // } else {
+    // get n_in     
+    n_in = atof(argv[0]);
+    if ((n_in <= 0) || (floor(n_in) != n_in)) {
+        printf("n_in must be a positive integer.\n");
+        if (jsonOutput) {
+            testRunNonIid.errorLevel = -1;
+            testRunNonIid.errorMsg = "n_in must be a positive integer";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunNonIid.GetAsJson();
+            output.close();
+        }
+        print_usage();
+    }
+
+    // get n_out     
+    n_out = atof(argv[1]);
+    if ((n_out <= 0) || (floor(n_out) != n_out)) {
+        printf("n_out must be a positive integer.\n");
+
+        if (jsonOutput) {
+            testRunNonIid.errorLevel = -1;
+            testRunNonIid.errorMsg = "n_out must be a positive integer";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunNonIid.GetAsJson();
+            output.close();
+        }
+
+        print_usage();
+    }
+
+    // get n_out     
+    nw = atof(argv[2]);
+    if ((nw <= 0) || (floor(nw) != nw)) {
+        printf("n_w must be a positive integer.\n");
+        if (jsonOutput) {
+            testRunNonIid.errorLevel = -1;
+            testRunNonIid.errorMsg = "n_w must be a positive integer";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunNonIid.GetAsJson();
+            output.close();
+        }
+        print_usage();
+    }
+
+    // get h_in     
+    h_in = atof(argv[3]);
+    if ((h_in <= 0) || (h_in > n_in)) {
+        printf("h_in must be positive and at most n_in.\n");
+        if (jsonOutput) {
+            testRunNonIid.errorLevel = -1;
+            testRunNonIid.errorMsg = "h_in must be a positive and at most n_in.";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunNonIid.GetAsJson();
+            output.close();
+        }
+        print_usage();
+    }
+
+    if (!vetted) {
+        h_p = atof(argv[4]);
+        if ((h_p < 0) || (h_p > 1.0)) {
+            printf("h' must be between 0 and 1 inclusive.\n");
+            if (jsonOutput) {
+                testRunNonIid.errorLevel = -1;
+                testRunNonIid.errorMsg = "h' must be between 0 and 1 inclusive.";
+                ofstream output;
+                output.open(outputfilename);
+                output << testRunNonIid.GetAsJson();
+                output.close();
+            }
+            print_usage();
+        }
+    }
+    //}
+
+
     if (nw > n_in) nw = n_in;
 
     //if (!quietMode) {
-        printf("n_in: %f\n", n_in);
-        printf("n_out: %f\n", n_out);
-        printf("nw: %f\n", nw);
-        printf("h_in: %f\n", h_in);
-        if (!vetted) printf("h': %f\n", h_p);
-   // }
+    printf("n_in: %f\n", n_in);
+    printf("n_out: %f\n", n_out);
+    printf("nw: %f\n", nw);
+    printf("h_in: %f\n", h_in);
+    if (!vetted) printf("h': %f\n", h_p);
+    // }
     // compute Output Entropy (Section 3.1.5.1.2)
     p_high = pow(2.0, -h_in);
     p_low = (1.0 - p_high) / (pow(2.0, n_in) - 1);
@@ -137,15 +179,15 @@ int main(int argc, char* argv[]) {
     if (output_entropy > n_out) output_entropy = n_out;
     if (output_entropy < 0) output_entropy = 0;
     //if (!quietMode) {
-        if (vetted) {
-            printf("\n(Vetted) ");
-            h_out = output_entropy;
-        } else {
-            printf("\n(Non-vetted) ");
-            h_out = std::min(output_entropy, std::min(0.999 * n_out, h_p * n_out));
-        }
+    if (vetted) {
+        printf("\n(Vetted) ");
+        h_out = output_entropy;
+    } else {
+        printf("\n(Non-vetted) ");
+        h_out = std::min(output_entropy, std::min(0.999 * n_out, h_p * n_out));
+    }
 
-        printf("h_out: %f\n", h_out);
+    printf("h_out: %f\n", h_out);
     //}
     NonIidTestCase tcOverallnonIid;
 

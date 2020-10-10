@@ -3,6 +3,7 @@
 #include "shared/lrs_test.h"
 #include "non_iid/non_iid_test_run.h"
 #include "iid/iid_test_run.h"
+#include "shared/TestRun.h"
 #include "shared/TestRunUtils.h"
 #include "non_iid/collision_test.h"
 #include "non_iid/lz78y_test.h"
@@ -189,11 +190,35 @@ int main(int argc, char* argv[]) {
     argv++;
     argc--;
 
+    char hash[65];
+    sha256_file(file_path, hash);
+
+    IidTestRun testRunIid;
+    testRunIid.type = "Restart";
+    testRunIid.timestamp = timestamp;
+    testRunIid.filename = file_path;
+    testRunIid.sha256 = hash;
+
+    NonIidTestRun testRunNonIid;
+    testRunNonIid.type = "Restart";
+    testRunNonIid.timestamp = timestamp;
+    testRunNonIid.sha256 = hash;
+    testRunNonIid.filename = file_path;
+
+
     if (argc == 2) {
         // get bits per word
         data.word_size = atoi(argv[0]);
         if (data.word_size < 1 || data.word_size > 8) {
             printf("Invalid bits per symbol.\n");
+            if (jsonOutput) {
+                testRunIid.errorLevel = -1;
+                testRunIid.errorMsg = "Invalid bits per symbol.";
+                ofstream output;
+                output.open(outputfilename);
+                output << testRunIid.GetAsJson();
+                output.close();
+            }
             print_usage();
         }
         argv++;
@@ -205,6 +230,14 @@ int main(int argc, char* argv[]) {
     H_I = atof(argv[0]);
     if (H_I < 0) {
         printf("H_I must be nonnegative.\n");
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "H_I must be nonnegative.";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
         print_usage();
     }
 
@@ -213,6 +246,16 @@ int main(int argc, char* argv[]) {
 
     if (!read_file(file_path, &data)) {
         printf("Error reading file.\n");
+
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "Error reading file.";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
+
         print_usage();
     }
 
@@ -220,18 +263,42 @@ int main(int argc, char* argv[]) {
 
     if (H_I > data.word_size) {
         printf("H_I must be at most 'bits_per_symbol'.\n");
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "H_I must be at most 'bits_per_symbol'.";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
         free_data(&data);
         exit(-1);
     }
 
     if (data.alph_size <= 1) {
         printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
         free_data(&data);
         exit(-1);
     }
 
     if (data.len != MIN_SIZE) {
         printf("\n*** Error: data does not contain %d samples ***\n\n", MIN_SIZE);
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "*** Error: data does not contain " + std::to_string(MIN_SIZE) + " samples ***";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
         exit(-1);
     }
     if (verbose > 0) {
@@ -242,6 +309,14 @@ int main(int argc, char* argv[]) {
     cdata = (byte*) malloc(data.len);
     if (cdata == NULL) {
         printf("Error: failure to initialize memory for columns\n");
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "Error: failure to initialize memory for columns";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
         exit(-1);
     }
 
@@ -295,20 +370,6 @@ int main(int argc, char* argv[]) {
 
         printf("Running Most Common Value Estimate...\n");
     }
-    char hash[65];
-    sha256_file(file_path, hash);
-
-    IidTestRun testRunIid;
-    testRunIid.type = "Restart";
-    testRunIid.timestamp = timestamp;
-    testRunIid.filename = file_path;
-    testRunIid.sha256 = hash;
-
-    NonIidTestRun testRunNonIid;
-    testRunNonIid.type = "Restart";
-    testRunNonIid.timestamp = timestamp;
-    testRunNonIid.sha256 = hash;
-    testRunNonIid.filename = file_path;
 
     // Section 6.3.1 - Estimate entropy with Most Common Value
     ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
