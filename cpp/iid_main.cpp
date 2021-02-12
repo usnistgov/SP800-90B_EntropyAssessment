@@ -10,7 +10,7 @@
 
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
+	printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] [-p] <file_name> [bits_per_symbol]\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
 	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
 	printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
@@ -18,8 +18,10 @@
 	printf("\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n");
 	printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
 	printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
-	printf("\n");
-	printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n");
+    printf("\t -p: Optional flag to denote that input data is contiguous bit-packed with the first sample occupying the most significant bits of the first byte and subsequent samples being in lower significant bits.  Use of the 'bits_per_symbol' parameter is required to ensure correct unpacking.  Currently not compatible with -l parameter.\n");
+    printf("\t     Currently only packed samples of 1, 2, 4 or 8 bits are permitted to ensure appropriate sample alignment to byte boundaries.\n");
+    printf("\n");
+	printf("\t Samples are assumed to be packed into 8-bit values unless -p is given, where the least significant 'bits_per_symbol'\n");
 	printf("\t bits constitute the symbol.\n");
 	printf("\n");
 	printf("\t -i: Initial Entropy Estimate (Section 3.1.3)\n");
@@ -47,18 +49,19 @@ int main(int argc, char* argv[]){
 	int verbose = 0;
 	double rawmean, median;
 	char* file_path;
-	data_t data;
+	data_t data = {0};
 	int opt;
 	unsigned long subsetIndex = ULONG_MAX;
 	unsigned long subsetSize = 0;
 	unsigned long long inint;
 	char *nextOption;
+    bool bit_packed = false;
 
 	data.word_size = 0;
 	initial_entropy = true;
 	all_bits = true;
 
-	while ((opt = getopt(argc, argv, "icatvl:")) != -1) {
+	while ((opt = getopt(argc, argv, "icatvl:p")) != -1) {
 		switch(opt) {
 			case 'i':
 				initial_entropy = true;
@@ -72,6 +75,9 @@ int main(int argc, char* argv[]){
 			case 't':
 				all_bits = false;
 				break;
+            case 'p':
+                bit_packed = true;
+                break;
 			case 'v':
 				verbose++;
 				break;
@@ -116,11 +122,17 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+    if(bit_packed && !data.word_size)  {
+        /* word_size was not given as a param and it should be for bit-packing */
+        printf("When using bit-packed input, you must provide the bits-per-symbol parameter.\n");
+        print_usage();
+    }
+
 	if(verbose > 0){
 		printf("Opening file: '%s'\n", file_path);
 	}
 
-	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
+	if(!read_file_subset(file_path, &data, bit_packed, subsetIndex, subsetSize)){
 		printf("Error reading file.\n");
 		print_usage();
 	}

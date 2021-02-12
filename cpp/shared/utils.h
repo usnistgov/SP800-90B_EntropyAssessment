@@ -46,7 +46,8 @@ struct data_t{
 	byte *rawsymbols; 	// raw data words
 	byte *symbols; 		// data words
 	byte *bsymbols; 	// data words as binary string
-	long len; 		// number of words in data
+	long rawlen; 		// number of words in data
+    long len;           // number of symbols in data
 	long blen; 		// number of bits in data
 };
 
@@ -153,304 +154,251 @@ void free_data(data_t *dp){
 	if((dp->word_size > 1) && (dp->bsymbols != NULL)) free(dp->bsymbols);
 } 
 
-// Read in binary file to test
-bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
-	FILE *file; 
-	int mask, j, max_symbols;
-	long rc, i;
-	long fileLen;
+
+bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned long subsetIndex, unsigned long subsetSize){
+	FILE *file = NULL; 
+	int mask = 0, j = 0, max_symbols = 0;
+	long rc = 0, i = 0;
+    byte datamask = 0;
+    byte curbit = 0x80;
+    int *symbol_map_down_table = NULL;
+    int shift_start = 0;
+    int tmp_symbol = 0;
+    bool status = false;
 
 	file = fopen(file_path, "rb");
 	if(!file){
 		printf("Error: could not open '%s'\n", file_path);
-		return false;
+        goto error_die;
 	}
 
 	rc = (long)fseek(file, 0, SEEK_END);
 	if(rc < 0){
 		printf("Error: fseek failed\n");
-		fclose(file);
-		return false;
+        goto error_die;
 	}
 
-	fileLen = ftell(file);
-	if(fileLen < 0){
-		printf("Error: ftell failed\n");
-		fclose(file);
-		return false;
-	}
+    dp->rawlen = ftell(file);
+    if(dp->rawlen < 0){
+        printf("Error: ftell failed\n");
+        goto error_die;
+    }
 
 	rewind(file);
 
-	if(subsetSize == 0) {
-		dp->len = fileLen;
-	} else {
-		rc = (long)fseek(file, subsetIndex*subsetSize, SEEK_SET);
-		if(rc < 0){
-			printf("Error: fseek failed\n");
-			fclose(file);
-			return false;
-		}
+    /* Disable bit-packing for bit sizes that have harder semantics to deal with.
+     * Technically the loading code below will work for all bit sizes, but for things
+     * like ranges and extents and transposition, bit sizes like 3 are difficult to
+     * deal with at the end of the range.
+     */
+    if(packed)  {
+        /* If dp->word_size is 0, then the parameter wasn't provided which isn't allowed with
+         * bit-packing.
+         */
+        switch(dp->word_size)  {
+            case 0: printf("The word size must be provided explicitly when bit-packed samples are used.\n");
+                    goto error_die;
+            case 3:
+            case 5:
+            case 6:
+            case 7: printf("Bit-packed samples with sample sizes of size %d are not yet supported for all cases.\n", dp->word_size);
+                    goto error_die;
+        }
+    }
 
-		dp->len = min(fileLen - subsetIndex*subsetSize, subsetSize);
-	}
+    if(subsetSize > 0 && packed)  {
+        /* Subsets are essentially a request to locate a substring of samples.
+         * The samples are of size word_size; the size of the sample is the number of samples.
+         * The index is the ith substring of this length.
+         * This means the input has to have at LEAST subsetIndex*subsetSize samples.
+         * Indexing starts at 0.
+         * A subset size must be > 0 to have any meaning.
+         * Units for the index is in "number of substrings of the given size".
+         * Units for the size is in "samples".
+         * If we want the 3rd substring of 12 samples, where a sample is 3 bits, then
+         * we need an input file that has AT LEAST ceil(3*12*3 bits) (14 bytes).
+         */
+        /* Then we get into a situation where the ith subset could start in the middle
+         * of a byte which definitely is an issue when trying to read from the raw
+         * data file.  So we don't support these semantics (yet).
+         */
+        printf("Subset semantics with bit-packed samples is not yet supported.\n");
+        goto error_die;
+    }
 
-	if(dp->len == 0){
-		printf("Error: '%s' is empty\n", file_path);
-		fclose(file);
-		return false;
-	}
-
-	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
-	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
-	if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
-		printf("Error: failure to initialize memory for symbols\n");
-		fclose(file);
-		if(dp->symbols != NULL) {
-			free(dp->symbols);
-			dp->symbols = NULL;
-		}
-		if(dp->rawsymbols != NULL) {
-			free(dp->rawsymbols);
-			dp->rawsymbols = NULL;
-		}
-		return false;
-	}
-
-	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
-	if(rc != dp->len){
-		printf("Error: file read failure\n");
-		fclose(file);
-		free(dp->symbols);
-		dp->symbols = NULL;
-		free(dp->rawsymbols);
-		dp->rawsymbols = NULL;
-		return false;
-	}
-	fclose(file);
-
-	//Do we need to establish the word size?
-	if(dp->word_size == 0) {
-		byte datamask = 0;
-		byte curbit = 0x80;
-
-		for(i = 0; i < dp->len; i++) {
-			datamask = datamask | dp->symbols[i];
-		}
-
-		for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
-			curbit = curbit >> 1;
-		}
-
-		dp->word_size = i;
-	} else {
-		byte datamask = 0;
-		byte curbit = 0x80;
-
-		for(i = 0; i < dp->len; i++) {
-			datamask = datamask | dp->symbols[i];
-		}
-
-		for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
-			curbit = curbit >> 1;
-		}
-
-		if( i < dp->word_size ) {
-			printf("Warning: Symbols appear to be narrower than described.\n");
-		} else if( i > dp->word_size ) {
-			printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
-			free(dp->symbols);
-			dp->symbols = NULL;
-			free(dp->rawsymbols);
-			dp->rawsymbols = NULL;
-			return false;
-		}
-	}
-
-	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
-	dp->maxsymbol = 0;
-
-	max_symbols = 1 << dp->word_size;
-	int symbol_map_down_table[max_symbols];
-
-	// create symbols (samples) and check if they need to be mapped down
-	dp->alph_size = 0;
-	memset(symbol_map_down_table, 0, max_symbols*sizeof(int));
-	mask = max_symbols-1;
-	for(i = 0; i < dp->len; i++){ 
-		dp->symbols[i] &= mask;
-		if(dp->symbols[i] > dp->maxsymbol) dp->maxsymbol = dp->symbols[i];
-		if(symbol_map_down_table[dp->symbols[i]] == 0) symbol_map_down_table[dp->symbols[i]] = 1;
-	}
-
-	for(i = 0; i < max_symbols; i++){
-		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (byte)dp->alph_size++;
-	}
-
-	// create bsymbols (bitstring) using the non-mapped data
-	dp->blen = dp->len * dp->word_size;
-	if(dp->word_size == 1) dp->bsymbols = dp->symbols;
-	else{
-		dp->bsymbols = (byte*)malloc(dp->blen);
-		if(dp->bsymbols == NULL){
-			printf("Error: failure to initialize memory for bsymbols\n");
-			free(dp->symbols);
-			dp->symbols = NULL;
-			free(dp->rawsymbols);
-			dp->rawsymbols = NULL;
-
-			return false;
-		}
-
-		for(i = 0; i < dp->len; i++){
-			for(j = 0; j < dp->word_size; j++){
-				dp->bsymbols[i*dp->word_size+j] = (dp->symbols[i] >> (dp->word_size-1-j)) & 0x1;
-			}
-		}
-	}
-
-	// map down symbols if less than 2^bits_per_word unique symbols
-	if(dp->alph_size < dp->maxsymbol + 1){
-		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
-	} 
-
-	return true;
-}
-
-
-bool read_file(const char *file_path, data_t *dp){
-	FILE *file; 
-	int mask, j, max_symbols;
-	long rc, i;
-
-	file = fopen(file_path, "rb");
-	if(!file){
-		printf("Error: could not open '%s'\n", file_path);
-		return false;
-	}
-
-	rc = (long)fseek(file, 0, SEEK_END);
-	if(rc < 0){
-		printf("Error: fseek failed\n");
-		fclose(file);
-		return false;
-	}
-
-	dp->len = ftell(file);
-	if(dp->len < 0){
-		printf("Error: ftell failed\n");
-		fclose(file);
-		return false;
-	}
-
-	rewind(file);
-
-	if(dp->len == 0){
-		printf("Error: '%s' is empty\n", file_path);
-		fclose(file);
-		return false;
-	}
-
-	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
-	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
-        if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
-                printf("Error: failure to initialize memory for symbols\n");
-                fclose(file);
-                if(dp->symbols != NULL) {
-                        free(dp->symbols);
-                        dp->symbols = NULL;
-                }
-                if(dp->rawsymbols != NULL) {
-                        free(dp->rawsymbols);
-                        dp->rawsymbols = NULL;
-                }
-                return false;
+    if(subsetSize > 0) {
+        rc = (long)fseek(file, subsetIndex*subsetSize, SEEK_SET);
+        if(rc < 0){
+            printf("Error: fseek failed\n");
+            goto error_die;
         }
 
-	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
-	if(rc != dp->len){
+        dp->rawlen = min(dp->rawlen - subsetIndex*subsetSize, subsetSize);
+    }
+
+	if(dp->rawlen == 0){
+		printf("Error: '%s' is empty\n", file_path);
+        goto error_die;
+	}
+
+	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->rawlen);
+    if(!dp->rawsymbols){
+        printf("Error: failure to initialize memory for %d raw symbols\n", dp->rawlen);
+        goto error_die;
+    }
+
+	rc = fread(dp->rawsymbols, sizeof(byte), dp->rawlen, file);
+	if(rc != dp->rawlen){
 		printf("Error: file read failure\n");
-		fclose(file);
-		free(dp->symbols);
-		dp->symbols = NULL;
-		free(dp->rawsymbols);
-		dp->rawsymbols = NULL;
-		return false;
+        goto error_die;
 	}
 	fclose(file);
+    file = NULL;
+
+
+    for(i = 0; i < dp->rawlen; i++) {
+        datamask = datamask | dp->rawsymbols[i];
+    }
+
+    for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
+        curbit = curbit >> 1;
+    }
 
 	//Do we need to establish the word size?
 	if(dp->word_size == 0) {
 		//Yes. Establish the word size using the highest order bit in use
-		byte datamask = 0;
-		byte curbit = 0x80;
-
-		for(i = 0; i < dp->len; i++) {
-			datamask = datamask | dp->symbols[i];
-		}
-
-		for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
-			curbit = curbit >> 1;
-		}
-
 		dp->word_size = i;
-       } else {
-                byte datamask = 0;
-		byte curbit = 0x80;
-
-                for(i = 0; i < dp->len; i++) {
-                        datamask = datamask | dp->symbols[i];
-                }
-
-                for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
-                        curbit = curbit >> 1;
-                }
-
-                if( i < dp->word_size ) {
-                        printf("Warning: Symbols appear to be narrower than described.\n");
-                } else if( i > dp->word_size ) {
-                        printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
-                        free(dp->symbols);
-                        dp->symbols = NULL;
-                        free(dp->rawsymbols);
-                        dp->rawsymbols = NULL;
-                        return false;
-                }
+    } else {
+        /* Else just do sanity checking and report back to user */
+        if( i < dp->word_size ) {
+            printf("Warning: Symbols appear to be narrower than described.\n");
+        } else { 
+            if( !packed && i > dp->word_size ) {
+                /* This error only occurs when the data is not packed. */
+                printf("Warning: Incorrect bit width specification: Data does not fit within described bit width.\n");
+                goto error_die;
+            }
+            /* When using bit-packed data, we can run into situations where we might not be able to determine what
+             * the last sample is supposed to be if it only takes up a fraction of a byte.  For instance, if there
+             * are 3-bit samples and the last byte has only one sample in it, then what are the last 5 bits supposed
+             * to be interpreted as?  For this reason, we check to make sure that -- at the very least -- the last
+             * byte could potentially be composed completely.  We do this based on the input length.  It isn't
+             * totally accurate and the worst case scenario occurs when when the input is bit-oriented and there
+             * is (for example) only one significant sample bit in the very last byte set (meaning the remaining 7
+             * bits have no interpretative value).  A better solution might be to simply trim the input to the 
+             * largest set of non-ambiguous interpretation.
+             * Instead, we will just warn of the possibility when it is obvious (eg. 3 bit sample in an 8-bit byte).
+             */
+            if( packed && (dp->rawlen * 8 % dp->word_size) != 0)  {
+                printf("Warning: Final byte has ambiguous number of samples. Consider truncating the file to %d bytes.\n", dp->rawlen / dp->word_size * dp->word_size);
+            }
         }
+    }
+
+    /* After reading the raw symbols, we can now determine how large the symbols will be
+     * that we want to process.  If word_size == 8, then it's just a bit-for-bit copy of
+     * the raw symbols. Else, we need to mask off the data words OR do bit ops to get the
+     * packed data, depending on how the user wanted to process the file.
+     */
+    if(packed)  {
+        /* Truncation division makes sense here because we can't round up to bits that
+         * don't exist.
+         */
+        dp->len = (dp->rawlen * 8) / dp->word_size;
+    } else  {
+        /* If we are not doing bit-packing, then we have significant bits in each
+         * byte (just depends on how many we care about).  Thus, the number of 
+         * samples is the same as the byte size.
+         */
+        dp->len = dp->rawlen;
+    }
 
 
-	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
+    dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
+    if(!dp->symbols)  {
+        printf("Error: failure to initialize memory for %d symbols\n", dp->len);
+        goto error_die;
+    }
+
+
 	dp->maxsymbol = 0;
 
 	max_symbols = 1 << dp->word_size;
-	int symbol_map_down_table[max_symbols];
+	symbol_map_down_table = (int *)malloc(sizeof(int)* max_symbols);
+    if(!symbol_map_down_table)  {
+        printf("Error! Unable to allocate memory for symbol map down table.\n");
+        goto error_die;
+    }
 
 	// create symbols (samples) and check if they need to be mapped down
 	dp->alph_size = 0;
 	memset(symbol_map_down_table, 0, max_symbols*sizeof(int));
 	mask = max_symbols-1;
-	for(i = 0; i < dp->len; i++){ 
-		dp->symbols[i] &= mask;
-		if(dp->symbols[i] > dp->maxsymbol) dp->maxsymbol = dp->symbols[i];
-		if(symbol_map_down_table[dp->symbols[i]] == 0) symbol_map_down_table[dp->symbols[i]] = 1;
+    shift_start = (8-dp->word_size);
+    tmp_symbol = 0;
+
+	for(i = 0, j = 0; i < dp->rawlen; i++){ 
+        /* If we are dealing with packed bits, then we need to do bit-shifting, possibly
+         * between two adjacent samples. 
+         */
+        if(packed)  {
+            dp->symbols[j] |= tmp_symbol;   /* Possibly continuing from before */
+            do {
+                /* Sanity check */
+                if (j > dp->len)  {
+                    printf("Error: unpacking bits resulted in symbol overflow\n");
+                    goto error_die;
+                }
+
+                dp->symbols[j] = ((dp->rawsymbols[i] >> shift_start) & mask);
+                shift_start -= dp->word_size;
+
+                /* Need to ensure we get all map down symbols captured in the bit-packed scenario. */
+    		    if(dp->symbols[j] > dp->maxsymbol) dp->maxsymbol = dp->symbols[j];
+    	    	if(symbol_map_down_table[dp->symbols[j]] == 0) symbol_map_down_table[dp->symbols[j]] = 1;
+
+                j++;
+            } while(shift_start >= 0);
+
+            /* At this point, we've exited the bit shifting loop because we ran out of bits in the current
+             * sample. This means shift_start < 0.  It is possible that we didn't get *enough* bits to
+             * form a viable sample.  So we need to use the residual bits as a temporary symbol and
+             * augment with the remaining bits on the next iteration.
+             * The way we know if we ran out of bits while in the middle of a sample extraction is if
+             * |shift_start| < wordsize.
+             */
+            if((-1*shift_start) < dp->word_size)  {
+                /* Ran out of bits before a full symbol was realized. So concat with next sample on next iteration. */
+                tmp_symbol = dp->rawsymbols[i] & ((1 << (shift_start + dp->word_size)) - 1);  /* Make a temp symbol based on remaining bits */
+                shift_start = 8 - (shift_start * -1);  /* new start location of shifting depends on how many residual bits we need */
+            }
+            else  {
+                /* Did not run out of bits when composing. Therefore, tmp_symbol should be zeroed out and shift_start
+                 * starts at the beginning again. 
+                 */
+                tmp_symbol = 0;
+                shift_start = 8 - dp->word_size;
+            }
+        }   /* End of bit-packing scenario */
+        else  {
+		    dp->symbols[i] = dp->rawsymbols[i] & mask;
+		    if(dp->symbols[i] > dp->maxsymbol) dp->maxsymbol = dp->symbols[i];
+    		if(symbol_map_down_table[dp->symbols[i]] == 0) symbol_map_down_table[dp->symbols[i]] = 1;
+        }
 	}
 
 	for(i = 0; i < max_symbols; i++){
 		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (byte)dp->alph_size++;
 	}
 
-	// create bsymbols (bitstring) using the non-mapped data
+	// create bsymbols (bitstring) using the non-mapped (non-raw) data
 	dp->blen = dp->len * dp->word_size;
 	if(dp->word_size == 1) dp->bsymbols = dp->symbols;
 	else{
 		dp->bsymbols = (byte*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
-			free(dp->symbols);
-			dp->symbols = NULL;
-			free(dp->rawsymbols);
-			dp->rawsymbols = NULL;
-			return false;
+            goto error_die;
 		}
 
 		for(i = 0; i < dp->len; i++){
@@ -465,8 +413,51 @@ bool read_file(const char *file_path, data_t *dp){
 		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
 	} 
 
-	return true;
+    /* In both success and failure, need to clear the symbol_map_down_table memory */
+    free(symbol_map_down_table); 
+    symbol_map_down_table = NULL;
+
+    status = true;
+    goto exit_function;
+
+error_die:
+    if(dp->symbols != NULL) {
+        free(dp->symbols);
+        dp->symbols = NULL;
+        dp->len = 0;
+    }
+    if(dp->rawsymbols != NULL) {
+        free(dp->rawsymbols);
+        dp->rawsymbols = NULL;
+        dp->rawlen = 0;
+    }
+    if(dp->bsymbols != NULL) {
+        if(dp->word_size != 1)  /* It was only malloc'd if this condition holds (see above) */
+            free(dp->bsymbols);
+        dp->bsymbols = NULL;
+        dp->blen = 0;
+    }
+
+    status = false;
+
+    /* Common exit point */
+exit_function:
+    if(symbol_map_down_table) {
+        free(symbol_map_down_table); 
+        symbol_map_down_table = NULL;
+    }
+    if(file) { 
+        fclose(file); 
+        file = NULL; 
+    }
+    return status;
 }
+
+/* Function alias */
+bool read_file(const char *file_path, data_t *dp, bool packed)  {
+    return read_file_subset(file_path, dp, packed, 0, 0);
+}
+
 
 /* This is xoshiro256** 1.0*/
 /*This implementation is derived from David Blackman and Sebastiano Vigna, which they placed into
