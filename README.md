@@ -101,7 +101,7 @@ or
 * `n_out`: The number of bits per conditioning step output.
 * `nw`: The narrowest width of the conditioning step.
 * `h_in`: The amount of entropy entering the conditioning step per output. Must be less than `n_in`.
-* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for '-n' option).
+* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for `-n` option).
 
 ## Make
 
