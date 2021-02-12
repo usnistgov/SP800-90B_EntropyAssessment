@@ -22,7 +22,7 @@
 	printf("\t <H_I>: Initial entropy estimate.\n");
 	printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
 	printf("\t -v: Optional verbosity flag for more output.\n");
-    printf("\t -p: Optional flag to denote that input data is contiguous bit-packed with the first sample occupying the most significant bits of the first byte and subsequent samples being in lower significant bits.  Use of the 'bits_per_symbol' parameter is required to ensure correct unpacking.  Currently not compatible with -l parameter.\n");
+    printf("\t -p: Optional flag to denote that input data is contiguous bit-packed with the first sample occupying the most significant bits of the first byte and subsequent samples being in lower significant bits.  Use of the 'bits_per_symbol' parameter is required to ensure correct unpacking.\n");
     printf("\t     Currently only packed samples of 1, 2, 4 or 8 bits are permitted to ensure appropriate sample alignment to byte boundaries.\n");
 	printf("\n");
 	printf("\t Restart samples are assumed to be packed into 8-bit values unless -p is used, where the\n");
