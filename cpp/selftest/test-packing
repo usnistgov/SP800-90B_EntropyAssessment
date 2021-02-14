@@ -1,0 +1,109 @@
+#!/bin/bash
+
+function ea_cmp()  {
+    binary=$1; shift;
+    pfile=$1; shift;
+    ufile=$1; shift;
+    bit=$1; shift;
+    cmd="./compareresults.pl <($binary -p -vv ${pfile} ${bit} 2>&1 | sed -e '1 s/packed-//') <($binary -vv ${ufile} ${bit} 2>&1 | sed -e '1 s/unpacked-//')"
+    if [ "$DEBUG" != "" ]; then
+        echo $cmd
+    fi
+    eval $cmd
+}
+
+function ea_iid_cmp() {
+    ea_cmp "__SP80090B_MOCKSEED__=1 ../ea_iid" $@
+}
+function ea_non_iid_cmp()  {
+    ea_cmp ../ea_non_iid $@
+}
+function ea_restart_cmp()  {
+    binary="../ea_restart"
+    pfile=$1; shift;
+    ufile=$1; shift;
+    cmd="./compareresults.pl <($binary -p -v ${pfile} ${bit} 0.1 2>&1 | sed -e '1 s/packed-//') <($binary -vv ${ufile} ${bit} 0.1 2>&1 | sed -e '1 s/unpacked-//')"
+    if [ "$DEBUG" != "" ]; then
+        echo $cmd
+    fi
+    #eval $cmd
+    echo "Not run"
+}
+function ea_transpose_cmp() {
+    binary="../ea_transpose"
+    pfile=$1; shift;
+    bit=$1; shift;
+
+    # Transpose twice and compare
+    tmpf=$(mktemp)
+    tmpf2=$(mktemp)
+
+    cmd1="$binary -p ${bit} ${pfile} ${tmpf}"
+    cmd2="$binary -p ${bit} ${tmpf} ${tmpf2}"
+    diff="diff ${tmpf2} ${pfile}"
+
+    if [ "$DEBUG" != "" ]; then
+        echo $cmd1
+        echo $cmd2
+        echo $diff
+    fi
+
+    eval $cmd1
+    eval $cmd2
+
+    eval $diff
+
+    if [ "$?" != "0" ]; then
+        echo "Error: files differ"
+    else
+        echo "Output matches"
+    fi
+    rm ${tmpf} ${tmpf2}
+}
+
+
+# The parameters can include naming the test cases you want to run:
+# iid, non_iid, restart, transpose.
+# Those that are not included are not run.
+# If no parameters supplied, all tests run.
+if [ "$#" -eq "0" ]; then
+    # No test cases requested, so request them all: this syntax sets $@
+    set -- iid non_iid restart transpose
+fi
+
+for tc in "$@"; do
+    if [ "${tc,,}" == "non_iid" ]; then
+        for bit in 1 2 4 8; do
+            pfile=pack-samples/packed-${bit}bit.bin
+            ufile=pack-samples/unpacked-${bit}bit.bin
+            # Ignore difference due to file name by removing the word 'packed' or 'unpacked' on the first line
+
+            echo -n "Non-IID packed vs. unpacked ${bit} bits: "
+            ea_non_iid_cmp ${pfile} ${ufile} ${bit}
+        done
+    elif [ "${tc,,}" == "iid" ]; then
+        for bit in 1 2 4 8; do
+            pfile=pack-samples/packed-${bit}bit.bin
+            ufile=pack-samples/unpacked-${bit}bit.bin
+            # Hard to test these by differences since the permutation testing is different each run
+            echo -n "IID packed vs. unpacked ${bit} bits: "
+            ea_iid_cmp ${pfile} ${ufile} ${bit}
+        done
+    elif [ "${tc,,}" == "restart" ]; then
+        echo "About to perform restart testing. This can be quite slow."
+        for bit in 1 2 4 8; do
+            pfile=pack-samples/packed-${bit}bit.bin
+            ufile=pack-samples/unpacked-${bit}bit.bin
+            echo -n "Restart packed vs. unpacked ${bit} bits: "
+            ea_restart_cmp ${pfile} ${ufile} ${bit}
+        done
+    elif [ "${tc,,}" == "transpose" ]; then
+        for bit in 1 2 4 8; do 
+            pfile=pack-samples/packed-${bit}bit.bin
+            echo -n "Transpose packed ${bit} bits: "
+            ea_transpose_cmp ${pfile} ${bit}
+        done
+    else
+        echo "Unknown test case '$tc'. Ignoring."
+    fi
+done
