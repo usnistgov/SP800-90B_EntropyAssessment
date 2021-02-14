@@ -46,9 +46,9 @@ struct data_t{
 	byte *rawsymbols; 	// raw data words
 	byte *symbols; 		// data words
 	byte *bsymbols; 	// data words as binary string
-	long rawlen; 		// number of words in data
     long len;           // number of symbols in data
-	long blen; 		// number of bits in data
+	long blen; 		    // number of bits in data
+    bool packed;        // whether the data is bit-packed; this is important to retain
 };
 
 using namespace std;
@@ -149,9 +149,11 @@ bool relEpsilonEqual(double A, double B, double maxAbsFactor, double maxRelFacto
 
 
 void free_data(data_t *dp){
-	if(dp->symbols != NULL) free(dp->symbols);
-	if(dp->rawsymbols != NULL) free(dp->rawsymbols);
-	if((dp->word_size > 1) && (dp->bsymbols != NULL)) free(dp->bsymbols);
+    /* For packed data, rawsymbols is the same structure as symbols, so don't free twice */
+	if(!dp->packed && dp->symbols != NULL) { free(dp->symbols); dp->symbols = NULL; }
+	if(dp->rawsymbols != NULL) { free(dp->rawsymbols); dp->rawsymbols = NULL; }
+    /* For bit-based data, the binary data is the same as the symbols data, so don't free twice */
+	if((dp->word_size > 1) && (dp->bsymbols != NULL)) { free(dp->bsymbols); dp->bsymbols = NULL; }
 } 
 
 
@@ -165,6 +167,8 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
     int shift_start = 0;
     int tmp_symbol = 0;
     bool status = false;
+    byte *inputdata = NULL;
+    int inputlen = 0;
 
 	file = fopen(file_path, "rb");
 	if(!file){
@@ -178,8 +182,8 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
         goto error_die;
 	}
 
-    dp->rawlen = ftell(file);
-    if(dp->rawlen < 0){
+    inputlen = ftell(file);
+    if(inputlen < 0){
         printf("Error: ftell failed\n");
         goto error_die;
     }
@@ -191,7 +195,8 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
      * like ranges and extents and transposition, bit sizes like 3 are difficult to
      * deal with at the end of the range.
      */
-    if(packed)  {
+    dp->packed = packed;
+    if(dp->packed)  {
         /* If dp->word_size is 0, then the parameter wasn't provided which isn't allowed with
          * bit-packing.
          */
@@ -206,7 +211,7 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
         }
     }
 
-    if(subsetSize > 0 && packed)  {
+    if(subsetSize > 0 && dp->packed)  {
         /* Subsets are essentially a request to locate a substring of samples.
          * The samples are of size word_size; the size of the sample is the number of samples.
          * The index is the ith substring of this length.
@@ -233,22 +238,22 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
             goto error_die;
         }
 
-        dp->rawlen = min(dp->rawlen - subsetIndex*subsetSize, subsetSize);
+        inputlen = min(inputlen - subsetIndex*subsetSize, subsetSize);
     }
 
-	if(dp->rawlen == 0){
+	if(inputlen == 0){
 		printf("Error: '%s' is empty\n", file_path);
         goto error_die;
 	}
 
-	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->rawlen);
-    if(!dp->rawsymbols){
-        printf("Error: failure to initialize memory for %d raw symbols\n", dp->rawlen);
+	inputdata = (byte*)malloc(sizeof(byte)*inputlen);
+    if(!inputdata){
+        printf("Error: failure to initialize memory for %d input data\n", inputlen);
         goto error_die;
     }
 
-	rc = fread(dp->rawsymbols, sizeof(byte), dp->rawlen, file);
-	if(rc != dp->rawlen){
+	rc = fread(inputdata, sizeof(byte), inputlen, file);
+	if(rc != inputlen){
 		printf("Error: file read failure\n");
         goto error_die;
 	}
@@ -256,8 +261,8 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
     file = NULL;
 
 
-    for(i = 0; i < dp->rawlen; i++) {
-        datamask = datamask | dp->rawsymbols[i];
+    for(i = 0; i < inputlen; i++) {
+        datamask = datamask | inputdata[i];
     }
 
     for(i=8; (i>0) && ((datamask & curbit) == 0); i--) {
@@ -289,8 +294,8 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
              * largest set of non-ambiguous interpretation.
              * Instead, we will just warn of the possibility when it is obvious (eg. 3 bit sample in an 8-bit byte).
              */
-            if( packed && (dp->rawlen * 8 % dp->word_size) != 0)  {
-                printf("Warning: Final byte has ambiguous number of samples. Consider truncating the file to %d bytes.\n", dp->rawlen / dp->word_size * dp->word_size);
+            if( packed && (inputlen * 8 % dp->word_size) != 0)  {
+                printf("Warning: Final byte has ambiguous number of samples. Consider truncating the file to %d bytes.\n", inputlen / dp->word_size * dp->word_size);
             }
         }
     }
@@ -299,27 +304,47 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
      * that we want to process.  If word_size == 8, then it's just a bit-for-bit copy of
      * the raw symbols. Else, we need to mask off the data words OR do bit ops to get the
      * packed data, depending on how the user wanted to process the file.
+     * This is the fundamental difference between "rawsymbols" and "symbols".
+     * If the data is NOT bit-packed, 'rawsymbols' is before any bit-masking and 'symbols'
+     * is after bit-masking.  This difference is not apparent with packed data and
+     * 'rawsymbols' will be the same as 'symbols' in this case.  This is only important
+     * with IID processing.
      */
     if(packed)  {
         /* Truncation division makes sense here because we can't round up to bits that
          * don't exist.
          */
-        dp->len = (dp->rawlen * 8) / dp->word_size;
+        dp->len = (inputlen * 8) / dp->word_size;
     } else  {
         /* If we are not doing bit-packing, then we have significant bits in each
          * byte (just depends on how many we care about).  Thus, the number of 
          * samples is the same as the byte size.
          */
-        dp->len = dp->rawlen;
+        dp->len = inputlen;
     }
 
 
-    dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
+    dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
+    if(!dp->rawsymbols)  {
+        printf("Error: failure to initialize memory for %d raw symbols\n", dp->len);
+        goto error_die;
+    }
+
+    /* If not packed, the rawsymbols and symbols have different semantics.
+     * If data is packed, then these structures are the same.  No need to duplicate memory.
+     */
+    if(dp->packed)
+        dp->symbols = dp->rawsymbols;
+    else  {
+        /* And raw symbols will be the input data. */
+        memcpy(dp->rawsymbols, inputdata, sizeof(byte)*dp->len);
+        dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
+    }
+
     if(!dp->symbols)  {
         printf("Error: failure to initialize memory for %d symbols\n", dp->len);
         goto error_die;
     }
-
 
 	dp->maxsymbol = 0;
 
@@ -337,7 +362,8 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
     shift_start = (8-dp->word_size);
     tmp_symbol = 0;
 
-	for(i = 0, j = 0; i < dp->rawlen; i++){ 
+    /* We need to process all of the input data */
+	for(i = 0, j = 0; i < inputlen; i++){ 
         /* If we are dealing with packed bits, then we need to do bit-shifting, possibly
          * between two adjacent samples. 
          */
@@ -350,7 +376,7 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
                     goto error_die;
                 }
 
-                dp->symbols[j] = ((dp->rawsymbols[i] >> shift_start) & mask);
+                dp->symbols[j] = ((inputdata[i] >> shift_start) & mask);
                 shift_start -= dp->word_size;
 
                 /* Need to ensure we get all map down symbols captured in the bit-packed scenario. */
@@ -369,7 +395,7 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
              */
             if((-1*shift_start) < dp->word_size)  {
                 /* Ran out of bits before a full symbol was realized. So concat with next sample on next iteration. */
-                tmp_symbol = dp->rawsymbols[i] & ((1 << (shift_start + dp->word_size)) - 1);  /* Make a temp symbol based on remaining bits */
+                tmp_symbol = inputdata[i] & ((1 << (shift_start + dp->word_size)) - 1);  /* Make a temp symbol based on remaining bits */
                 shift_start = 8 - (shift_start * -1);  /* new start location of shifting depends on how many residual bits we need */
             }
             else  {
@@ -421,35 +447,15 @@ bool read_file_subset(const char *file_path, data_t *dp, bool packed, unsigned l
     goto exit_function;
 
 error_die:
-    if(dp->symbols != NULL) {
-        free(dp->symbols);
-        dp->symbols = NULL;
-        dp->len = 0;
-    }
-    if(dp->rawsymbols != NULL) {
-        free(dp->rawsymbols);
-        dp->rawsymbols = NULL;
-        dp->rawlen = 0;
-    }
-    if(dp->bsymbols != NULL) {
-        if(dp->word_size != 1)  /* It was only malloc'd if this condition holds (see above) */
-            free(dp->bsymbols);
-        dp->bsymbols = NULL;
-        dp->blen = 0;
-    }
-
+    free_data(dp);
     status = false;
 
     /* Common exit point */
 exit_function:
-    if(symbol_map_down_table) {
-        free(symbol_map_down_table); 
-        symbol_map_down_table = NULL;
-    }
-    if(file) { 
-        fclose(file); 
-        file = NULL; 
-    }
+    if(symbol_map_down_table) free(symbol_map_down_table); 
+    if(file) fclose(file); 
+    if(inputdata) free(inputdata);
+
     return status;
 }
 

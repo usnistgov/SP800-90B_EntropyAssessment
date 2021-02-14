@@ -121,6 +121,9 @@ int main(int argc, char* argv[])
          * the whole thing at once using fwrite. 
          * We could combine these two blocks for bit- and byte-based
          * samples, but it's easier to read if we split them out.
+         * Note that we cannot use 'rawsymbols' like in the non-packed
+         * case because the semantics of 'rawsymbols' doesn't hold for
+         * bit-packed data.
          */
         byte b = 0;
         int k = 0;  /* Bit shifting index */
