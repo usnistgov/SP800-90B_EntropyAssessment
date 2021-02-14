@@ -525,15 +525,26 @@ void xoshiro_jump(unsigned int jump_count, uint64_t *xoshiro256starstarState) {
 void seed(uint64_t *xoshiro256starstarState){
 	FILE *infp;
 
-	if((infp=fopen("/dev/urandom", "rb"))==NULL) {
-		perror("Can't open random source. Reverting to a deterministic seed.");
+   	if((infp=fopen("/dev/urandom", "rb"))==NULL) {
+   	    perror("Can't open random source. Reverting to a deterministic seed.");
 		exit(-1);
-	} 
+    } 
 
-	if(fread(xoshiro256starstarState, sizeof(uint64_t), 4, infp)!=4) {
-		perror("Can't read random seed");
-		exit(-1);
-	}
+    if (getenv("__SP80090B_TESTING__") == NULL)  {
+    	if(fread(xoshiro256starstarState, sizeof(uint64_t), 4, infp)!=4) {
+	    	perror("Can't read random seed");
+		    exit(-1);
+	    }
+    } else  {
+        /* This static seed obtained by the following: 
+         * dd if=/dev/urandom bs=$[64/8] count=4 | hexdump -v -e '16/1 "0x%x," "\n"'
+         */
+        byte staticTestSeed[sizeof(uint64_t)*4] = {
+            0xdd,0xe9,0x96,0x88,0x0,0x39,0xc,0xd0,0xa4,0xf4,0x64,0x30,0xd0,0x8d,0x2c,0x71,
+            0xf7,0xf,0x41,0x5a,0x7e,0xd8,0x10,0x3b,0xf7,0x11,0x1,0x54,0x5b,0x87,0x12,0x99
+        };
+        memcpy(xoshiro256starstarState, staticTestSeed, sizeof(uint64_t) * 4);
+    }
 
 	if(fclose(infp)!=0) {
 		perror("Couldn't close random source");

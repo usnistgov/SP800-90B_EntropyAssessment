@@ -61,6 +61,20 @@ int main(int argc, char* argv[]){
 	initial_entropy = true;
 	all_bits = true;
 
+    /* This particular test harness makes use of non-determinism in the permutation test sequence.
+     * In order to perform any kind of comparisons for regression testing, we need to enable deterministic
+     * behaviour.  This means we need to disable seeding from /dev/urandom.
+     * There are several ways in which this could be accomplished.  The best way would be to permit
+     * run-time changes to the seed source (eg. like faketime, but for /dev/urandom access). However, there
+     * are significant limitations to that kind of mocking for device nodes.  Therefore, we will use
+     * environment variables to alter behaviour.  However, we want to make sure that someone didn't leave 
+     * an environment variable enabled when they didn't mean to.
+     */
+    if (getenv("__SP80090B_TESTING__") != NULL)  {
+        printf("*** Environment variable '__SP80090B_TESTING__' detected. Test harness is operating in deterministic test mode. Make sure this is expected. ***\n");
+    }
+
+
 	while ((opt = getopt(argc, argv, "icatvl:p")) != -1) {
 		switch(opt) {
 			case 'i':
