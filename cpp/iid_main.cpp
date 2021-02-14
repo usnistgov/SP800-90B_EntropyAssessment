@@ -70,8 +70,8 @@ int main(int argc, char* argv[]){
      * environment variables to alter behaviour.  However, we want to make sure that someone didn't leave 
      * an environment variable enabled when they didn't mean to.
      */
-    if (getenv("__SP80090B_TESTING__") != NULL)  {
-        printf("*** Environment variable '__SP80090B_TESTING__' detected. Test harness is operating in deterministic test mode. Make sure this is expected. ***\n");
+    if (getenv("__SP80090B_MOCKSEED__") != NULL)  {
+        printf("*** Environment variable '__SP80090B_MOCKSEED__' detected. Test harness is operating in deterministic test mode. Make sure this is expected. ***\n");
     }
 
 

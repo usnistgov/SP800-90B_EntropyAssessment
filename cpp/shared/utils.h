@@ -530,7 +530,7 @@ void seed(uint64_t *xoshiro256starstarState){
 		exit(-1);
     } 
 
-    if (getenv("__SP80090B_TESTING__") == NULL)  {
+    if (getenv("__SP80090B_MOCKSEED__") == NULL)  {
     	if(fread(xoshiro256starstarState, sizeof(uint64_t), 4, infp)!=4) {
 	    	perror("Can't read random seed");
 		    exit(-1);
