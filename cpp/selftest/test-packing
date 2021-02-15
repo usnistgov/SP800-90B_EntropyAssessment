@@ -1,11 +1,11 @@
 #!/bin/bash
 
 function ea_cmp()  {
-    binary=$1; shift;
-    pfile=$1; shift;
-    ufile=$1; shift;
-    bit=$1; shift;
-    cmd="./compareresults.pl <($binary -p -vv ${pfile} ${bit} 2>&1 | sed -e '1 s/packed-//') <($binary -vv ${ufile} ${bit} 2>&1 | sed -e '1 s/unpacked-//')"
+    local binary=$1; shift;
+    local pfile=$1; shift;
+    local ufile=$1; shift;
+    local bit=$1; shift;
+    local cmd="./compareresults.pl <($binary -p -vv ${pfile} ${bit} 2>&1 | sed -e '1 s/packed-//') <($binary -vv ${ufile} ${bit} 2>&1 | sed -e '1 s/unpacked-//')"
     if [ "$DEBUG" != "" ]; then
         echo $cmd
     fi
@@ -19,10 +19,10 @@ function ea_non_iid_cmp()  {
     ea_cmp ../ea_non_iid $@
 }
 function ea_restart_cmp()  {
-    binary="../ea_restart"
-    pfile=$1; shift;
-    ufile=$1; shift;
-    cmd="./compareresults.pl <($binary -p -v ${pfile} ${bit} 0.1 2>&1 | sed -e '1 s/packed-//') <($binary -vv ${ufile} ${bit} 0.1 2>&1 | sed -e '1 s/unpacked-//')"
+    local binary="../ea_restart"
+    local pfile=$1; shift;
+    local ufile=$1; shift;
+    local cmd="./compareresults.pl <($binary -p -v ${pfile} ${bit} 0.1 2>&1 | sed -e '1 s/packed-//') <($binary -vv ${ufile} ${bit} 0.1 2>&1 | sed -e '1 s/unpacked-//')"
     if [ "$DEBUG" != "" ]; then
         echo $cmd
     fi
@@ -30,17 +30,18 @@ function ea_restart_cmp()  {
     echo "Not run"
 }
 function ea_transpose_cmp() {
-    binary="../ea_transpose"
-    pfile=$1; shift;
-    bit=$1; shift;
+    local binary="../ea_transpose"
+    local file=$1; shift;
+    local bit=$1; shift;
 
     # Transpose twice and compare
-    tmpf=$(mktemp)
-    tmpf2=$(mktemp)
+    local tmpf=$(mktemp)
+    local tmpf2=$(mktemp)
 
-    cmd1="$binary -p ${bit} ${pfile} ${tmpf}"
-    cmd2="$binary -p ${bit} ${tmpf} ${tmpf2}"
-    diff="diff ${tmpf2} ${pfile}"
+    local cmd1="$binary ${bit} ${file} ${tmpf}"
+    local cmd2="$binary ${bit} ${tmpf} ${tmpf2}"
+    local diff1="diff ${tmpf} ${tmpf2}"
+    local diff2="diff ${tmpf2} ${file}"
 
     if [ "$DEBUG" != "" ]; then
         echo $cmd1
@@ -51,12 +52,18 @@ function ea_transpose_cmp() {
     eval $cmd1
     eval $cmd2
 
-    eval $diff
+    eval $diff1 2>&1 >/dev/null
+    if [ "$?" -eq "0" ]; then
+        echo "Error: transposed file is not different from original"
+        rm ${tmpf} ${tmpf2}
+        return -1
+    fi
 
+    eval $diff2 2>&1 >/dev/null
     if [ "$?" != "0" ]; then
         echo "Error: files differ"
     else
-        echo "Output matches"
+        echo "Output ok"
     fi
     rm ${tmpf} ${tmpf2}
 }
@@ -100,8 +107,11 @@ for tc in "$@"; do
     elif [ "${tc,,}" == "transpose" ]; then
         for bit in 1 2 4 8; do 
             pfile=pack-samples/packed-${bit}bit.bin
+            ufile=pack-samples/unpacked-${bit}bit.bin
             echo -n "Transpose packed ${bit} bits: "
-            ea_transpose_cmp ${pfile} ${bit}
+            ea_transpose_cmp ${pfile} "-p ${bit}"
+            echo -n "Transpose unpacked ${bit} bits: "
+            ea_transpose_cmp ${ufile} ""
         done
     else
         echo "Unknown test case '$tc'. Ignoring."
