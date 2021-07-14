@@ -487,9 +487,9 @@ void populateTestCase(IidTestCase &tc, int C[][3]){
     PermutationTestResult tr1;
     PermutationTestResult tr2;
     
-    tr0.iteration = "0";
-    tr1.iteration = "1";
-    tr2.iteration = "2";
+    tr0.iteration = 0;
+    tr1.iteration = 1;
+    tr2.iteration = 2;
     
     tr0.excursion = C[0][0];
     tr1.excursion = C[0][1];

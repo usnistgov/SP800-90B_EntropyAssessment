@@ -19,7 +19,7 @@ public:
     bool passed_chi_square_tests = false;
     bool passed_longest_repeated_substring_test = false;
     bool passed_iid_permutation_tests = false;
-    
+
     double h_r = -1.0;
     double h_c = -1.0;
     double h_i = -1.0;
@@ -28,19 +28,28 @@ public:
 
     Json::Value GetAsJson() {
         Json::Value json = TestCaseBase::GetBaseJson();
-        json["mean"] = mean;
-        json["median"] = median;
-        json["binary"] = binary;
-        json["passedChiSquareTests"] = passed_chi_square_tests;
-        json["passedLongestRepeatedSubstringTest"] = passed_longest_repeated_substring_test;
-        json["passedIidPermutationTests"] = passed_iid_permutation_tests;
+        if (mean != -1)
+            json["mean"] = mean;
+        if (median != -1)
+            json["median"] = median;
+        if (binary != -1)
+            json["binary"] = binary;
+        if (passed_chi_square_tests != -1)
+            json["passedChiSquareTests"] = passed_chi_square_tests;
+        if (passed_longest_repeated_substring_test != -1)
+            json["passedLongestRepeatedSubstringTest"] = passed_longest_repeated_substring_test;
+        if (passed_iid_permutation_tests != -1)
+            json["passedIidPermutationTests"] = passed_iid_permutation_tests;
 
-        json["h_r"] = h_r;
-        json["h_c"] = h_c;
-        json["h_i"] = h_i;
-        
+        if (h_r != -1)
+            json["h_r"] = h_r;
+        if (h_c != -1)
+            json["h_c"] = h_c;
+        if (h_i != -1)
+            json["h_i"] = h_i;
+
         Json::Value permutationTestResults;
-        for (int i = 0; i < testResults.size(); i++){
+        for (int i = 0; i < testResults.size(); i++) {
             permutationTestResults[i] = testResults[i].GetAsJson();
         }
 

@@ -24,13 +24,20 @@ protected:
     Json::Value GetBaseJson() {
         Json::Value baseJson;
         baseJson["testCaseDesc"] = testCaseNumber;
-        baseJson["hOriginal"] = h_original;
-        baseJson["hBitstring"] = h_bitstring;
-        baseJson["hAssessed"] = h_assessed;
+        
+        if(h_original != -1)
+            baseJson["hOriginal"] = h_original;
+        if(h_bitstring != -1)
+            baseJson["hBitstring"] = h_bitstring;
+        if(h_assessed != -1)
+            baseJson["hAssessed"] = h_assessed;
 
-        baseJson["mcvEstimateMode"] = mcv_estimate_mode;
-        baseJson["mcvEstimatePHat"] = mcv_estimate_p_hat;
-        baseJson["mcvEstimatePU"] = mcv_estimate_p_u;
+        if(mcv_estimate_mode != -1)
+            baseJson["mcvEstimateMode"] = mcv_estimate_mode;
+        if(mcv_estimate_p_hat != -1)
+            baseJson["mcvEstimatePHat"] = mcv_estimate_p_hat;
+        if(mcv_estimate_p_u != -1)
+            baseJson["mcvEstimatePU"] = mcv_estimate_p_u;
         baseJson["mcvEstimate"] = literal_mcv_estimate ? "literal" : "bitstring";
 
         return baseJson;
