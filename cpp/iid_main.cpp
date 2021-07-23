@@ -116,9 +116,10 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	if(verbose > 0){
-		printf("Opening file: '%s'\n", file_path);
-	}
+        if(verbose>0) {
+                if(subsetSize == 0) printf("Opening file: '%s'\n", file_path);
+                else printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
+        }
 
 	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
 		printf("Error reading file.\n");

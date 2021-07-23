@@ -65,7 +65,11 @@ int main(int argc, char* argv[])
 		print_usage();
 	}
 
-	if(verbose>0) printf("Opening input file: '%s'\n", argv[0]);
+        if(verbose>0) {
+                if(subsetSize == 0) printf("Opening input file: '%s'\n", argv[0]);
+                else printf("Opening file: '%s', reading block %ld of size %ld\n", argv[0], subsetIndex, subsetSize);
+        }
+
 
         if(!read_file_subset(argv[0], &data, subsetIndex, subsetSize)){
                 printf("Error reading file.\n");
