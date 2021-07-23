@@ -198,11 +198,11 @@ int main(int argc, char* argv[]) {
 	n = std::min(n_out, nw);
 
 	//Print out the inputs
-	printf("n_in: %u\n", n_in);
-	printf("n_out: %u\n", n_out);
-	printf("nw: %u\n", nw);
-	printf("h_in: %.22Lg\n", h_in);
-	if(!vetted) printf("h': %.22Lg\n", h_p);
+	printf("n_in = %u\n", n_in);
+	printf("n_out = %u\n", n_out);
+	printf("nw = %u\n", nw);
+	printf("h_in = %.22Lg\n", h_in);
+	if(!vetted) printf("h' = %.22Lg\n", h_p);
 
 	// Establish the maximum precision that ought to be necessary
 	// If something goes wrong, we can increase this precision automatically.
@@ -223,7 +223,6 @@ int main(int argc, char* argv[]) {
 		//Initialize arbitrary precision versions of h_in
 		//We want to make sure not to lose precision here.
 		if(mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ) != 0) {
-			fprintf(stderr, "h_in not captured correctly\n");
 			adaquatePrecision=false;
 		}
 
@@ -239,7 +238,6 @@ int main(int argc, char* argv[]) {
 
 		//This is an integer value, and should be exact
 		if(mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ)!=0) {
-			fprintf(stderr, "denom term not captured correctly\n");
 			adaquatePrecision=false;
 		}
 
@@ -249,7 +247,6 @@ int main(int argc, char* argv[]) {
 		//Prior to moving on, calculate a reused power term
 		//This is an integer value, and should be exact
 		if(mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU)!=0) {
-			fprintf(stderr, "power term not captured correctly\n");
 			adaquatePrecision=false;
 		}
 
@@ -258,13 +255,11 @@ int main(int argc, char* argv[]) {
 		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDU);
 		// h_in > 0 so Psi > P_high. If this isn't so, then we're doing the calculation at too low of a precision.
 		if(mpfr_cmp(ap_p_high, ap_psi) >= 0) {
-			fprintf(stderr, "P_high >= Psi\n");
 			adaquatePrecision=false;
 		}
 
 		//We're going to need an arbitrary precision version of log(2)
 		if(mpfr_set_ui(ap_omega, 2U, MPFR_RNDZ) != 0) {
-			fprintf(stderr, "2 can't be set?\n");
 			adaquatePrecision=false;
 		}
 		mpfr_log(ap_omega, ap_omega, MPFR_RNDU);
@@ -294,13 +289,11 @@ int main(int argc, char* argv[]) {
 		//Could outputEntropy be valid?
 		//We know that n_out > ap_outputEntropy for all finite inputs...
 		if(mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
-			fprintf(stderr, "outputEntropy >= n_out\n");
 			adaquatePrecision = false;
 		}
 
 		//We know that h_in > ap_outputEntropy for all finite inputs...
 		if(mpfr_cmp(ap_outputEntropy, ap_h_in) >= 0) {
-			fprintf(stderr, "outputEntropy >= h_in\n");
 			adaquatePrecision = false;
 		}
 
@@ -367,18 +360,19 @@ int main(int argc, char* argv[]) {
 	printf("\n");
 
 	if(vetted) {
-		printf("(Vetted) h_out: %.22Lg\n", outputEntropy);
+		printf("(Vetted) h_out = %.22Lg\n", outputEntropy);
 
 		if(outputEntropy > 0.999L*((long double)n_out)) {
 			//h_out = (1 - epsilon) * n_out
-			printf("epsilon: 2^(-%.22Lg)", epsilonExp);
+			printf("epsilon = 2^(-%.22Lg)", epsilonExp);
 			//Should this qualify as "full entropy" under the 2012 draft of SP 800-90B?
 			//Should this qualify as "full entropy" under the 2021 SP 800-90C draft?
 			if(epsilonExp >= 64.0L) {
-				printf(": SP 800-90B 2012 Draft and SP 800-90C 2021 Draft Full Entopy\n");
+				printf(": SP 800-90B 2012 Draft and SP 800-90C 2021 Draft Full Entropy");
 			} else if(epsilonExp >= 32.0L) {
-				printf(": SP 800-90C 2021 Full Entopy\n");
+				printf(": SP 800-90C 2021 Full Entropy");
 			}
+			printf("\n");
 		}
 	} else {
 		long double bound90B = 0.999L*((long double)n_out);
@@ -388,7 +382,7 @@ int main(int argc, char* argv[]) {
 		printf("0.999 * n_out = %.22Lg\n", bound90B);
 		printf("h' * n_out = %.22Lg\n", statBound);
 		h_out = std::min(outputEntropy, std::min(bound90B, statBound));
-		printf("(Non-vetted) h_out: %.22Lg\n", h_out);
+		printf("(Non-vetted) h_out = %.22Lg\n", h_out);
 	}
 
 	return 0;
