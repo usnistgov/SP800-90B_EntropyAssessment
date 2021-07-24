@@ -140,9 +140,9 @@ int main(int argc, char* argv[]) {
 	int opt;
 	bool adaquatePrecision = false;
 	unsigned int maxval;
-	long double epsilonExp = -1.0L;
-	long double deltaExp = -1.0L;
-	long double gammaExp = -1.0L;
+	long double noutEpsilonExp = -1.0L;
+	long double hinEpsilonExp = -1.0L;
+	long double nwEpsilonExp = -1.0L;
 
 	mpfr_t ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out;
 
@@ -303,13 +303,13 @@ int main(int argc, char* argv[]) {
 			//To be conservative, round so that -log2(epsilon) epsilon is as small as possible
 			//(that is epsilon should be as large as possible)
 			mpfr_set_ui(ap_n_out, n_out, MPFR_RNDZ);
-			epsilonExp = calculateEpsilon(ap_outputEntropy, ap_n_out, precision);
+			noutEpsilonExp = calculateEpsilon(ap_outputEntropy, ap_n_out, precision);
 
 			//We may also be interested in other ways that this output may have been limited.
-			deltaExp = calculateEpsilon(ap_outputEntropy, ap_h_in, precision);
+			hinEpsilonExp = calculateEpsilon(ap_outputEntropy, ap_h_in, precision);
 
 			mpfr_set_ui(ap_nw, nw, MPFR_RNDZ);
-			gammaExp = calculateEpsilon(ap_outputEntropy, ap_nw, precision);
+			nwEpsilonExp = calculateEpsilon(ap_outputEntropy, ap_nw, precision);
 
 			//If we get here, then adequate precision was used
 			//Extract a value for display.
@@ -347,15 +347,15 @@ int main(int argc, char* argv[]) {
 	printf("Output_Entropy(*) = %.22Lg", outputEntropy);
 	if(outputEntropy == (long double)n_out) {
 		//outputEntropy rounded to full entropy, so the difference between this and full entropy is less than 1/2 ULP.
-		printf("; Close to n_out (epsilon = %.22Lg)", epsilonExp);
+		printf("; Close to n_out (epsilon = 2^(-%.22Lg))", noutEpsilonExp);
 	}
 	if(outputEntropy == h_in) {
 		//outputEntropy rounded to the input entropy, so the difference between this and the input entropy is less than 1/2 ULP.
-		printf("; Close to h_in (epsilon = %.22Lg)", deltaExp);
+		printf("; Close to h_in (epsilon = 2^(-%.22Lg))", hinEpsilonExp);
 	}
 	if(outputEntropy == (long double)nw) {
 		//outputEntropy rounded to the nw, so the difference between this and nw is less than 1/2 ULP.
-		printf("; Close to nw (epsilon = %.22Lg)", gammaExp);
+		printf("; Close to nw (epsilon = 2^(-%.22Lg))", nwEpsilonExp);
 	}
 	printf("\n");
 
@@ -364,12 +364,12 @@ int main(int argc, char* argv[]) {
 
 		if(outputEntropy > 0.999L*((long double)n_out)) {
 			//h_out = (1 - epsilon) * n_out
-			printf("epsilon = 2^(-%.22Lg)", epsilonExp);
+			printf("epsilon = 2^(-%.22Lg)", noutEpsilonExp);
 			//Should this qualify as "full entropy" under the 2012 draft of SP 800-90B?
 			//Should this qualify as "full entropy" under the 2021 SP 800-90C draft?
-			if(epsilonExp >= 64.0L) {
+			if(noutEpsilonExp >= 64.0L) {
 				printf(": SP 800-90B 2012 Draft and SP 800-90C 2021 Draft Full Entropy");
-			} else if(epsilonExp >= 32.0L) {
+			} else if(noutEpsilonExp >= 32.0L) {
 				printf(": SP 800-90C 2021 Full Entropy");
 			}
 			printf("\n");
