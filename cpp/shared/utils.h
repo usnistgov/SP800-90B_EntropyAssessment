@@ -781,11 +781,26 @@ double divide(const int a, const int b) {
 }
 
 double prediction_estimate_function(long double p, long r, long N){
-	long double q, x;
+	long double q, x, xlast=0.0L;
+	assert(p > 0.0L); //In fact, it is >= 1/k
+	assert(p < 1.0L);
 
 	q = 1.0L-p;
 	x = 1.0L;
-	for(int i = 0; i < 10; i++) x = 1.0L + q*powl(p, r)*powl(x, r+1.0L);
+
+	//We know that 
+	// * x is in the interval [1,1/p] which is a subset of [1,k]
+	// * the sequence is monotonic up (so x >= xlast).
+	//As such we don't need much fancyness for looking for "equality"
+	for(int i = 0; (i <= 65) && ((x - xlast) > (LDBL_EPSILON*x)); i++) {
+		xlast = x;
+		x = 1.0L + q*powl(p, r)*powl(x, r+1.0L);
+		//We expect this convergence to be monotonic up.
+		assert(x >= xlast);
+		//We expect x<=1/p
+		assert(p*x <= 1.0L);
+	}
+
 	return((double)(logl(1.0L-p*x) - logl((r+1.0L-r*x)*q) - (N+1.0L)*logl(x)));
 }
 

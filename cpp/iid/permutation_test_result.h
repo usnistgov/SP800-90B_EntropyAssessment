@@ -10,7 +10,7 @@ using namespace std;
 class PermutationTestResult {
 public:
     
-    string iteration;
+    int iteration;
 
     double excursion = -1.0;
     double numDirectionalRuns = -1.0;
@@ -35,33 +35,53 @@ public:
     Json::Value GetAsJson() {
         Json::Value testResultJson;
         
-        testResultJson["iteration"] = iteration;
+        if(iteration != -1)
+            testResultJson["iteration"] = iteration;
         
-        testResultJson["excursion"] = excursion;
+        if(excursion != -1)
+            testResultJson["excursion"] = excursion;
         
-        testResultJson["numDirectionalRuns"] = numDirectionalRuns;
-        testResultJson["lenDirectionalRuns"] = lenDirectionalRuns;
-        testResultJson["numIncreasesDecreases"] = numIncreasesDecreases;
+        if(numDirectionalRuns != -1)
+            testResultJson["numDirectionalRuns"] = numDirectionalRuns;
+        if(lenDirectionalRuns != -1)
+            testResultJson["lenDirectionalRuns"] = lenDirectionalRuns;
+        if(numIncreasesDecreases != -1)
+            testResultJson["numIncreasesDecreases"] = numIncreasesDecreases;
         
-        testResultJson["numRunsMedian"] = numRunsMedian;
-        testResultJson["lenRunsMedian"] = lenRunsMedian;
+        if(numRunsMedian != -1)
+            testResultJson["numRunsMedian"] = numRunsMedian;
+        if(lenRunsMedian != -1)
+            testResultJson["lenRunsMedian"] = lenRunsMedian;
         
-        testResultJson["avgCollision"] = avgCollision;
-        testResultJson["maxCollision"] = maxCollision;
+        if(avgCollision != -1)
+            testResultJson["avgCollision"] = avgCollision;
+        if(maxCollision != -1)
+            testResultJson["maxCollision"] = maxCollision;
 
-        testResultJson["periodicity1"] = periodicity1;
-        testResultJson["periodicity2"] = periodicity2;
-        testResultJson["periodicity8"] = periodicity8;
-        testResultJson["periodicity16"] = periodicity16;
-        testResultJson["periodicity32"] = periodicity32;
+        if(periodicity1 != -1)
+            testResultJson["periodicity1"] = periodicity1;
+        if(periodicity2 != -1)
+            testResultJson["periodicity2"] = periodicity2;
+        if(periodicity8 != -1)
+            testResultJson["periodicity8"] = periodicity8;
+        if(periodicity16 != -1)
+            testResultJson["periodicity16"] = periodicity16;
+        if(periodicity32 != -1)
+            testResultJson["periodicity32"] = periodicity32;
 
-        testResultJson["covariance1"] = covariance1;
-        testResultJson["covariance2"] = covariance2;
-        testResultJson["covariance8"] = covariance8;
-        testResultJson["covariance16"] = covariance16;
-        testResultJson["covariance32"] = covariance32;
+        if(covariance1 != -1)
+            testResultJson["covariance1"] = covariance1;
+        if(covariance2 != -1)
+            testResultJson["covariance2"] = covariance2;
+        if(covariance8 != -1)
+            testResultJson["covariance8"] = covariance8;
+        if(covariance16 != -1)
+            testResultJson["covariance16"] = covariance16;
+        if(covariance32 != -1)
+            testResultJson["covariance32"] = covariance32;
 
-        testResultJson["compression"] = compression;
+        if(compression != -1)
+            testResultJson["compression"] = compression;
 
         return testResultJson;
     }
