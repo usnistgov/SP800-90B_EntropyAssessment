@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
     int counts[256];
     long int X_cutoff;
     long i, j, X_i, X_r, X_c, X_max;
-    double H_I, H_r, H_c, alpha, ret_min_entropy;
+    double H_I, H_r, H_c, alpha, ret_min_entropy_row, ret_min_entropy_col;
     byte *rdata, *cdata;
     data_t data;
     int opt;
@@ -397,28 +397,22 @@ int main(int argc, char* argv[]) {
     }
 
     // Section 6.3.1 - Estimate entropy with Most Common Value
-    ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
-    if (verbose > 0) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-    H_r = min(ret_min_entropy, H_r);
-    ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
-    if (verbose > 0) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-    H_c = min(ret_min_entropy, H_c);
+    ret_min_entropy_row = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
+    if (verbose > 0) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy_row, data.word_size);
+    H_r = min(ret_min_entropy_row, H_r);
 
-    NonIidTestCase tc631nonIid;
-    tc631nonIid.ret_min_entropy = ret_min_entropy;
-    tc631nonIid.data_word_size = data.word_size;
-    tc631nonIid.h_r = H_r;
-    tc631nonIid.h_c = H_c;
-    tc631nonIid.testCaseNumber = "Estimate entropy with Most Common Value";
-    testRunNonIid.testCases.push_back(tc631nonIid);
+    ret_min_entropy_col = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
+    if (verbose > 0) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy_col, data.word_size);
+    H_c = min(ret_min_entropy_col, H_c);
 
-    NonIidTestCase tc631Iid;
-    tc631Iid.ret_min_entropy = ret_min_entropy;
-    tc631Iid.data_word_size = data.word_size;
-    tc631Iid.h_r = H_r;
-    tc631Iid.h_c = H_c;
-    tc631Iid.testCaseNumber = "Estimate entropy with Most Common Value";
-    testRunNonIid.testCases.push_back(tc631Iid);
+    NonIidTestCase tc631;
+    tc631.ret_min_entropy_row = ret_min_entropy_row;
+    tc631.ret_min_entropy_col = ret_min_entropy_col;
+    tc631.data_word_size = data.word_size;
+    tc631.h_r = H_r;
+    tc631.h_c = H_c;
+    tc631.testCaseNumber = "Estimate entropy with Most Common Value";
+    testRunNonIid.testCases.push_back(tc631);
 
     if (!iid) {
 
@@ -426,15 +420,17 @@ int main(int argc, char* argv[]) {
             if (!quietMode) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
             // Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
-            ret_min_entropy = collision_test(rdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_r = min(ret_min_entropy, H_r);
-            ret_min_entropy = collision_test(cdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_c = min(ret_min_entropy, H_c);
+            ret_min_entropy_row = collision_test(rdata, data.len, verbose, "Literal");
+            if (verbose > 0) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy_row);
+            H_r = min(ret_min_entropy_row, H_r);
+
+            ret_min_entropy_col = collision_test(cdata, data.len, verbose, "Literal");
+            if (verbose > 0) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy_col);
+            H_c = min(ret_min_entropy_col, H_c);
 
             NonIidTestCase tc632;
-            tc632.ret_min_entropy = ret_min_entropy;
+            tc632.ret_min_entropy_row = ret_min_entropy_row;
+            tc632.ret_min_entropy_col = ret_min_entropy_col;
             tc632.data_word_size = data.word_size;
             tc632.h_r = H_r;
             tc632.h_c = H_c;
@@ -442,15 +438,17 @@ int main(int argc, char* argv[]) {
             testRunNonIid.testCases.push_back(tc632);
 
             // Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
-            ret_min_entropy = markov_test(rdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_r = min(ret_min_entropy, H_r);
-            ret_min_entropy = markov_test(cdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_c = min(ret_min_entropy, H_c);
+            ret_min_entropy_row = markov_test(rdata, data.len, verbose, "Literal");
+            if (verbose > 0) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy_row);
+            H_r = min(ret_min_entropy_row, H_r);
+
+            ret_min_entropy_col = markov_test(cdata, data.len, verbose, "Literal");
+            if (verbose > 0) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy_col);
+            H_c = min(ret_min_entropy_col, H_c);
 
             NonIidTestCase tc633;
-            tc633.ret_min_entropy = ret_min_entropy;
+            tc633.ret_min_entropy_row = ret_min_entropy_row;
+            tc633.ret_min_entropy_col = ret_min_entropy_col;
             tc633.data_word_size = data.word_size;
             tc633.h_r = H_r;
             tc633.h_c = H_c;
@@ -458,19 +456,21 @@ int main(int argc, char* argv[]) {
             testRunNonIid.testCases.push_back(tc633);
 
             // Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
-            ret_min_entropy = compression_test(rdata, data.len, verbose, "Literal");
-            if (ret_min_entropy >= 0) {
-                if (verbose > 0) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
-                H_r = min(ret_min_entropy, H_r);
+            ret_min_entropy_row = compression_test(rdata, data.len, verbose, "Literal");
+            if (ret_min_entropy_row >= 0) {
+                if (verbose > 0) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy_row);
+                H_r = min(ret_min_entropy_row, H_r);
             }
-            ret_min_entropy = compression_test(cdata, data.len, verbose, "Literal");
-            if (ret_min_entropy >= 0) {
-                if (verbose > 0) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
-                H_c = min(ret_min_entropy, H_c);
+
+            ret_min_entropy_col = compression_test(cdata, data.len, verbose, "Literal");
+            if (ret_min_entropy_col >= 0) {
+                if (verbose > 0) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy_col);
+                H_c = min(ret_min_entropy_col, H_c);
             }
 
             NonIidTestCase tc634;
-            tc634.ret_min_entropy = ret_min_entropy;
+            tc634.ret_min_entropy_row = ret_min_entropy_row;
+            tc634.ret_min_entropy_col = ret_min_entropy_col;
             tc634.data_word_size = data.word_size;
             tc634.h_r = H_r;
             tc634.h_c = H_c;
@@ -494,7 +494,8 @@ int main(int argc, char* argv[]) {
         H_c = min(col_t_tuple_res, H_c);
 
         NonIidTestCase tc635;
-        tc635.ret_min_entropy = ret_min_entropy;
+        tc635.ret_min_entropy_row = row_t_tuple_res;
+        tc635.ret_min_entropy_col = col_t_tuple_res;
         tc635.data_word_size = data.word_size;
         tc635.h_r = H_r;
         tc635.h_c = H_c;
@@ -504,11 +505,13 @@ int main(int argc, char* argv[]) {
         // Section 6.3.6 - Estimate entropy with LRS Test
         if (verbose > 0) printf("\tLRS Test Estimate (Rows) = %f / %d bit(s)\n", row_lrs_res, data.word_size);
         H_r = min(row_lrs_res, H_r);
+
         if (verbose > 0) printf("\tLRS Test Estimate (Cols) = %f / %d bit(s)\n", col_lrs_res, data.word_size);
         H_c = min(col_lrs_res, H_c);
 
         NonIidTestCase tc636;
-        tc636.ret_min_entropy = ret_min_entropy;
+        tc636.ret_min_entropy_row = row_lrs_res;
+        tc636.ret_min_entropy_col = col_lrs_res;
         tc636.data_word_size = data.word_size;
         tc636.h_r = H_r;
         tc636.h_c = H_c;
@@ -519,19 +522,21 @@ int main(int argc, char* argv[]) {
         // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
         if (!quietMode) printf("\nRunning Predictor Estimates...\n");
 
-        ret_min_entropy = multi_mcw_test(rdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_r = min(ret_min_entropy, H_r);
+        ret_min_entropy_row = multi_mcw_test(rdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_row >= 0) {
+            if (verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy_row, data.word_size);
+            H_r = min(ret_min_entropy_row, H_r);
         }
-        ret_min_entropy = multi_mcw_test(cdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_c = min(ret_min_entropy, H_c);
+
+        ret_min_entropy_col = multi_mcw_test(cdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_col >= 0) {
+            if (verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy_col, data.word_size);
+            H_c = min(ret_min_entropy_col, H_c);
         }
 
         NonIidTestCase tc637;
-        tc637.ret_min_entropy = ret_min_entropy;
+        tc637.ret_min_entropy_row = ret_min_entropy_row;
+        tc637.ret_min_entropy_col = ret_min_entropy_col;
         tc637.data_word_size = data.word_size;
         tc637.h_r = H_r;
         tc637.h_c = H_c;
@@ -539,19 +544,21 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc637);
 
         // Section 6.3.8 - Estimate entropy with Lag Prediction Test
-        ret_min_entropy = lag_test(rdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_r = min(ret_min_entropy, H_r);
+        ret_min_entropy_row = lag_test(rdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_row >= 0) {
+            if (verbose > 0) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy_row, data.word_size);
+            H_r = min(ret_min_entropy_row, H_r);
         }
-        ret_min_entropy = lag_test(cdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_c = min(ret_min_entropy, H_c);
+
+        ret_min_entropy_col = lag_test(cdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_col >= 0) {
+            if (verbose > 0) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy_col, data.word_size);
+            H_c = min(ret_min_entropy_col, H_c);
         }
 
         NonIidTestCase tc638;
-        tc638.ret_min_entropy = ret_min_entropy;
+        tc638.ret_min_entropy_row = ret_min_entropy_row;
+        tc638.ret_min_entropy_col = ret_min_entropy_col;
         tc638.data_word_size = data.word_size;
         tc638.h_r = H_r;
         tc638.h_c = H_c;
@@ -559,19 +566,21 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc638);
 
         // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
-        ret_min_entropy = multi_mmc_test(rdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_r = min(ret_min_entropy, H_r);
+        ret_min_entropy_row = multi_mmc_test(rdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_row >= 0) {
+            if (verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy_row, data.word_size);
+            H_r = min(ret_min_entropy_row, H_r);
         }
-        ret_min_entropy = multi_mmc_test(cdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_c = min(ret_min_entropy, H_c);
+
+        ret_min_entropy_col = multi_mmc_test(cdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_col >= 0) {
+            if (verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy_col, data.word_size);
+            H_c = min(ret_min_entropy_col, H_c);
         }
 
         NonIidTestCase tc639;
-        tc639.ret_min_entropy = ret_min_entropy;
+        tc639.ret_min_entropy_row = ret_min_entropy_row;
+        tc639.ret_min_entropy_col = ret_min_entropy_col;
         tc639.data_word_size = data.word_size;
         tc639.h_r = H_r;
         tc639.h_c = H_c;
@@ -579,18 +588,21 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc639);
 
         // Section 6.3.10 - Estimate entropy with LZ78Y Test
-        ret_min_entropy = LZ78Y_test(rdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_r = min(ret_min_entropy, H_r);
+        ret_min_entropy_row = LZ78Y_test(rdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_row >= 0) {
+            if (verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy_row, data.word_size);
+            H_r = min(ret_min_entropy_row, H_r);
         }
-        ret_min_entropy = LZ78Y_test(cdata, data.len, data.alph_size, verbose, "Literal");
-        if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_c = min(ret_min_entropy, H_c);
+
+        ret_min_entropy_col = LZ78Y_test(cdata, data.len, data.alph_size, verbose, "Literal");
+        if (ret_min_entropy_col >= 0) {
+            if (verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy_col, data.word_size);
+            H_c = min(ret_min_entropy_col, H_c);
         }
+
         NonIidTestCase tc6310;
-        tc6310.ret_min_entropy = ret_min_entropy;
+        tc6310.ret_min_entropy_row = ret_min_entropy_row;
+        tc6310.ret_min_entropy_col = ret_min_entropy_col;
         tc6310.data_word_size = data.word_size;
         tc6310.h_r = H_r;
         tc6310.h_c = H_c;
@@ -632,6 +644,7 @@ int main(int argc, char* argv[]) {
             printf("min(H_r, H_c, H_I): %f\n\n", min(min(H_r, H_c), H_I));
         }
     }
+    
     free(cdata);
     free_data(&data);
     return 0;

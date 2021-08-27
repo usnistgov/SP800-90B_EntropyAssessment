@@ -11,6 +11,8 @@ using namespace std;
 class NonIidTestCase : public TestCaseBase {
 public:
     double ret_min_entropy = -1.0;
+    double ret_min_entropy_row = -1.0;
+    double ret_min_entropy_col = -1.0;
     double data_word_size = -1.0;
     double bin_t_tuple_res = -1.0;
     double t_tuple_res = -1.0;
@@ -32,6 +34,10 @@ public:
         
         if(ret_min_entropy != -1)
             json["retMinEntropy"] = ret_min_entropy;
+        if(ret_min_entropy_row != -1)
+            json["retMinEntropyRow"] = ret_min_entropy_row;
+        if(ret_min_entropy_col != -1)
+            json["retMinEntropyCol"] = ret_min_entropy_col;
         if(data_word_size != -1)
             json["dataWordSize"] = data_word_size;
         if(bin_t_tuple_res != -1)
