@@ -233,20 +233,35 @@ int main(int argc, char* argv[]) {
 		mpfr_neg(ap_entexp, ap_h_in, MPFR_RNDZ);
 		mpfr_ui_pow(ap_p_high, 2UL, ap_entexp, MPFR_RNDU);
 
-		//P_low
-		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDU);
-
-		//This is an integer value, and should be exact
-		if(mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ)!=0) {
+		// p_high must be in the interval (0,1)
+		if(mpfr_cmp_ui(ap_p_high, 0UL)<=0) {
+			adaquatePrecision=false;
+		}
+		if(mpfr_cmp_ui(ap_p_high, 1UL)>=0) {
 			adaquatePrecision=false;
 		}
 
-		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDZ);
-		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDU);
+		//P_low
+		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDU); //p_low = 1-p_high
+
+		//This is an integer value, and should be exact
+		if(mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ)!=0) { //ap_denom = 2^(n_in)
+			adaquatePrecision=false;
+		}
+
+		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDZ); // ap_denom = 2^(n_in) - 1
+		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDU); // p_low = (1-p_high)/(2^(n_in)-1)
+		// p_low must be in the interval (0,1)
+		if(mpfr_cmp_ui(ap_p_low, 0UL)<=0) {
+			adaquatePrecision=false;
+		}
+		if(mpfr_cmp_ui(ap_p_low, 1UL)>=0) {
+			adaquatePrecision=false;
+		}
 
 		//Prior to moving on, calculate a reused power term
 		//This is an integer value, and should be exact
-		if(mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU)!=0) {
+		if(mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU)!=0) { //power_term = 2^(n_in - n)
 			adaquatePrecision=false;
 		}
 
@@ -258,20 +273,47 @@ int main(int argc, char* argv[]) {
 			adaquatePrecision=false;
 		}
 
-		//We're going to need an arbitrary precision version of log(2)
-		if(mpfr_set_ui(ap_omega, 2U, MPFR_RNDZ) != 0) {
+		assert(mpfr_cmp_ui(ap_psi, 0UL)>=0);
+
+		if(mpfr_cmp_ui(ap_psi, 0UL)==0) {
 			adaquatePrecision=false;
 		}
-		mpfr_log(ap_omega, ap_omega, MPFR_RNDU);
+
+		//Is psi > 1?
+		if(mpfr_cmp_ui(ap_psi, 1UL)>0) {
+			//This is quite unlikely for most parameters, but it is possible for some allowed values.
+			//Set this value to the largest meaningful value.
+			mpfr_set_ui(ap_psi, 1UL, MPFR_RNDZ);
+		}
+
+		//We're going to need an arbitrary precision version of log(2)
+		if(mpfr_set_ui(ap_omega, 2U, MPFR_RNDZ) != 0) { //omega = 2
+			adaquatePrecision=false;
+		}
+		mpfr_log(ap_omega, ap_omega, MPFR_RNDU); // omega = log(2)
 
 		//Step 4: Calculate U (goes into the ap_omega variable)
-		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDU);
-		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDU);
-		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDU);
-		mpfr_add(ap_omega, ap_omega, ap_power_term,  MPFR_RNDU);
+		mpfr_mul(ap_omega, ap_omega, ap_power_term, MPFR_RNDU); //omega = log(2) 2^(n_in - n)
+		mpfr_mul_ui(ap_omega, ap_omega, 2UL*n, MPFR_RNDU); //omega = log(2) 2^(n_in - n) * 2 * n
+		mpfr_sqrt(ap_omega, ap_omega, MPFR_RNDU); // omega = Sqrt(log(2) 2^(n_in - n) * 2 * n)
+		mpfr_add(ap_omega, ap_omega, ap_power_term,  MPFR_RNDU); // omega = 2^(n_in-n) + Sqrt(log(2) 2^(n_in - n) * 2 * n)
 
 		//Step 5: Calculate omega
-		mpfr_mul(ap_omega, ap_omega, ap_p_low, MPFR_RNDU);
+		mpfr_mul(ap_omega, ap_omega, ap_p_low, MPFR_RNDU); // omega = (2^(n_in-n) + Sqrt(log(2) 2^(n_in - n) * 2 * n)) * p_low
+		//Omega is expected to be non-negative
+		assert(mpfr_cmp_ui(ap_omega, 0UL)>=0);
+
+		if(mpfr_cmp_ui(ap_omega, 0UL)==0) {
+			//Omega is expected to be non-zero for all parameters
+			adaquatePrecision=false;
+		}
+
+		//Is omega > 1?
+		if(mpfr_cmp_ui(ap_omega, 1UL)>0) {
+			//This is quite unlikely for most parameters, but it is possible for some allowed values.
+			//Set this value to the largest meaningful value.
+			mpfr_set_ui(ap_omega, 1UL, MPFR_RNDZ);
+		}
 
 		//Step 6: Compare the values
 		//we want to round so that the log is (in absolute value) as small as possible.
