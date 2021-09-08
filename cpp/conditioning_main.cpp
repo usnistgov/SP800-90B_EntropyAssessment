@@ -110,8 +110,6 @@ static long double calculateEpsilon(mpfr_t calcValue, mpfr_t maxValue,  mpfr_pre
 	mpfr_set_ui(ap_log2, 2U, MPFR_RNDZ);
 	mpfr_log(ap_log2, ap_log2, MPFR_RNDU);
 
-	mpfr_log_ui(ap_log2, 2UL, MPFR_RNDU);
-
 	//Calculate the ratio value/max
 	mpfr_set(ratio, calcValue, MPFR_RNDU);
 	mpfr_neg(ratio, ratio, MPFR_RNDD);
