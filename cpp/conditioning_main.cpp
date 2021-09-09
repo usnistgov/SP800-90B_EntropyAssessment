@@ -8,8 +8,6 @@
 #include <assert.h>
 #include <getopt.h>
 #include <mpfr.h>
-#include <stdint.h>
-#include <cinttypes>
 #include <errno.h>
 #include <fenv.h>
 
