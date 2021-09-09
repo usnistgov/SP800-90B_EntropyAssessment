@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <getopt.h>
 #include <mpfr.h>
+#include <stdint.h>
+#include <cinttypes>
 #include <errno.h>
 #include <fenv.h>
 
@@ -142,7 +144,7 @@ int main(int argc, char* argv[]) {
 	long double hinEpsilonExp = -1.0L;
 	long double nwEpsilonExp = -1.0L;
 
-	mpfr_t ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out;
+	mpfr_t ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out;
 
 	vetted = true;
 
@@ -204,14 +206,18 @@ int main(int argc, char* argv[]) {
 
 	// Establish the maximum precision that ought to be necessary
 	// If something goes wrong, we can increase this precision automatically.
-	maxval = 64; // Always be large enough to faithfully represent h_in.
+	maxval = 53; // Always be large enough to faithfully represent h_in.
 	maxval = (maxval>n_in)?maxval:n_in;
 	maxval = (maxval>n_out)?maxval:n_out;
 	maxval = (maxval>nw)?maxval:nw;
 	precision = 2*maxval;
 
+	//Check to see if this environment is going to support the needed exponent range
+	assert(mpfr_get_emax() > maxval);
+	assert(mpfr_get_emin() < -maxval);
+	
 	//Initialize all the arbitrary precision values
-	mpfr_inits2(precision, ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
+	mpfr_inits2(precision, ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
 
 	adaquatePrecision = false;
 
@@ -222,6 +228,7 @@ int main(int argc, char* argv[]) {
 		//We want to make sure not to lose precision here.
 		if(mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ) != 0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
 		// compute Output Entropy (Section 3.1.5.1.2)
@@ -234,47 +241,66 @@ int main(int argc, char* argv[]) {
 		// p_high must be in the interval (0,1)
 		if(mpfr_cmp_ui(ap_p_high, 0UL)<=0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 		if(mpfr_cmp_ui(ap_p_high, 1UL)>=0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
 		//P_low
 		mpfr_ui_sub(ap_p_low, 1UL, ap_p_high, MPFR_RNDU); //p_low = 1-p_high
 
 		//This is an integer value, and should be exact
-		if(mpfr_ui_pow_ui (ap_denom, 2UL, n_in, MPFR_RNDZ)!=0) { //ap_denom = 2^(n_in)
+		if(mpfr_ui_pow_ui (ap_inputSpaceSize, 2UL, n_in, MPFR_RNDZ)!=0) { //ap_inputSpaceSize = 2^(n_in)
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
-		mpfr_sub_ui(ap_denom, ap_denom, 1UL, MPFR_RNDZ); // ap_denom = 2^(n_in) - 1
+		mpfr_sub_ui(ap_denom, ap_inputSpaceSize, 1UL, MPFR_RNDZ); // ap_denom = 2^(n_in) - 1
+		//Is the difference correct?
+		mpfr_sub(ap_diff, ap_inputSpaceSize, ap_denom, MPFR_RNDZ);
+		if(mpfr_cmp_ui(ap_diff, 1UL) != 0) {
+			//Evidently not. Increase the precision.
+			adaquatePrecision=false;
+			goto precisionCheck;
+		}
+
 		mpfr_div (ap_p_low, ap_p_low, ap_denom, MPFR_RNDU); // p_low = (1-p_high)/(2^(n_in)-1)
 		// p_low must be in the interval (0,1)
 		if(mpfr_cmp_ui(ap_p_low, 0UL)<=0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 		if(mpfr_cmp_ui(ap_p_low, 1UL)>=0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
 		//Prior to moving on, calculate a reused power term
 		//This is an integer value, and should be exact
 		if(mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU)!=0) { //power_term = 2^(n_in - n)
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
 		//Step 3: Calculate Psi
-		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDU);
-		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDU);
+		mpfr_mul(ap_psi, ap_power_term, ap_p_low, MPFR_RNDU); // ap_psi = 2^(n_in - n) * p_low
+		mpfr_add(ap_psi, ap_psi, ap_p_high,  MPFR_RNDU); // ap_psi = 2^(n_in - n) * p_low + p_high
+
 		// h_in > 0 so Psi > P_high. If this isn't so, then we're doing the calculation at too low of a precision.
 		if(mpfr_cmp(ap_p_high, ap_psi) >= 0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
+		//Psi > 0 is expected
 		assert(mpfr_cmp_ui(ap_psi, 0UL)>=0);
 
+		//If we have equality, then we didn't use adaquate precision.
 		if(mpfr_cmp_ui(ap_psi, 0UL)==0) {
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
 		//Is psi > 1?
@@ -287,6 +313,7 @@ int main(int argc, char* argv[]) {
 		//We're going to need an arbitrary precision version of log(2)
 		if(mpfr_set_ui(ap_omega, 2U, MPFR_RNDZ) != 0) { //omega = 2
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 		mpfr_log(ap_omega, ap_omega, MPFR_RNDU); // omega = log(2)
 
@@ -304,6 +331,7 @@ int main(int argc, char* argv[]) {
 		if(mpfr_cmp_ui(ap_omega, 0UL)==0) {
 			//Omega is expected to be non-zero for all parameters
 			adaquatePrecision=false;
+			goto precisionCheck;
 		}
 
 		//Is omega > 1?
@@ -330,12 +358,16 @@ int main(int argc, char* argv[]) {
 		//We know that n_out > ap_outputEntropy for all finite inputs...
 		if(mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
 			adaquatePrecision = false;
+			goto precisionCheck;
 		}
 
 		//We know that h_in > ap_outputEntropy for all finite inputs...
 		if(mpfr_cmp(ap_outputEntropy, ap_h_in) >= 0) {
 			adaquatePrecision = false;
+			goto precisionCheck;
 		}
+
+precisionCheck:
 
 		if(adaquatePrecision) {
 			//Check to see if meets the definition of "full entropy".
@@ -368,6 +400,8 @@ int main(int argc, char* argv[]) {
 			mpfr_set_prec(ap_p_high, precision);
 			mpfr_set_prec(ap_p_low, precision);
 			mpfr_set_prec(ap_denom, precision);
+			mpfr_set_prec(ap_inputSpaceSize, precision);
+			mpfr_set_prec(ap_diff, precision);
 			mpfr_set_prec(ap_power_term, precision);
 			mpfr_set_prec(ap_psi, precision);
 			mpfr_set_prec(ap_omega, precision);
