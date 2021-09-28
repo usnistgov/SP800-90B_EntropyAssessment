@@ -300,7 +300,7 @@ int main(int argc, char* argv[]) {
     testRun.testCases.push_back(tc634);
 
     // Section 6.3.5 - Estimate entropy with t-Tuple Test
-    if (verbose >= 1 ) printf("\nRunning Tuple Estimates...\n");
+    if (verbose >= 1) printf("\nRunning Tuple Estimates...\n");
     if (((data.alph_size > 2) || !initial_entropy)) {
         SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose, "Bitstring");
         if (bin_t_tuple_res >= 0.0) {
@@ -470,7 +470,7 @@ int main(int argc, char* argv[]) {
     testRun.testCases.push_back(tc6310);
 
     double h_assessed;
-    if (verbose >= 1 ) {
+    if (verbose >= 1) {
         printf("\n");
         if (initial_entropy) {
             printf("H_original: %f\n", H_original);
@@ -479,21 +479,21 @@ int main(int argc, char* argv[]) {
                 printf("min(H_original, %d X H_bitstring): %f\n\n", data.word_size, min(H_original, data.word_size * H_bitstring));
             }
         } else printf("h': %f\n", H_bitstring);
-    } else {
-        h_assessed = data.word_size;
-
-        if ((data.alph_size > 2) || !initial_entropy) {
-            h_assessed = min(h_assessed, H_bitstring * data.word_size);
-            printf("H_bitstring = %.17g\n", H_bitstring);
-        }
-
-        if (initial_entropy) {
-            h_assessed = min(h_assessed, H_original);
-            printf("H_original: %.17g\n", H_original);
-        }
-
-        printf("Assessed min entropy: %.17g\n", h_assessed);
     }
+    h_assessed = data.word_size;
+
+    if ((data.alph_size > 2) || !initial_entropy) {
+        h_assessed = min(h_assessed, H_bitstring * data.word_size);
+        printf("H_bitstring = %.17g\n", H_bitstring);
+    }
+
+    if (initial_entropy) {
+        h_assessed = min(h_assessed, H_original);
+        printf("H_original: %.17g\n", H_original);
+    }
+
+    printf("Assessed min entropy: %.17g\n", h_assessed);
+
 
     NonIidTestCase tcOverall;
     tcOverall.h_bitstring = H_bitstring;

@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) {
     int alphabet_size = data.alph_size;
     int sample_size = data.len;
 
-    if(!quietMode) printf("Calculating baseline statistics...\n");
+    if (!quietMode) printf("Calculating baseline statistics...\n");
     calc_stats(&data, rawmean, median);
 
     if (verbose > 0) {
@@ -245,24 +245,25 @@ int main(int argc, char* argv[]) {
                 printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size * H_bitstring));
             }
         } else printf("h': %f\n", H_bitstring);
-    } else {
-        h_assessed = data.word_size;
-
-        if ((data.alph_size > 2) || !initial_entropy) {
-            h_assessed = min(h_assessed, H_bitstring * data.word_size);
-            printf("H_bitstring = %.17g\n", H_bitstring);
-        }
-
-        if (initial_entropy) {
-            h_assessed = min(h_assessed, H_original);
-            printf("H_original: %.17g\n", H_original);
-        }
-
-        printf("Assessed min entropy: %.17g\n", h_assessed);
     }
+    h_assessed = data.word_size;
+
+    if ((data.alph_size > 2) || !initial_entropy) {
+        h_assessed = min(h_assessed, H_bitstring * data.word_size);
+        printf("H_bitstring = %.17g\n", H_bitstring);
+    }
+
+    if (initial_entropy) {
+        h_assessed = min(h_assessed, H_original);
+        printf("H_original: %.17g\n", H_original);
+    }
+
+    printf("Assessed min entropy: %.17g\n", h_assessed);
+
+
     tc.h_assessed = h_assessed;
 
-    if(!quietMode) printf("\n");
+    if (!quietMode) printf("\n");
 
     // Compute chi square stats
     bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
