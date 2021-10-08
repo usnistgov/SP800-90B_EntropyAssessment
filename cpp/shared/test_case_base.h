@@ -16,7 +16,7 @@ public:
     double mcv_estimate_mode = -1.0;
     double mcv_estimate_p_hat = -1.0;
     double mcv_estimate_p_u = -1.0;
-    bool literal_mcv_estimate = false;
+    int literal_mcv_estimate = -1;
 
     string testCaseNumber;
 
@@ -38,7 +38,8 @@ protected:
             baseJson["mcvEstimatePHat"] = mcv_estimate_p_hat;
         if(mcv_estimate_p_u != -1)
             baseJson["mcvEstimatePU"] = mcv_estimate_p_u;
-        baseJson["mcvEstimate"] = literal_mcv_estimate ? "literal" : "bitstring";
+        if(literal_mcv_estimate != -1)
+            baseJson["mcvEstimate"] = literal_mcv_estimate ? "literal" : "bitstring";
 
         return baseJson;
     }

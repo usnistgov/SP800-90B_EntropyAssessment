@@ -1,4 +1,4 @@
-#include "non_iid/non_iid_test_run.h"
+#include "other/conditioning_test_run.h"
 #include "non_iid/collision_test.h"
 #include "non_iid/lz78y_test.h"
 #include "non_iid/multi_mmc_test.h"
@@ -112,20 +112,21 @@ int main(int argc, char* argv[]) {
     argc -= optind;
     argv += optind;
 
-    NonIidTestRun testRunNonIid;
-    testRunNonIid.type = "Conditioning";
-    testRunNonIid.timestamp = timestamp;
+    ConditioningTestRun testRun;
+    testRun.type = "Conditioning";
+    testRun.timestamp = timestamp;
 
     // get n_in 
     n_in = atof(argv[0]);
     if ((n_in <= 0) || (floor(n_in) != n_in)) {
+        
         printf("n_in must be a positive integer.\n");
         if (jsonOutput) {
-            testRunNonIid.errorLevel = -1;
-            testRunNonIid.errorMsg = "n_in must be a positive integer";
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "n_in must be a positive integer";
             ofstream output;
             output.open(outputfilename);
-            output << testRunNonIid.GetAsJson();
+            output << testRun.GetAsJson();
             output.close();
         }
         print_usage();
@@ -137,11 +138,11 @@ int main(int argc, char* argv[]) {
         printf("n_out must be a positive integer.\n");
 
         if (jsonOutput) {
-            testRunNonIid.errorLevel = -1;
-            testRunNonIid.errorMsg = "n_out must be a positive integer";
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "n_out must be a positive integer";
             ofstream output;
             output.open(outputfilename);
-            output << testRunNonIid.GetAsJson();
+            output << testRun.GetAsJson();
             output.close();
         }
 
@@ -153,11 +154,11 @@ int main(int argc, char* argv[]) {
     if ((nw <= 0) || (floor(nw) != nw)) {
         printf("n_w must be a positive integer.\n");
         if (jsonOutput) {
-            testRunNonIid.errorLevel = -1;
-            testRunNonIid.errorMsg = "n_w must be a positive integer";
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "n_w must be a positive integer";
             ofstream output;
             output.open(outputfilename);
-            output << testRunNonIid.GetAsJson();
+            output << testRun.GetAsJson();
             output.close();
         }
         print_usage();
@@ -168,11 +169,11 @@ int main(int argc, char* argv[]) {
     if ((h_in <= 0) || (h_in > n_in)) {
         printf("h_in must be positive and at most n_in.\n");
         if (jsonOutput) {
-            testRunNonIid.errorLevel = -1;
-            testRunNonIid.errorMsg = "h_in must be a positive and at most n_in.";
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "h_in must be a positive and at most n_in.";
             ofstream output;
             output.open(outputfilename);
-            output << testRunNonIid.GetAsJson();
+            output << testRun.GetAsJson();
             output.close();
         }
         print_usage();
@@ -185,11 +186,11 @@ int main(int argc, char* argv[]) {
             if ((h_p < 0) || (h_p > 1.0)) {
                 printf("h' must be between 0 and 1 inclusive.\n");
                 if (jsonOutput) {
-                    testRunNonIid.errorLevel = -1;
-                    testRunNonIid.errorMsg = "h' must be between 0 and 1 inclusive.";
+                    testRun.errorLevel = -1;
+                    testRun.errorMsg = "h' must be between 0 and 1 inclusive.";
                     ofstream output;
                     output.open(outputfilename);
-                    output << testRunNonIid.GetAsJson();
+                    output << testRun.GetAsJson();
                     output.close();
                 }
                 print_usage();
@@ -199,8 +200,8 @@ int main(int argc, char* argv[]) {
 
             char hash[65];
             sha256_file(&inputfilename[0], hash);
-            testRunNonIid.sha256 = hash;
-            testRunNonIid.filename = inputfilename.c_str();
+            testRun.sha256 = hash;
+            testRun.filename = inputfilename.c_str();
 
             data_t data;
             data.word_size = 0;
@@ -241,7 +242,7 @@ int main(int argc, char* argv[]) {
                 if (h_assessed != 0) {
                     h_assessed = h_assessed / data.word_size;
                 }
-
+                h_p = h_assessed;
             } else {
                 // NON-IID path
                 h_assessed = data.word_size;
@@ -398,9 +399,9 @@ int main(int argc, char* argv[]) {
                 if (h_assessed != 0) {
                     h_assessed = h_assessed / data.word_size;
                 }
-
+                h_p = h_assessed;
             }
-            h_p = h_assessed;
+            
         }
     }
 
@@ -438,24 +439,24 @@ int main(int argc, char* argv[]) {
         printf("h_out: %f\n", h_out);
     }
 
-    NonIidTestCase tcOverallnonIid;
+    ConditioningTestCase tcOverall;
 
-    tcOverallnonIid.testCaseNumber = "Overall";
-    tcOverallnonIid.vetted = vetted;
-    tcOverallnonIid.n_in = n_in;
-    tcOverallnonIid.n_out = n_out;
-    tcOverallnonIid.nw = nw;
-    tcOverallnonIid.h_in = h_in;
-    tcOverallnonIid.h_out = h_out;
-    tcOverallnonIid.h_p = h_p;
+    tcOverall.testCaseNumber = "Overall";
+    tcOverall.vetted = vetted;
+    tcOverall.n_in = n_in;
+    tcOverall.n_out = n_out;
+    tcOverall.nw = nw;
+    tcOverall.h_in = h_in;
+    tcOverall.h_out = h_out;
+    tcOverall.h_p = h_p;
 
-    testRunNonIid.testCases.push_back(tcOverallnonIid);
-    testRunNonIid.errorLevel = 0;
+    testRun.testCases.push_back(tcOverall);
+    testRun.errorLevel = 0;
 
     if (jsonOutput) {
         ofstream output;
         output.open(outputfilename);
-        output << testRunNonIid.GetAsJson();
+        output << testRun.GetAsJson();
         output.close();
     }
 
