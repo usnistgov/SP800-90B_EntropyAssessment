@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
     tc631.h_bitstring = H_bitstring;
     tc631.h_original = H_original;
     tc631.ret_min_entropy = ret_min_entropy;
-    tc631.data_word_size = data.word_size;
+    //tc631.data_word_size = data.word_size;
     tc631.lrs_res = lrs_res;
     tc631.testCaseNumber = "Estimate entropy with Most Common Value";
     testRun.testCases.push_back(tc631);
@@ -248,7 +248,7 @@ int main(int argc, char* argv[]) {
     tc632.h_bitstring = H_bitstring;
     tc632.h_original = H_original;
     tc632.ret_min_entropy = ret_min_entropy;
-    tc632.data_word_size = data.word_size;
+    //tc632.data_word_size = data.word_size;
     tc632.lrs_res = lrs_res;
     tc632.testCaseNumber = "Estimate entropy with Collision Test (for bit strings only)";
     testRun.testCases.push_back(tc632);
@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
     tc633.h_bitstring = H_bitstring;
     tc633.h_original = H_original;
     tc633.ret_min_entropy = ret_min_entropy;
-    tc633.data_word_size = data.word_size;
+    //tc633.data_word_size = data.word_size;
     tc633.lrs_res = lrs_res;
     tc633.testCaseNumber = "Estimate entropy with Markov Test (for bit strings only)";
     testRun.testCases.push_back(tc633);
@@ -294,7 +294,7 @@ int main(int argc, char* argv[]) {
     tc634.h_bitstring = H_bitstring;
     tc634.h_original = H_original;
     tc634.ret_min_entropy = ret_min_entropy;
-    tc634.data_word_size = data.word_size;
+    //tc634.data_word_size = data.word_size;
     tc634.lrs_res = lrs_res;
     tc634.testCaseNumber = "Estimate entropy with Compression Test (for bit strings only)";
     testRun.testCases.push_back(tc634);
@@ -323,7 +323,7 @@ int main(int argc, char* argv[]) {
     tc635.ret_min_entropy = ret_min_entropy;
     tc635.bin_t_tuple_res = bin_t_tuple_res;
     tc635.t_tuple_res = t_tuple_res;
-    tc635.data_word_size = data.word_size;
+    //tc635.data_word_size = data.word_size;
     tc635.lrs_res = lrs_res;
     tc635.testCaseNumber = "Estimate entropy with t-Tuple Test";
     testRun.testCases.push_back(tc635);
@@ -346,7 +346,7 @@ int main(int argc, char* argv[]) {
     tc636.bin_t_tuple_res = bin_t_tuple_res;
     tc636.bin_lrs_res = bin_lrs_res;
     tc636.t_tuple_res = t_tuple_res;
-    tc636.data_word_size = data.word_size;
+    //tc636.data_word_size = data.word_size;
     tc636.lrs_res = lrs_res;
     tc636.testCaseNumber = "Estimate entropy with LRS Test";
     testRun.testCases.push_back(tc636);
@@ -377,7 +377,7 @@ int main(int argc, char* argv[]) {
     tc637.bin_t_tuple_res = bin_t_tuple_res;
     tc637.t_tuple_res = t_tuple_res;
     tc637.bin_lrs_res = bin_lrs_res;
-    tc637.data_word_size = data.word_size;
+    //tc637.data_word_size = data.word_size;
     tc637.lrs_res = lrs_res;
     tc637.testCaseNumber = "Estimate entropy with Multi Most Common in Window Test";
     testRun.testCases.push_back(tc637);
@@ -406,7 +406,7 @@ int main(int argc, char* argv[]) {
     tc638.bin_t_tuple_res = bin_t_tuple_res;
     tc638.t_tuple_res = t_tuple_res;
     tc638.bin_lrs_res = bin_lrs_res;
-    tc638.data_word_size = data.word_size;
+    //tc638.data_word_size = data.word_size;
     tc638.lrs_res = lrs_res;
     tc638.testCaseNumber = "Estimate entropy with Lag Prediction Test";
     testRun.testCases.push_back(tc638);
@@ -435,7 +435,7 @@ int main(int argc, char* argv[]) {
     tc639.bin_t_tuple_res = bin_t_tuple_res;
     tc639.t_tuple_res = t_tuple_res;
     tc639.bin_lrs_res = bin_lrs_res;
-    tc639.data_word_size = data.word_size;
+    //tc639.data_word_size = data.word_size;
     tc639.lrs_res = lrs_res;
     tc639.testCaseNumber = "Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)";
     testRun.testCases.push_back(tc639);
@@ -464,7 +464,7 @@ int main(int argc, char* argv[]) {
     tc6310.bin_t_tuple_res = bin_t_tuple_res;
     tc6310.t_tuple_res = t_tuple_res;
     tc6310.bin_lrs_res = bin_lrs_res;
-    tc6310.data_word_size = data.word_size;
+    //tc6310.data_word_size = data.word_size;
     tc6310.testCaseNumber = "Estimate entropy with LZ78Y Test";
     tc6310.lrs_res = lrs_res;
     testRun.testCases.push_back(tc6310);
@@ -502,7 +502,7 @@ int main(int argc, char* argv[]) {
     tcOverall.bin_t_tuple_res = bin_t_tuple_res;
     tcOverall.t_tuple_res = t_tuple_res;
     tcOverall.bin_lrs_res = bin_lrs_res;
-    tcOverall.data_word_size = data.word_size;
+    //tcOverall.data_word_size = data.word_size;
     tcOverall.testCaseNumber = "Overall";
     tcOverall.h_assessed = h_assessed;
     tcOverall.lrs_res = lrs_res;

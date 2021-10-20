@@ -22,7 +22,8 @@ protected:
         baseJson["filename"] = filename;
         baseJson["sha256"] = sha256;
         baseJson["errorLevel"] = errorLevel;
-        baseJson["type"] = type;
+        if(!type.empty())
+            baseJson["type"] = type;
 
         if (errorLevel != 0){
             baseJson["errorMessage"] = errorMsg;

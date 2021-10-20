@@ -23,7 +23,8 @@ public:
 protected:
     Json::Value GetBaseJson() {
         Json::Value baseJson;
-        baseJson["testCaseDesc"] = testCaseNumber;
+        if(!testCaseNumber.empty())
+            baseJson["testCaseDesc"] = testCaseNumber;
         
         if(h_original != -1)
             baseJson["hOriginal"] = h_original;
