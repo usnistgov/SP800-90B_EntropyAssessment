@@ -115,6 +115,7 @@ int main(int argc, char* argv[]) {
     ConditioningTestRun testRun;
     testRun.type = "Conditioning";
     testRun.timestamp = timestamp;
+    testRun.IID = -1;
 
     // get n_in 
     n_in = atof(argv[0]);

@@ -14,6 +14,7 @@ public:
     int errorLevel = 0;
     string errorMsg;
     string type;
+    int IID;
 
 protected:
     Json::Value GetBaseJson() {
@@ -28,7 +29,13 @@ protected:
         if (errorLevel != 0){
             baseJson["errorMessage"] = errorMsg;
         }
-
+        if(IID != -1) {
+            if(IID) {
+                baseJson["IID"] = true;
+            } else {
+                baseJson["IID"] = false;
+            }
+        }
         return baseJson;
     }
 };

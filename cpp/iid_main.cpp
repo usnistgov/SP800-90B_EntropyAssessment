@@ -130,6 +130,8 @@ int main(int argc, char* argv[]) {
     IidTestRun testRun;
     testRun.timestamp = timestamp;
     testRun.filename = file_path;
+    testRun.type = "IID";
+    testRun.IID = true;
 
     if (argc == 2) {
 

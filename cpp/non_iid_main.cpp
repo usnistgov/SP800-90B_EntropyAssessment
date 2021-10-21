@@ -139,7 +139,9 @@ int main(int argc, char* argv[]) {
     testRun.timestamp = timestamp;
     testRun.sha256 = hash;
     testRun.filename = file_path;
-
+    testRun.type = "NonIID";
+    testRun.IID = false;
+    
     if (argc == 2) {
         // get bits per word
         inint = atoi(argv[1]);

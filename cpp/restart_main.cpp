@@ -203,7 +203,8 @@ int main(int argc, char* argv[]) {
     testRunRestart.timestamp = timestamp;
     testRunRestart.filename = file_path;
     testRunRestart.sha256 = hash;
-
+    testRunRestart.IID = iid;
+    
     //NonIidTestRun testRunRestart;
     //testRunRestart.type = "Restart";
     //testRunRestart.timestamp = timestamp;

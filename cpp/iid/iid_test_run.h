@@ -12,7 +12,6 @@ class IidTestRun : public TestRunBase {
 public:
     string GetAsJson() {
         Json::Value json = TestRunBase::GetBaseJson();
-        json["IID"] = IID;
 
         Json::Value testCasesJson;
         for (int i = 0; i < testCases.size(); i++){
@@ -25,7 +24,6 @@ public:
         return styled.write(json);
     }
 
-    const bool IID = true;
     vector<IidTestCase> testCases;
 };
 #endif /* IIDTESTRUN_H */

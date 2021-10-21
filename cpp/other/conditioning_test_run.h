@@ -27,7 +27,7 @@ public:
         return styled.write(json);
     }
 
-    const bool IID = false;
+    //const bool IID = false;
     vector<ConditioningTestCase> testCases;
 };
 #endif /* CONDITIONINGTESTRUN_H */
