@@ -123,7 +123,10 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	if(verbose>0) printf("Opening file: '%s'\n", file_path);
+	if(verbose>0) {
+		if(subsetSize == 0) printf("Opening file: '%s'\n", file_path);
+		else printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
+	}
 
 	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
 		printf("Error reading file.\n");
@@ -207,8 +210,10 @@ int main(int argc, char* argv[]){
 
 	if(initial_entropy && (data.alph_size == 2)) {
 		ret_min_entropy = compression_test(data.symbols, data.len, verbose, "Literal");
-		if(verbose == 1) printf("\ttCompression Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
-		H_original = min(ret_min_entropy, H_original);
+		if(ret_min_entropy >= 0) {
+			if(verbose == 1) printf("\ttCompression Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
+			H_original = min(ret_min_entropy, H_original);
+		}
 	}
 
 	if(verbose <= 1) printf("\nRunning Tuple Estimates...\n");
