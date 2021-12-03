@@ -203,7 +203,9 @@ vector<unsigned int> find_collisions(const byte data[], const unsigned int n, co
 			if(dups[data[i+j]]) {
 				// Record info on collision and end inner loop
 				// Advance outer loop past the collision end
-				ret.push_back(j);
+				// Note that j is not the current window size,
+				// it is one less that the window size.
+				ret.push_back(j+1);
 				i += j;
 				j=0;
 				break;
@@ -597,12 +599,12 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 						statusMessageLength = 0;
 					}
 
-					res = snprintf(statusMessage+statusMessageLength, sizeof(statusMessage)-statusMessageLength, "%6.02f%% of Permutuation test rounds, %6.02f%% of Permutuation tests", (100.0*((float)completed)/((float)PERMS)), (100.0*((float)passed_count)/19.0));
+					res = snprintf(statusMessage+statusMessageLength, sizeof(statusMessage)-statusMessageLength, "%6.02f%% of Permutation test rounds, %6.02f%% of Permutation tests", (100.0*((float)completed)/((float)PERMS)), (100.0*((float)passed_count)/19.0));
 					assert(res>0);
 					statusMessageLength += res;
 					assert(statusMessageLength < sizeof(statusMessage));
 
-					/* If not diplaying to screen, then we can print even more information. Ultimately
+					/* If not displaying to screen, then we can print even more information. Ultimately
 					* we want the '\n' however printed when not printing to terminal so that the redirected
 					* output looks nicer. 
 					*/
@@ -619,7 +621,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 					}
 				}
 			} else {
-				//We don't have a lock for this branch, so make one to update the complted count.
+				//We don't have a lock for this branch, so make one to update the completed count.
 				#pragma omp atomic
 				completed ++;
 			}
