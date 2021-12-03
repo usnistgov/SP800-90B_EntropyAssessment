@@ -15,16 +15,18 @@
 #define SIMULATION_ROUNDS 5000000
 
 [[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>\n\n");
+	printf("Usage is: ea_restart [-i|-n] [-p] [-v] <file_name> [bits_per_symbol] <H_I>\n\n");
 	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples),\n");
 	printf("\t and in the \"row dataset\" format described in SP800-90B Section 3.1.4.1.\n");
 	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive.\n");
 	printf("\t <H_I>: Initial entropy estimate.\n");
 	printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
 	printf("\t -v: Optional verbosity flag for more output.\n");
+    printf("\t -p: Optional flag to denote that input data is contiguous bit-packed with the first sample occupying the most significant bits of the first byte and subsequent samples being in lower significant bits.  Use of the 'bits_per_symbol' parameter is required to ensure correct unpacking.\n");
+    printf("\t     Currently only packed samples of 1, 2, 4 or 8 bits are permitted to ensure appropriate sample alignment to byte boundaries.\n");
 	printf("\n");
-	printf("\t Restart samples are assumed to be packed into 8-bit values, where the rightmost 'bits_per_symbol'\n");
-	printf("\t bits constitute the sample.\n");
+	printf("\t Restart samples are assumed to be packed into 8-bit values unless -p is used, where the\n");
+	printf("\t rightmost 'bits_per_symbol' bits constitute the sample.\n");
 	printf("\n");
 	printf("\t This program performs restart testing as described in Restart Tests (Section 3.1.4). The data\n"); 
 	printf("\t consists of 1000 restarts, each with 1000 samples. The data is converted to rows and columns\n");
@@ -131,13 +133,15 @@ int main(int argc, char* argv[]){
 	long i, j, X_i, X_r, X_c, X_max;
 	double H_I, H_r, H_c, alpha, ret_min_entropy; 
 	byte *rdata, *cdata;
-	data_t data;
+	data_t data = {0};
 	int opt;
 
 	iid = false;
 	data.word_size = 0;
 
-        while ((opt = getopt(argc, argv, "inv")) != -1) {
+    bool bit_packed = false;
+
+        while ((opt = getopt(argc, argv, "invp")) != -1) {
                 switch(opt) {
                         case 'i':
                                 iid = true;
@@ -147,6 +151,9 @@ int main(int argc, char* argv[]){
                                 break;
                         case 'v':
                                 verbose++;
+                                break;
+                        case 'p':
+                                bit_packed = true;
                                 break;
                         default:
                                 print_usage();
@@ -179,6 +186,12 @@ int main(int argc, char* argv[]){
 		argc--;
 	}
 
+    if(bit_packed && !data.word_size)  {
+        /* word_size was not given as a param and it should be for bit-packing */
+        printf("When using bit-packed input, you must provide the bits-per-symbol parameter.\n");
+        print_usage();
+    }
+
 	// get H_I	
 	H_I = atof(argv[0]);
 	if(H_I < 0){
@@ -188,7 +201,7 @@ int main(int argc, char* argv[]){
 
 	if(verbose > 0) printf("Opening file: '%s'\n", file_path);
 
-	if(!read_file(file_path, &data)){
+	if(!read_file(file_path, &data, bit_packed)){
 		printf("Error reading file.\n");
 		print_usage();
 	}

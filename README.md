@@ -44,7 +44,7 @@ For IID tests use the Makefile to compile the program:
 
 Then you can run the program with
 
-    ./ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples>] <file_name> [bits_per_symbol]
+    ./ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples>] [-p] <file_name> [bits_per_symbol]
 
 You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond to the following:
 
@@ -55,7 +55,8 @@ You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond t
 * Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.
 * `-l`: Reads (at most) `samples` data samples after indexing into the file by `index*samples` bytes.
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
-* bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
+* `-p`: Optional flag to denote that input data is contiguous bit-packed with the first sample occupying the most significant bits of the first byte and subsequent samples being in lower significant bits.  Use of the `bits_per_symbol` parameter is required to ensure correct unpacking.  Currently not compatible with `-l` parameter.
+* `bits_per_symbol` are the number of bits per symbol. Each symbol is expected to fit within a single byte unless `-p` is used.
 
 To run the non-IID tests, use the Makefile to compile:
 
@@ -63,7 +64,7 @@ To run the non-IID tests, use the Makefile to compile:
 
 Running this works the same way. This looks like
 
-	./ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]
+	./ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] [-p] <file_name> [bits_per_symbol]
 
 To run the restart testing, use the Makefile to compile:
     
@@ -71,14 +72,15 @@ To run the restart testing, use the Makefile to compile:
 
 Running this is similar.
 	
-	./ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>
+	./ea_restart [-i|-n] [-v] [-p] <file_name> [bits_per_symbol] <H_I>
 
 The file should be in the "row dataset" format described in SP800-90B Section 3.1.4.1.
 
 * `-i`: Indicates IID data.
 * `-n`: Indicates non-IID data.
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
-* bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
+* `-p`: Optional flag to denote that input data is contiguous bit-packed with the first sample occupying the most significant bits of the first byte and subsequent samples being in lower significant bits.  Use of the `bits_per_symbol` parameter is required to ensure correct unpacking.
+* `bits_per_symbol` are the number of bits per symbol. Each symbol is expected to fit within a single byte unless `-p` is used.
 * `H_I` is the assessed entropy.
 
 To calculate the entropy reduction due to conditioning, use the Makefile to compile:
@@ -98,8 +100,8 @@ or
 * `n_in`: The number of bits entering the conditioning step per output.
 * `n_out`: The number of bits per conditioning step output.
 * `nw`: The narrowest width of the conditioning step.
-* `h_in`: The amount of entropy entering the conditioning step per output. Must be less than n_in.
-* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for '-n' option).
+* `h_in`: The amount of entropy entering the conditioning step per output. Must be less than `n_in`.
+* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for `-n` option).
 
 ## Make
 
