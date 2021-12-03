@@ -1,6 +1,7 @@
 *.pyc
 *.log
 *.out
+*.res
 tmp.cpp
 test/
 ea_iid
