@@ -16,7 +16,7 @@ This code package requires a C++11 compiler. The code uses OpenMP directives, so
 
 The resulting binary is linked with bzlib and divsufsort, so these libraries (and their associated include files) must be installed and accessible to the compiler.
 
-See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-libdivsufsort) for some distribution-specific instructions on installing divsufsort.
+See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-libdivsufsort-and-bzlib) for some distribution-specific instructions on installing divsufsort.
 
 ## Overview
 
