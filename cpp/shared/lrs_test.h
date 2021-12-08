@@ -79,6 +79,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	assert(n>0);
 	assert(k>0);
 	assert(n <= SAINDEX_MAX - 1);
+	assert((UINT64_MAX / (uint64_t)n) >= ((uint64_t)n+1U)); // (mult assert)
 
 	calcSALCP(text, n, sa, L);
 
@@ -210,7 +211,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 
 	//calculate the LRS estimate
 	if(v>=u) {
-		vector <long int> S(v+1, 0);
+		vector <uint64_t> S(v+1, 0);
 		memset(A.data(), 0, sizeof(saidx_t)*((size_t)v+2));
 
 		for(long int i = 1; i <= n; i++) {
@@ -221,15 +222,23 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 				if(b < u) b = u-1;
 
 				for(t = L[i-1]; t > b; t--) {
+					uint64_t priorS;
+					uint64_t choices;
 					A[t] += A[t+1];
 					A[t+1] = 0;
 
 					assert(A[t] >= 0);
-					//update sum
-					//Note that (c choose 2) is just (c)(c-1)/2.
-					//The numerator of this expression is necessarily even
-					//Dividing an even quantity by 2 is the same as right shifting by 1.
-					S[t] += ((((uint64_t)(A[t]+1) * (uint64_t)(A[t]))))>>1; /* update sum */ 
+					// update sum
+					// Note that (c choose 2) is just (c)(c-1)/2.
+					// The numerator of this expression is necessarily even
+					// Dividing an even quantity by 2 is the same as right shifting by 1.
+					// Check for overflows when adding to S[t] (unsigned 64 bit integers)
+					// Note, A[t] <= n, so the assert marked "(mult assert)" tells us that the multiplication won't rollover.
+
+					priorS = S[t];
+					choices = ((((uint64_t)(A[t]+1) * (uint64_t)(A[t]))))>>1;
+					S[t] = priorS + choices;
+					assert(S[t] >= priorS);
 				}
 
 				if(b >= u) A[b] += A[b+1]; /* carry over count for t = L[i] */
@@ -242,7 +251,9 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 		//We now have a complete set of numerators in S
 		Pmax = 0.0;
 		for(long int i=u; i<=v; i++) {
-			double curP = ((double)S[i]) / (double)(((n-i)*(n-i+1))>>1);
+			// Note, the assert marked "(mult assert)" tells us that the multiplication won't rollover.
+			uint64_t choices = (((uint64_t)n-(uint64_t)i)*((uint64_t)n-(uint64_t)i+1U))>>1;
+			double curP = ((double)S[i]) / (double)choices;
 			double curPMax = pow(curP, 1.0/((double)i));
 			 //fprintf(stderr, "LRS Estimate: P_%ld = %.17g ( %zu / %zu )\n", i, curP, S[i], ((n-i)*(n-i+1))>>1);
 			 //fprintf(stderr, "LRS Estimate: P_{max,%ld} = %.17g\n", i, curPMax);
