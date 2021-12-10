@@ -5,6 +5,7 @@ CXXFLAGS = -std=c++11 -fopenmp -O2 -msse2 -ffloat-store -march=native
 #static analysis in clang using
 #scan-build-8 --use-c++=/usr/bin/clang++-8 make
 LIB = -lbz2 -lpthread -ldivsufsort
+COND_LIB = -lmpfr -lgmp
 INC=
 
 ######
@@ -30,7 +31,7 @@ restart_main.o: restart_main.cpp
 
 conditioning: conditioning_main.o
 conditioning_main.o: conditioning_main.cpp
-	$(CXX) $(CXXFLAGS) $(INC) conditioning_main.cpp -o ea_conditioning -lmpfr -lgmp
+	$(CXX) $(CXXFLAGS) $(INC) conditioning_main.cpp -o ea_conditioning $(COND_LIB)
 
 transpose: transpose_main.o
 transpose_main.o: transpose_main.cpp
