@@ -11,7 +11,7 @@
 //http://web.cs.iastate.edu/~cs548/references/linear_lcp.pdf
 //The default implementation uses 4 byte indexes
 //Note that indexes should be signed, so the next natural size is int64_t
-static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vector<saidx_t> &lcp) {
+static void sa2lcp(const byte text[], int64_t n, const vector<saidx_t> &sa, vector<saidx_t> &lcp) {
 	saidx_t h;
 	vector<saidx_t> rank(n+1,-1);
 
@@ -44,7 +44,7 @@ static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vec
 	}
 }
 
-void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp) {
+void calcSALCP(const byte text[], int64_t n, vector<saidx_t> &sa, vector<saidx_t> &lcp) {
 	int32_t res;
 
 	assert(n < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
@@ -63,14 +63,14 @@ void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_
  * This is described here:
  * http://www.untruth.org/~josh/sp80090b/Kaufer%20Further%20Improvements%20for%20SP%20800-90B%20Tuple%20Counts.pdf
  */
-void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &lrs_res, const int verbose, const char *label) {
+void SAalgs(const byte text[], int64_t n, int k, double &t_tuple_res, double &lrs_res, const int verbose, const char *label) {
 	vector <saidx_t> sa(n+1, -1); //each value is at most n-1
 	vector <saidx_t> L(n+2, -1); //each value is at most n-1
 
-   	long int u; //The length of a string: 1 <= u <= v+1 <= n
-   	long int v; //The length of the LRS. 1 <= v <= n-1
-	long int c; //contains a count from A
-	long int j; //0 <= j <= v+1 <= n
+   	int64_t u; //The length of a string: 1 <= u <= v+1 <= n
+   	int64_t v; //The length of the LRS. 1 <= v <= n-1
+	int64_t c; //contains a count from A
+	int64_t j; //0 <= j <= v+1 <= n
 	saidx_t t; //Takes values from LCP array. 0 <= t < n
 
 	double Pmax;
@@ -90,7 +90,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	//Find the length of the LRS, v
 
 	v=0;
-	for(long int i=0; i<n; i++) {
+	for(int64_t i=0; i<n; i++) {
 		if(L[i]>v) v = L[i];
 	}
 
@@ -106,7 +106,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	vector <saidx_t> I(v+3, 0); //each value is most 0 <= I[i] <= v+2 <= n+1
 
 	j = 0;
-	for(long int i = 1; i <= n; i++) {
+	for(int64_t i = 1; i <= n; i++) {
 		c = 0;
 		//Note L[0] is already verified to be 0
 		assert(L[i] >= 0);
@@ -174,7 +174,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	//at this point, Q is completely calculated.
 	/*Calculate the various Pmax[i] values. We need not save the actual values, only the largest*/
 	Pmax = -1.0;
-	for(long int i=1; i<u; i++) {
+	for(int64_t i=1; i<u; i++) {
 		double curP = ((double)(Q[i]))/((double)(n-i+1));
 		double curPMax = pow(curP, 1.0/(double)i);
 		 //fprintf(stderr, "t-Tuple Estimate: P[%ld] = %.17g ( %d / %ld )\n", i, curP, Q[i], n-i+1);
@@ -210,10 +210,10 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 
 	//calculate the LRS estimate
 	if(v>=u) {
-		vector <long int> S(v+1, 0);
+		vector <int64_t> S(v+1, 0);
 		memset(A.data(), 0, sizeof(saidx_t)*((size_t)v+2));
 
-		for(long int i = 1; i <= n; i++) {
+		for(int64_t i = 1; i <= n; i++) {
 			if((L[i-1] >= u) && (L[i] < L[i-1])) {
 				saidx_t b = L[i];
 
@@ -241,7 +241,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 
 		//We now have a complete set of numerators in S
 		Pmax = 0.0;
-		for(long int i=u; i<=v; i++) {
+		for(int64_t i=u; i<=v; i++) {
 			double curP = ((double)S[i]) / (double)(((uint64_t)(n-i)*(uint64_t)(n-i+1))>>1);
 			double curPMax = pow(curP, 1.0/((double)i));
 			 //fprintf(stderr, "LRS Estimate: P_%ld = %.17g ( %zu / %zu )\n", i, curP, S[i], ((n-i)*(n-i+1))>>1);
@@ -321,7 +321,7 @@ bool len_LRS_test(const byte data[], const int sample_size, const int alphabet_s
 
 	int lrs = len_LRS(data, sample_size);
 	int n = sample_size - lrs + 1;
-	long int overlap = n_choose_2(n);
+	int64_t overlap = n_choose_2(n);
 
 	double pr_x = 1 - pow(1 - pow(p_col, lrs), overlap);
 

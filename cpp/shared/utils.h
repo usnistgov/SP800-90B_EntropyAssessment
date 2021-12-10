@@ -601,21 +601,21 @@ double randomUnit(uint64_t *xoshiro256starstarState) {
 
 // Fisher-Yates Fast (in place) shuffle algorithm
 void FYshuffle(byte data[], byte rawdata[], const int sample_size, uint64_t *xoshiro256starstarState) {
-	long int r;
+	int64_t r;
 	static mutex shuffle_mutex;
 	unique_lock<mutex> lock(shuffle_mutex);
 
-	for (long int i = sample_size - 1; i > 0; --i) {
-		r = (long int)randomRange64((uint64_t)i, xoshiro256starstarState);
+	for (int64_t i = sample_size - 1; i > 0; --i) {
+		r = (int64_t)randomRange64((uint64_t)i, xoshiro256starstarState);
 		SWAP(data[r], data[i]);
 		SWAP(rawdata[r], rawdata[i]);
 	}
 }
 
 // Quick sum array  // TODO
-long int sum(const byte arr[], const int sample_size) {
-	long int sum = 0;
-	for (long int i = 0; i < sample_size; ++i) {
+int64_t sum(const byte arr[], const int sample_size) {
+	int64_t sum = 0;
+	for (int64_t i = 0; i < sample_size; ++i) {
 		sum += arr[i];
 	}
 
@@ -637,7 +637,7 @@ int sum(const array<int, LENGTH> &arr) {
 template<typename T>
 T sum(const vector<T> &v) {
 	T sum = 0;
-	for (unsigned long int i = 0; i < v.size(); ++i) {
+	for (uint64_t i = 0; i < v.size(); ++i) {
 		sum += v[i];
 	}
 
@@ -655,7 +655,7 @@ void calc_stats(const data_t *dp, double &rawmean, double &median) {
 	vector<byte> v(dp->symbols, dp->symbols + dp->len);
 	sort(v.begin(), v.end());
 
-	long int half = dp->len / 2;
+	int64_t half = dp->len / 2;
 	if(dp->alph_size == 2) {
 		//This isn't necessarily true, but we are supposed to set it this way.
 		//See 5.1.5, 5.1.6.
@@ -721,7 +721,7 @@ double std_dev(const vector<int> x, const double x_mean) {
 }
 
 // Quick formula for n choose 2 (which can be simplified to [n^2 - n] / 2)
-long int n_choose_2(const long int n) {
+int64_t n_choose_2(const int64_t n) {
 	return ((n*n) - n) / 2;
 }
 

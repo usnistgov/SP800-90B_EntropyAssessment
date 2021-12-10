@@ -40,11 +40,11 @@
 
 //Here, we simulate a sort of "worst case" for this test, where there are a maximal number of symbols with maximal probability,
 //and the rest is distributed to the other symbols
-long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
-	long int counts[256];
+int64_t simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
+	int64_t counts[256];
 	int current_symbol;
 	int k_max;
-	long int max_count=0;
+	int64_t max_count=0;
 	double p, max_cutoff, p_min, cur_rand;
 
 	assert(k<=256);
@@ -87,10 +87,10 @@ long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
 
 //This returns the bound (cutoff) for the test. Counts equal to this value should pass.
 //Larger values should fail.
-long int simulateBound(double alpha, int k, double H_I){
+int64_t simulateBound(double alpha, int k, double H_I){
 	uint64_t xoshiro256starstarMainSeed[4];
-	vector<long int> results(SIMULATION_ROUNDS, -1);
-	long int returnIndex;
+	vector<int64_t> results(SIMULATION_ROUNDS, -1);
+	int64_t returnIndex;
 
 	assert((k>1) && (k<=256));
 
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]){
 	char *file_path;
 	int r = 1000, c = 1000;
 	int counts[256];
-	long int X_cutoff;
+	int64_t X_cutoff;
 	long i, j, X_i, X_r, X_c, X_max;
 	double H_I, H_r, H_c, alpha, ret_min_entropy; 
 	byte *rdata, *cdata;

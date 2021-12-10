@@ -190,8 +190,8 @@ vector<unsigned int> find_collisions(const byte data[], const unsigned int n, co
 	vector<unsigned int> ret;
 	vector<bool> dups(k, false);
 
-	unsigned long int i=0;
-	unsigned long int j=0;
+	uint64_t i=0;
+	uint64_t j=0;
 
 	// Begin at the start
 	while(i + j < n){
@@ -266,8 +266,8 @@ unsigned int periodicity(const byte data[], const unsigned int p, const unsigned
 // Based on lag parameter p = [1, 2, 8, 16, 32]
 //
 // Requires non-binary data or binary data from conversion1
-unsigned long int covariance(const byte data[], const unsigned int p, const unsigned int n){
-	unsigned long int T = 0;
+uint64_t covariance(const byte data[], const unsigned int p, const unsigned int n){
+	uint64_t T = 0;
 
 	for(unsigned int i = 0; i < n-p; ++i){
 		T += data[i] * data[i+p];

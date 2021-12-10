@@ -600,7 +600,7 @@ void goodness_of_fit(const byte data[], double &score, int &df, const int sample
         // Calculate the expected number of occurrences for each possible pair of symbols
         // Calculate the expected number of occurrences for each possible pair of symbols
         vector<struct tupleTranslateEntry> e(alphabet_size);
-	for(long int j=0; j < alphabet_size; j++) {
+	for(int64_t j=0; j < alphabet_size; j++) {
 		e[j].tuple = j;
 		e[j].expectation = p[j] * floor((double) sample_size / 10.0);
 		e[j].bin = -1;
