@@ -1,8 +1,10 @@
 #pragma once
 #include "../shared/utils.h"
+#include "../shared/test_case_base.h"
+#include <string>
 
 // Section 6.3.1 - Most Common Value Estimate
-double most_common(byte* data, const long len, const int alph_size, const int verbose, const char *label){
+double most_common(byte* data, const long len, const int alph_size, const int verbose, const char *label, TestCaseBase &tc){
 
 	long counts[alph_size];
 	long i, mode;
@@ -31,5 +33,20 @@ double most_common(byte* data, const long len, const int alph_size, const int ve
 		printf("%s Most Common Value Estimate: min entropy = %.17g\n", label, entEst);
 	}
 
+    string literal = "Literal";
+    tc.mcv_estimate_mode = mode;
+    tc.mcv_estimate_p_hat = pmax;
+    tc.mcv_estimate_p_u = ubound;
+    tc.literal_mcv_estimate = literal.compare(label);
+        
 	return entEst;
+}
+
+//Wrapper method needed because some runs do not get output as JSON currently
+//and therefore do not have a TestCase object to send (restart tests)
+double most_common(byte* data, const long len, const int alph_size, const int verbose, const char *label){
+   
+   TestCaseBase dummy;
+   return most_common(data, len, alph_size, verbose, label, dummy);    
+   
 }

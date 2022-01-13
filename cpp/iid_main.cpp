@@ -1,44 +1,52 @@
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
+#include "iid/iid_test_run.h"
+#include "shared/TestRunUtils.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
 #include <omp.h>
 #include <getopt.h>
 #include <limits.h>
 
+#include <iostream>
+#include <fstream>
 
-
-[[ noreturn ]] void print_usage(){
-	printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
-	printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
-	printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
-	printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
-	printf("\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to %d bits. Test all data by default.\n", MIN_SIZE);
-	printf("\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n");
-	printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
-	printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
-	printf("\n");
-	printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n");
-	printf("\t bits constitute the symbol.\n");
-	printf("\n");
-	printf("\t -i: Initial Entropy Estimate (Section 3.1.3)\n");
-	printf("\n");
-	printf("\t\t Computes the initial entropy estimate H_I as described in Section 3.1.3\n");
-	printf("\t\t (not accounting for H_submitter) using the entropy estimators specified in\n");
-	printf("\t\t Section 6.3.  If 'bits_per_symbol' is greater than 1, the samples are also\n");
-	printf("\t\t converted to bitstrings and assessed to create H_bitstring; for multi-bit symbols,\n");
-	printf("\t\t two entropy estimates are computed: H_original and H_bitstring.\n");
-	printf("\t\t Returns min(H_original, bits_per_symbol X H_bitstring). The initial entropy\n");
-	printf("\t\t estimate H_I = min(H_submitter, H_original, bits_per_symbol X H_bitstring).\n");
-	printf("\n");
-	printf("\t -c: Conditioned Sequential Dataset Entropy Estimate (Section 3.1.5.2)\n");
-	printf("\n");
-	printf("\t\t Computes the entropy estimate per bit h' for the conditioned sequential dataset if the\n");
-	printf("\t\t conditioning function is non-vetted. The samples are converted to a bitstring.\n");
-	printf("\t\t Returns h' = min(H_bitstring).\n");
-	printf("\n");
-	exit(-1);
+[[ noreturn ]] void print_usage() {
+    printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-q] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
+    printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
+    printf("\t [bits_per_symbol]: Must be between 1-8, inclusive. By default this value is inferred from the data.\n");
+    printf("\t [-i|-c]: '-i' for initial entropy estimate, '-c' for conditioned sequential dataset entropy estimate. The initial entropy estimate is the default.\n");
+    printf("\t [-a|-t]: '-a' produces the 'H_bitstring' assessment using all read bits, '-t' truncates the bitstring used to produce the `H_bitstring` assessment to %d bits. Test all data by default.\n", MIN_SIZE);
+    printf("\t Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.\n");
+    printf("\t -v: Optional verbosity flag for more output. Can be used multiple times.\n");
+    printf("\t -q: Quiet mode, less output to screen. This will override any verbose flags.\n");
+    printf("\t -l <index>,<samples>\tRead the <index> substring of length <samples>.\n");
+    printf("\n");
+    printf("\t Samples are assumed to be packed into 8-bit values, where the least significant 'bits_per_symbol'\n");
+    printf("\t bits constitute the symbol.\n");
+    printf("\n");
+    printf("\t -i: Initial Entropy Estimate (Section 3.1.3)\n");
+    printf("\n");
+    printf("\t\t Computes the initial entropy estimate H_I as described in Section 3.1.3\n");
+    printf("\t\t (not accounting for H_submitter) using the entropy estimators specified in\n");
+    printf("\t\t Section 6.3.  If 'bits_per_symbol' is greater than 1, the samples are also\n");
+    printf("\t\t converted to bitstrings and assessed to create H_bitstring; for multi-bit symbols,\n");
+    printf("\t\t two entropy estimates are computed: H_original and H_bitstring.\n");
+    printf("\t\t Returns min(H_original, bits_per_symbol X H_bitstring). The initial entropy\n");
+    printf("\t\t estimate H_I = min(H_submitter, H_original, bits_per_symbol X H_bitstring).\n");
+    printf("\n");
+    printf("\t -c: Conditioned Sequential Dataset Entropy Estimate (Section 3.1.5.2)\n");
+    printf("\n");
+    printf("\t\t Computes the entropy estimate per bit h' for the conditioned sequential dataset if the\n");
+    printf("\t\t conditioning function is non-vetted. The samples are converted to a bitstring.\n");
+    printf("\t\t Returns h' = min(H_bitstring).\n");
+    printf("\n");
+    printf("\t -o: Set Output Type to JSON\n");
+    printf("\n");
+    printf("\t\t Changes the output format to JSON and sets the file location for the output file.\n");
+    printf("\n");
+    exit(-1);
 }
 
 int main(int argc, char* argv[]){
@@ -58,7 +66,12 @@ int main(int argc, char* argv[]){
 	initial_entropy = true;
 	all_bits = true;
 
-	while ((opt = getopt(argc, argv, "icatvl:")) != -1) {
+    bool quietMode = false;
+    bool jsonOutput = false;
+    string timestamp = getCurrentTimestamp();
+    string outputfilename;
+
+	while ((opt = getopt(argc, argv, "icatvlqo:")) != -1) {
 		switch(opt) {
 			case 'i':
 				initial_entropy = true;
@@ -75,21 +88,29 @@ int main(int argc, char* argv[]){
 			case 'v':
 				verbose++;
 				break;
-                        case 'l':
-                                inint = strtoull(optarg, &nextOption, 0);
-                                if((inint > ULONG_MAX) || (errno == EINVAL) || (nextOption == NULL) || (*nextOption != ',')) {
-                                        print_usage();
-                                }
-                                subsetIndex = inint;
+            case 'l':
+                inint = strtoull(optarg, &nextOption, 0);
+                if((inint > ULONG_MAX) || (errno == EINVAL) || (nextOption == NULL) || (*nextOption != ',')) {
+                    print_usage();
+                }
+                subsetIndex = inint;
 
-                                nextOption++;
+                nextOption++;
 
-                                inint = strtoull(nextOption, NULL, 0);
-                                if((inint > ULONG_MAX) || (errno == EINVAL)) {
-                                        print_usage();
-                                }
-                                subsetSize = inint;
-                                break;
+                inint = strtoull(nextOption, NULL, 0);
+                if((inint > ULONG_MAX) || (errno == EINVAL)) {
+                    print_usage();
+                }
+
+                subsetSize = inint;
+                break;
+            case 'q':
+                quietMode = true;
+                break;
+            case 'o':
+                jsonOutput = true;
+                outputfilename = optarg;
+                break;
 			default:
 				print_usage();
 		}
@@ -104,30 +125,81 @@ int main(int argc, char* argv[]){
 		print_usage();
 	}
 
+    // If quiet mode is enabled, force minimum verbose
+    if (quietMode) {
+        verbose = 0;
+    }
+
 	// get filename
 	file_path = argv[0];
+
+    IidTestRun testRun;
+    testRun.timestamp = timestamp;
+    testRun.filename = file_path;
 
 	if(argc == 2) {
 		// get bits per word
 		data.word_size = atoi(argv[1]);
 		if(data.word_size < 1 || data.word_size > 8){
-			printf("Invalid bits per symbol.\n");
+			
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "Invalid bits per symbol.";
+
+            if (jsonOutput) {
+                ofstream output;
+                output.open(outputfilename);
+                output << testRun.GetAsJson();
+                output.close();
+            }
+
+            printf("Invalid bits per symbol.\n");
 			print_usage();
 		}
 	}
 
-        if(verbose>0) {
-                if(subsetSize == 0) printf("Opening file: '%s'\n", file_path);
-                else printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
+    if(verbose > 0) {
+        if(subsetSize == 0) {
+            printf("Opening file: '%s'\n", file_path);
+        } else {
+            printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
+        }
+    }
+
+    // Record hash of input file
+    char hash[65];
+    sha256_file(file_path, hash);
+    testRun.sha256 = hash;
+
+	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
+
+        testRun.errorLevel = -1;
+        testRun.errorMsg = "Error reading file.";
+
+        if (jsonOutput) {
+            ofstream output;
+            output.open(outputfilename);
+            output << testRun.GetAsJson();
+            output.close();
         }
 
-	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)){
 		printf("Error reading file.\n");
 		print_usage();
 	}
+
 	if(verbose > 0) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
-	if(data.alph_size <= 1){
+	if(data.alph_size <= 1) {
+
+        testRun.errorLevel = -1;
+        testRun.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
+
+        if (jsonOutput) {
+            ofstream output;
+            output.open(outputfilename);
+            output << testRun.GetAsJson();
+            output.close();
+        }
+
 		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
 		free_data(&data);
 		exit(-1);
@@ -137,7 +209,7 @@ int main(int argc, char* argv[]){
 
 	if((verbose > 0) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary samples: %ld\n", data.blen);
 	if(data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
-	if(verbose > 0){
+	if(verbose > 0) {
 		if(data.alph_size < (1 << data.word_size)) printf("\nSamples have been translated\n");
 	}
 
@@ -145,14 +217,21 @@ int main(int argc, char* argv[]){
 	int alphabet_size = data.alph_size;
 	int sample_size = data.len;
 
-	printf("Calculating baseline statistics...\n");
-	calc_stats(&data, rawmean, median);
+    if (!quietMode)
+	   printf("Calculating baseline statistics...\n");
+	
+    calc_stats(&data, rawmean, median);
 
 	if(verbose > 0){
 		printf("\tRaw Mean: %f\n", rawmean);
 		printf("\tMedian: %f\n", median);
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
 	}
+
+    IidTestCase tc;
+    tc.mean = rawmean;
+    tc.median = median;
+    tc.binary = (alphabet_size == 2);
 
 	double H_original = data.word_size;
 	double H_bitstring = 1.0;
@@ -161,64 +240,90 @@ int main(int argc, char* argv[]){
 	if(initial_entropy) {
 		H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal");
 	}
+    tc.h_original = H_original;
 
 	if(((data.alph_size > 2) || !initial_entropy)) {
 		H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
 	}
-
-        if(verbose <= 1) {
-                if(initial_entropy){
-                        printf("H_original: %f\n", H_original);
-                        if(data.alph_size > 2) {
-                                printf("H_bitstring: %f\n", H_bitstring);
-                                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
-                        }
-                } else printf("h': %f\n", H_bitstring);
-        } else {
-                double h_assessed = data.word_size;
-
-                if((data.alph_size > 2) || !initial_entropy) {
-                        h_assessed = min(h_assessed, H_bitstring * data.word_size);
-                        printf("H_bitstring = %.17g\n", H_bitstring);
+    tc.h_bitstring = H_bitstring;
+    
+    double h_assessed = data.word_size;
+    if(verbose <= 1) {
+        if (!quietMode) {
+            if(initial_entropy) {
+                
+                printf("H_original: %f\n", H_original);
+                if(data.alph_size > 2) {
+                    printf("H_bitstring: %f\n", H_bitstring);
+                    printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
                 }
+            } else {
+                printf("h': %f\n", H_bitstring);
+            }
+        }
+    } else {
+        h_assessed = data.word_size;
 
-                if(initial_entropy) {
-                        h_assessed = min(h_assessed, H_original);
-                        printf("H_original: %.17g\n", H_original);
-                }
-
-                printf("Assessed min entropy: %.17g\n", h_assessed);
+        if((data.alph_size > 2) || !initial_entropy) {
+            h_assessed = min(h_assessed, H_bitstring * data.word_size);
+            printf("H_bitstring = %.17g\n", H_bitstring);
         }
 
-	printf("\n");
+        if (initial_entropy) {
+            h_assessed = min(h_assessed, H_original);
+            printf("H_original: %.17g\n", H_original);
+        }
 
-	// Compute chi square stats
-	bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
+        printf("Assessed min entropy: %.17g\n", h_assessed);
+    }
+    tc.h_assessed = h_assessed;
 
-	if(chi_square_test_pass){
-		printf("** Passed chi square tests\n\n");
-	}else{
-		printf("** Failed chi square tests\n\n");
-	}
+    // Compute chi square stats
+    bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
+    tc.passed_chi_square_tests = chi_square_test_pass;
 
-	// Compute length of the longest repeated substring stats
-	bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
+    if (!quietMode) {
+        if (chi_square_test_pass) {
+            printf("** Passed chi square tests\n\n");
+        } else {
+            printf("** Failed chi square tests\n\n");
+        }
+    }
+    
+    // Compute length of the longest repeated substring stats
+    bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
+    tc.passed_longest_repeated_substring_test = len_LRS_test_pass;
 
-	if(len_LRS_test_pass){
-		printf("** Passed length of longest repeated substring test\n\n");
-	}else{
-		printf("** Failed length of longest repeated substring test\n\n");
-	}
+    if (!quietMode) {
+        if (len_LRS_test_pass) {
+            printf("** Passed length of longest repeated substring test\n\n");
+        } else {
+            printf("** Failed length of longest repeated substring test\n\n");
+        }
+    }
+    
+    // Compute permutation stats
+    bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
+    tc.passed_iid_permutation_tests = perm_test_pass;
 
-	// Compute permutation stats
-	bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose);
+    if (!quietMode) {
+        if (perm_test_pass) {
+            printf("** Passed IID permutation tests\n\n");
+        } else {
+            printf("** Failed IID permutation tests\n\n");
+        }        
+    }
 
-	if(perm_test_pass){
-		printf("** Passed IID permutation tests\n\n");
-	}else{
-		printf("** Failed IID permutation tests\n\n");
-	}
+    testRun.testCases.push_back(tc);
+    testRun.errorLevel = 0;
 
-	free_data(&data);
-	return 0;
+    if (jsonOutput) {
+        ofstream output;
+        output.open(outputfilename);
+        output << testRun.GetAsJson();
+        output.close();
+    }
+
+    free_data(&data);
+    return 0;
 }

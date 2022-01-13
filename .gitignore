@@ -10,3 +10,6 @@ ea_conditioning
 ea_restart
 ea_transpose
 .vscode
+*.json
+.DS_Store
+*.res

@@ -14,14 +14,16 @@ Issues on this repository are strictly for problems or questions concerning the 
 
 This code package requires a C++11 compiler. The code uses OpenMP directives, so compiler support for OpenMP is expected. GCC is preferred (and the only platform tested). There is one method that involves a GCC built-in function (`chi_square_tests.h -> binary_goodness_of_fit() -> __builtin_popcount()`). To run this you will need some compiler that supplies this GCC built-in function (GCC and clang both do so).
 
-The resulting binary is linked with bzlib, divsufsort, GMP MP and GNU MPFR, so these libraries (and their associated include files) must be installed and accessible to the compiler.
+The resulting binary is linked with bzlib, divsufsort, jsoncpp, GMP MP and GNU MPFR, so these libraries (and their associated include files) must be installed and accessible to the compiler.
+
+On Ubuntu they can be installed with `apt-get install libbz2-dev libdivsufsort-dev libjsoncpp-dev libssl-dev`.
 
 See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-Packages) for some distribution-specific instructions on installing the mentioned packages.
 
 ## Overview
 
-* `bin/` has binary files for testing
-* `cpp/` holds the new codebase
+* `bin/` has example binary files of random data samples for testing
+* `cpp/` holds the C++ codebase
 
 ## How to run
 

@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
+#include "../shared/TestCase.h"
+#include "../shared/TestResult.h"
 #include <assert.h>
 #include <unistd.h>
 
@@ -481,7 +483,98 @@ void print_results(int C[][3]){
 	cout << endl;
 }
 
-bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose){
+void populateTestCase(IidTestCase &tc, int C[][3]){
+
+    PermutationTestResult tr0;
+    PermutationTestResult tr1;
+    PermutationTestResult tr2;
+    
+    tr0.iteration = 0;
+    tr1.iteration = 1;
+    tr2.iteration = 2;
+    
+    tr0.excursion = C[0][0];
+    tr1.excursion = C[0][1];
+    tr2.excursion = C[0][2];
+
+    tr0.numDirectionalRuns = C[1][0];
+    tr1.numDirectionalRuns = C[1][1];
+    tr2.numDirectionalRuns = C[1][2];
+       
+    tr0.lenDirectionalRuns = C[2][0];
+    tr1.lenDirectionalRuns = C[2][1];
+    tr2.lenDirectionalRuns = C[2][2];
+    
+    tr0.numIncreasesDecreases = C[3][0];
+    tr1.numIncreasesDecreases = C[3][1];
+    tr2.numIncreasesDecreases = C[3][2];
+    
+    tr0.numRunsMedian = C[4][0];
+    tr1.numRunsMedian = C[4][1];
+    tr2.numRunsMedian = C[4][2];
+    
+    tr0.lenRunsMedian = C[5][0];
+    tr1.lenRunsMedian = C[5][1];
+    tr2.lenRunsMedian = C[5][2];
+    
+    tr0.avgCollision = C[6][0];
+    tr1.avgCollision = C[6][1];
+    tr2.avgCollision = C[6][2];
+    
+    tr0.maxCollision = C[7][0];
+    tr1.maxCollision = C[7][1];
+    tr2.maxCollision = C[7][2];
+    
+    tr0.periodicity1 = C[8][0];
+    tr1.periodicity1 = C[8][1];
+    tr2.periodicity1 = C[8][2];
+    
+    tr0.periodicity2 = C[9][0];
+    tr1.periodicity2 = C[9][1];
+    tr2.periodicity2 = C[9][2];
+    
+    tr0.periodicity8 = C[10][0];
+    tr1.periodicity8 = C[10][1];
+    tr2.periodicity8 = C[10][2];
+
+    tr0.periodicity16 = C[11][0];
+    tr1.periodicity16 = C[11][1];
+    tr2.periodicity16 = C[11][2];
+
+    tr0.periodicity32 = C[12][0];
+    tr1.periodicity32 = C[12][1];
+    tr2.periodicity32 = C[12][2];
+
+    tr0.covariance1 = C[13][0];
+    tr1.covariance1 = C[13][1];
+    tr2.covariance1 = C[13][2];
+
+    tr0.covariance2 = C[13][0];
+    tr1.covariance2 = C[13][1];
+    tr2.covariance2 = C[13][2];
+
+    tr0.covariance8 = C[13][0];
+    tr1.covariance8 = C[13][1];
+    tr2.covariance8 = C[13][2];
+    
+    tr0.covariance16 = C[13][0];
+    tr1.covariance16 = C[13][1];
+    tr2.covariance16 = C[13][2];
+
+    tr0.covariance32 = C[13][0];
+    tr1.covariance32 = C[13][1];
+    tr2.covariance32 = C[13][2];
+
+    tr0.compression = C[14][0];
+    tr1.compression = C[14][1];
+    tr2.compression = C[14][2];
+    
+    tc.testResults.push_back(tr0);
+    tc.testResults.push_back(tr1);
+    tc.testResults.push_back(tr2);
+}
+
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose, IidTestCase &tc){
 	uint64_t xoshiro256starstarMainSeed[4];
 	bool istty;
 
@@ -508,7 +601,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	}
 
 	// Run initial tests
-	cout << "Beginning initial tests..." << endl;
+	if(verbose) cout << "Beginning initial tests..." << endl;
 	seed(xoshiro256starstarMainSeed);
 
 	run_tests(dp, dp->symbols, dp->rawsymbols, rawmean, median, t, test_status);
@@ -522,8 +615,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		cout << endl;
 	}
 	
-	cout << "Beginning permutation tests... these may take some time" << endl;
-
+	if(verbose) cout << "Beginning permutation tests... these may take some time" << endl;
 
 	#pragma omp parallel
 	{
@@ -632,8 +724,10 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	} //end parallel
 
 	if(verbose) print_results(C);
-
-	for(unsigned int i = 0; i < num_tests; ++i){
+        
+    populateTestCase(tc, C);
+	
+    for(unsigned int i = 0; i < num_tests; ++i){
 		if((C[i][0] + C[i][1] <= 5) || (C[i][1] + C[i][2] <= 5)){
 			return false;
 	 	}
