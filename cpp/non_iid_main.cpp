@@ -294,8 +294,10 @@ int main(int argc, char* argv[]) {
 
     if (initial_entropy && (data.alph_size == 2)) {
         ret_min_entropy = compression_test(data.symbols, data.len, verbose, "Literal");
-        if (verbose == 1) printf("\ttCompression Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
-        H_original = min(ret_min_entropy, H_original);
+        if (ret_min_entropy >= 0) {
+            if (verbose == 1) printf("\tCompression Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
+            H_original = min(ret_min_entropy, H_original);    
+        }
     }
 
     NonIidTestCase tc634;
