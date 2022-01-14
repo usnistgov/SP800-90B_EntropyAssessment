@@ -4,7 +4,6 @@
 #include <bzlib.h> // sudo apt-get install libbz2-dev
 #include "../shared/utils.h"
 #include "../shared/TestCase.h"
-#include "../shared/TestResult.h"
 #include <assert.h>
 #include <unistd.h>
 

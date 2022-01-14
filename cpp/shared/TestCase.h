@@ -4,8 +4,6 @@
 #include <cstdlib>
 #include <string>
 #include <vector> 
-#include "TestResult.h"
-//#include <jsoncpp/json/json.h>
 
 using namespace std;
 
@@ -53,6 +51,5 @@ public:
     int passed_iid_permutation_tests = -1;
 
     string testCaseNumber;
-    vector<TestResult> testResults;    
 };
 #endif /* TESTCASE_H */

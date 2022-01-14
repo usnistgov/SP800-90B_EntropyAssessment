@@ -3,7 +3,6 @@
 #include "shared/lrs_test.h"
 #include "non_iid/non_iid_test_run.h"
 #include "iid/iid_test_run.h"
-#include "shared/TestRun.h"
 #include "shared/TestRunUtils.h"
 #include "non_iid/collision_test.h"
 #include "non_iid/lz78y_test.h"
