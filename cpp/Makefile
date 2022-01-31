@@ -1,5 +1,12 @@
-CXX = g++
-CXXFLAGS = -std=c++11 -fopenmp -O2 -msse2 -ffloat-store -march=native
+ARCH ?= x86
+
+CXX ?= $(CROSS_COMPILE)g++
+
+CXXFLAGS = -std=c++11 -fopenmp -O2 -ffloat-store
+ifeq ($(ARCH),x86)
+CXXFLAGS += -msse2 -march=native
+endif
+
 #CXX = clang++-8
 #CXXFLAGS = -Wno-padded -Wno-disabled-macro-expansion -Wno-gnu-statement-expression -Wno-bad-function-cast -fopenmp -O1 -fsanitize=address -fsanitize=undefined -fdenormal-fp-math=ieee -msse2 -march=native
 #static analysis in clang using
