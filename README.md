@@ -107,6 +107,12 @@ or
 
 A `Makefile` is provided.
 
+## How to cross-compile
+
+To cross-compiling for a different CPU architecture, set `ARCH` and `CROSS_COMPILE` variables in you Makefile commandline
+
+    make ARCH=aarch64 CROSS_COMPILE=aarch64-linux-gnu-
+
 ## More Information
 
 For more information on the estimation methods, see [SP 800-90B](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90B.pdf).
