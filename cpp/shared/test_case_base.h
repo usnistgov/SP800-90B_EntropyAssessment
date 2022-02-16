@@ -38,7 +38,9 @@ protected:
             baseJson["mcvEstimatePHat"] = mcv_estimate_p_hat;
         if(mcv_estimate_p_u != -1)
             baseJson["mcvEstimatePU"] = mcv_estimate_p_u;
-        baseJson["mcvEstimate"] = literal_mcv_estimate ? "literal" : "bitstring";
+
+        // not needed in every test case, easier to exclude for now
+        //baseJson["mcvEstimate"] = literal_mcv_estimate ? "literal" : "bitstring";
 
         return baseJson;
     }

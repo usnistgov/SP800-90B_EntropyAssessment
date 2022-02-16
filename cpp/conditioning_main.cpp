@@ -614,7 +614,7 @@ int main(int argc, char* argv[]) {
     NonIidTestCase tcOverallnonIid;
 
     tcOverallnonIid.testCaseNumber = "Overall";
-    tcOverallnonIid.vetted = vetted;
+    //tcOverallnonIid.vetted = vetted;
     tcOverallnonIid.n_in = n_in;
     tcOverallnonIid.n_out = n_out;
     tcOverallnonIid.nw = nw;

@@ -25,7 +25,7 @@ public:
     double h_in = -1.0;
     double h_out = -1.0;
     double h_p = -1.0;
-    bool vetted = true;
+    //bool vetted = true;
     
     Json::Value GetAsJson() {
         Json::Value json = TestCaseBase::GetBaseJson();
@@ -60,8 +60,8 @@ public:
             json["h_out"] = h_out;
         if(h_p != -1)
             json["h_p"] = h_p;
-        if(vetted != -1)
-            json["vetted"] = vetted;
+        //if(vetted != -1)
+        //    json["vetted"] = vetted;
         
         return json;
     }
