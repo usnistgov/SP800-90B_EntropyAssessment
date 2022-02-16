@@ -381,7 +381,9 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
                 h_bitstring = min(bin_t_tuple_res, h_bitstring);
             }
 
-            h_bitstring = min(bin_lrs_res, h_bitstring);
+            if (bin_lrs_res >= 0) {
+            	h_bitstring = min(bin_lrs_res, h_bitstring);
+            }
 
             ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, false, "Bitstring");
             if (ret_min_entropy >= 0) {

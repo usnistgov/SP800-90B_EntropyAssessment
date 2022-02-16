@@ -338,13 +338,13 @@ int main(int argc, char* argv[]) {
     tc635.testCaseNumber = "Estimate entropy with t-Tuple Test";
     testRun.testCases.push_back(tc635);
 
-    // Section 6.3.6 - Estimate entropy with LRS Test
-    if (((data.alph_size > 2) || !initial_entropy)) {
+     // Section 6.3.6 - Estimate entropy with LRS Test
+    if ((((data.alph_size > 2) || !initial_entropy)) && (bin_lrs_res >= 0.0)) {
         if (verbose == 1) printf("\tLRS Test Estimate (bit string) = %f / 1 bit(s)\n", bin_lrs_res);
         H_bitstring = min(bin_lrs_res, H_bitstring);
     }
 
-    if (initial_entropy) {
+    if (initial_entropy && (lrs_res >= 0.0)) {
         if (verbose == 1) printf("\tLRS Test Estimate = %f / %d bit(s)\n", lrs_res, data.word_size);
         H_original = min(lrs_res, H_original);
     }
