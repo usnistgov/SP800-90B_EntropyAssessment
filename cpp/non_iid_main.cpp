@@ -222,14 +222,14 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring", tc631);
         if (verbose == 1) printf("\tMost Common Value Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
         H_bitstring = min(ret_min_entropy, H_bitstring);
-        tc631.ret_min_entropy = ret_min_entropy;
+        tc631.h_bitstring = ret_min_entropy;
     }
 
     if (initial_entropy) {
         ret_min_entropy = most_common(data.symbols, data.len, data.alph_size, verbose, "Literal", tc631);
         if (verbose == 1) printf("\tMost Common Value Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
         H_original = min(ret_min_entropy, H_original);
-        tc631.ret_min_entropy = ret_min_entropy;
+        tc631.h_original = ret_min_entropy;
     }
 
     tc631.testCaseNumber = "Estimate entropy with Most Common Value";
@@ -244,14 +244,14 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = collision_test(data.bsymbols, data.blen, verbose, "Bitstring");
         if (verbose == 1) printf("\tCollision Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
         H_bitstring = min(ret_min_entropy, H_bitstring);
-        tc632.ret_min_entropy = ret_min_entropy;
+        tc632.h_bitstring = ret_min_entropy;
     }
 
     if (initial_entropy && (data.alph_size == 2)) {
         ret_min_entropy = collision_test(data.symbols, data.len, verbose, "Literal");
         if (verbose == 1) printf("\tCollision Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
         H_original = min(ret_min_entropy, H_original);
-        tc632.ret_min_entropy = ret_min_entropy;
+        tc632.h_original = ret_min_entropy;
     }
 
     tc632.testCaseNumber = "Estimate entropy with Collision Test (for bit strings only)";
@@ -264,14 +264,14 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = markov_test(data.bsymbols, data.blen, verbose, "Bitstring");
         if (verbose == 1) printf("\tMarkov Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
         H_bitstring = min(ret_min_entropy, H_bitstring);
-        tc633.ret_min_entropy = ret_min_entropy;
+        tc633.h_bitstring = ret_min_entropy;
     }
 
     if (initial_entropy && (data.alph_size == 2)) {
         ret_min_entropy = markov_test(data.symbols, data.len, verbose, "Literal");
         if (verbose == 1) printf("\tMarkov Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
         H_original = min(ret_min_entropy, H_original);
-        tc633.ret_min_entropy = ret_min_entropy;
+        tc633.h_original = ret_min_entropy;
     }
 
     tc633.testCaseNumber = "Estimate entropy with Markov Test (for bit strings only)";
@@ -285,7 +285,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tCompression Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
             H_bitstring = min(ret_min_entropy, H_bitstring);
-            tc634.ret_min_entropy = ret_min_entropy;
+            tc634.h_bitstring = ret_min_entropy;
         }
     }
 
@@ -294,7 +294,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tCompression Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
             H_original = min(ret_min_entropy, H_original);
-            tc634.ret_min_entropy = ret_min_entropy;
+            tc634.h_original = ret_min_entropy;
         }
     }
 
@@ -355,7 +355,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
             H_bitstring = min(ret_min_entropy, H_bitstring);
-            tc637.ret_min_entropy = ret_min_entropy;
+            tc637.h_bitstring = ret_min_entropy;
         }
     }
 
@@ -364,7 +364,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_original = min(ret_min_entropy, H_original);
-            tc637.ret_min_entropy = ret_min_entropy;
+            tc637.h_original = ret_min_entropy;
         }
     }
 
@@ -379,7 +379,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tLag Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
             H_bitstring = min(ret_min_entropy, H_bitstring);
-            tc638.ret_min_entropy = ret_min_entropy;
+            tc638.h_bitstring = ret_min_entropy;
         }
     }
 
@@ -388,7 +388,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tLag Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_original = min(ret_min_entropy, H_original);
-            tc638.ret_min_entropy = ret_min_entropy;
+            tc638.h_original = ret_min_entropy;
         }
     }
 
@@ -403,7 +403,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
             H_bitstring = min(ret_min_entropy, H_bitstring);
-            tc639.ret_min_entropy = ret_min_entropy;
+            tc639.h_bitstring = ret_min_entropy;
         }
     }
 
@@ -412,7 +412,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_original = min(ret_min_entropy, H_original);
-            tc639.ret_min_entropy = ret_min_entropy;
+            tc639.h_original = ret_min_entropy;
         }
     }
 
@@ -427,7 +427,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tLZ78Y Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
             H_bitstring = min(ret_min_entropy, H_bitstring);
-            tc6310.ret_min_entropy = ret_min_entropy;
+            tc6310.h_bitstring = ret_min_entropy;
         }
     }
 
@@ -436,7 +436,7 @@ int main(int argc, char* argv[]) {
         if (ret_min_entropy >= 0) {
             if (verbose == 1) printf("\tLZ78Y Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_original = min(ret_min_entropy, H_original);
-            tc6310.ret_min_entropy = ret_min_entropy;
+            tc6310.h_original = ret_min_entropy;
         }
     }
 
