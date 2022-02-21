@@ -463,7 +463,7 @@ int main(int argc, char* argv[]) {
             	inputfilename = optarg;
             	break;
             case 'c':
-            	iid = (optarg == "iid");
+            	iid = (strcmp(optarg, "iid")==0);
             	break;
             default:
                 print_usage();

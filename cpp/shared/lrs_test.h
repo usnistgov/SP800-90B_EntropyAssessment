@@ -196,8 +196,8 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 
 		t_tuple_res = -log2(pu);
 
-		if(verbose == 1) printf("%s t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", label, u-1, Pmax, pu);
-		else if(verbose == 2) {
+		if(verbose == 2) printf("%s t-Tuple Estimate: t = %ld, p-hat_max = %.17g, p_u = %.17g\n", label, u-1, Pmax, pu);
+		else if(verbose == 3) {
 			printf("%s t-Tuple Estimate: t = %ld\n", label, u-1);
 			printf("%s t-Tuple Estimate: p-hat_max = %.17g\n", label, Pmax);
 			printf("%s t-Tuple Estimate: p_u = %.17g\n", label, pu);
@@ -205,7 +205,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 		}
 
 	} else {
-		if(verbose > 0) printf("t-Tuple Estimate: No strings are repeated 35 times. t-Tuple estimate failed.\n");
+		if(verbose > 1) printf("t-Tuple Estimate: No strings are repeated 35 times. t-Tuple estimate failed.\n");
 		t_tuple_res = -1.0;
 	}
 
@@ -271,8 +271,8 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 
 		lrs_res = -log2(pu);
 
-		if(verbose == 1) printf("%s LRS Estimate: u = %ld, v = %ld, p-hat = %.17g, p_u = %.17g\n", label, u, v, Pmax, pu);
-		else if(verbose == 2) {
+		if(verbose == 2) printf("%s LRS Estimate: u = %ld, v = %ld, p-hat = %.17g, p_u = %.17g\n", label, u, v, Pmax, pu);
+		else if(verbose == 3) {
 			printf("%s LRS Estimate: u = %ld\n", label, u);
 			printf("%s LRS Estimate: v = %ld\n", label, v);
 			printf("%s LRS Estimate: p-hat = %.17g\n", label, Pmax);
@@ -339,7 +339,7 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 	// It is possible for p_col to be exactly 1 (e.g., if the input data is all one symbol)
 	// In this instance, a collision of any length up to L-1 has probability 1.
 	if(p_col > 1.0L - LDBL_EPSILON) {
-		if(verbose > 0) cout << "\tPr(X >= 1) = 1.0" << endl;
+		if(verbose > 1) cout << "\tPr(X >= 1) = 1.0" << endl;
 		return true;
 	}
 	assert(p_col < 1.0L);
@@ -373,7 +373,7 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 	// This is the number of ways of choosing 2 substrings of length W from a string of length L.
 	long int N = n_choose_2(L - W + 1);
 
-	if(verbose > 0){
+	if(verbose > 1){
 		cout << label << "Longest Repeated Substring results" << endl;
 		cout << "\tP_col: " << p_col << endl;
 		cout << "\tLength of LRS: " << W << endl;

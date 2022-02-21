@@ -41,11 +41,11 @@ double collision_test(byte* data, long len, const int verbose, const char *label
 	// X is mean of t_v's, s is sample stdev, where
 	// s^2 = (sum(t_v^2) - sum(t_v)^2/v) / (v-1)
 	X = i / (double)v;
-	if(verbose == 1) printf("%s Collision Estimate: X-bar = %.17g, ", label, X);
+	if(verbose == 2) printf("%s Collision Estimate: X-bar = %.17g, ", label, X);
 	s = sqrt((s - (i*X)) / (v-1));
-	if(verbose == 1) printf("sigma-hat = %.17g, ", s);
+	if(verbose == 2) printf("sigma-hat = %.17g, ", s);
 
-	if(verbose == 2) {
+	if(verbose == 3) {
 		printf("%s Collision Estimate: v = %ld\n", label, v);
 		printf("%s Collision Estimate: Sum t_i = %ld\n", label, i);
 		printf("%s Collision Estimate: X-bar = %.17g\n", label, X);
@@ -57,7 +57,7 @@ double collision_test(byte* data, long len, const int verbose, const char *label
 	//2 is the smallest meaninful value here.
 	if(X < 2.0) X = 2.0;
 
-	if(verbose == 2)
+	if(verbose == 3)
 		printf("%s Collision Estimate: X-bar' = %.17g\n", label, X);
 
 	//Uyen Dinh observed that (with the simpler F function described in UL comments) we can simplify the entire expression much further than in 90B.
@@ -67,15 +67,15 @@ double collision_test(byte* data, long len, const int verbose, const char *label
 	if(X < 2.5) {
 		p = 0.5 + sqrt(1.25 - 0.5 * X);
 		entEst = -log2(p);
-		if(verbose == 2) printf("%s Collision Estimate: Found p.\n", label);
+		if(verbose == 3) printf("%s Collision Estimate: Found p.\n", label);
 	} else {
-		if(verbose == 2) printf("%s Collision Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
+		if(verbose == 3) printf("%s Collision Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
 		p = 0.5;
 		entEst = 1.0;
 	}
 
-	if(verbose == 1) printf("p = %.17g\n", p);
-	else if(verbose == 2) {
+	if(verbose == 2) printf("p = %.17g\n", p);
+	else if(verbose == 3) {
 		printf("%s Collision Estimate: p = %.17g\n", label, p);
 		printf("%s Collision Estimate: min entropy = %.17g\n", label, entEst);
 	}

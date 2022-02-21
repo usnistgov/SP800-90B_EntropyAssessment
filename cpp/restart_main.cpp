@@ -132,7 +132,7 @@ long int simulateBound(double alpha, int k, double H_I) {
 
 int main(int argc, char* argv[]) {
     bool iid;
-    int verbose = 0;
+    int verbose = 1;  //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
     bool quietMode = false;
     char *file_path;
     int r = 1000, c = 1000;
@@ -188,6 +188,8 @@ int main(int argc, char* argv[]) {
     argv++;
     argc--;
 
+    if(quietMode) verbose = 0;
+
     char hash[65];
     sha256_file(file_path, hash);
 
@@ -239,7 +241,7 @@ int main(int argc, char* argv[]) {
         print_usage();
     }
 
-    if (verbose > 0) printf("Opening file: '%s'\n", file_path);
+    if (verbose > 1) printf("Opening file: '%s'\n", file_path);
 
     if (!read_file(file_path, &data)) {
         printf("Error reading file.\n");
@@ -256,7 +258,7 @@ int main(int argc, char* argv[]) {
         print_usage();
     }
 
-    if (verbose > 0) printf("Loaded %ld samples made up of %d distinct %d-bit-wide symbols.\n", data.len, data.alph_size, data.word_size);
+    if (verbose > 1) printf("Loaded %ld samples made up of %d distinct %d-bit-wide symbols.\n", data.len, data.alph_size, data.word_size);
 
     if (H_I > data.word_size) {
         printf("H_I must be at most 'bits_per_symbol'.\n");
@@ -299,7 +301,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    if (verbose > 0) {
+    if (verbose > 1) {
         if (data.alph_size < (1 << data.word_size)) printf("\nSymbols have been translated.\n\n");
     }
 
@@ -322,7 +324,7 @@ int main(int argc, char* argv[]) {
 
     alpha = 1 - exp(log(0.99) / (r + c));
     X_cutoff = simulateBound(alpha, data.alph_size, H_I);
-    if (!quietMode) printf("ALPHA: %.17g, X_cutoff: %ld\n", alpha, X_cutoff);
+    if (verbose > 0) printf("ALPHA: %.17g, X_cutoff: %ld\n", alpha, X_cutoff);
 
     // get maximum row count
     X_r = 0;
@@ -353,16 +355,24 @@ int main(int argc, char* argv[]) {
 
     // perform sanity check on rows and columns of restart data (Section 3.1.4.3)
     X_max = max(X_r, X_c);
-    if (!quietMode) printf("X_max: %ld\n", X_max);
+    if (verbose > 0) printf("X_max: %ld\n", X_max);
     if (X_max > X_cutoff) {
-        printf("\n*** Restart Sanity Check Failed ***\n");
+        if(verbose > 0) printf("\n*** Restart Sanity Check Failed ***\n");
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "Restart Sanity Check Failed.";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
         exit(-1);
-    } else if (verbose > 0) printf("\nRestart Sanity Check Passed...\n");
+    } else if (verbose > 1) printf("\nRestart Sanity Check Passed...\n");
 
     // The maximum min-entropy is -log2(1/2^word_size) = word_size
     H_c = data.word_size;
     H_r = data.word_size;
-    if (!quietMode) {
+    if (verbose > 0) {
         if (iid) printf("\nRunning IID tests...\n\n");
         else printf("\nRunning non-IID tests...\n\n");
 
@@ -371,11 +381,11 @@ int main(int argc, char* argv[]) {
 
     // Section 6.3.1 - Estimate entropy with Most Common Value
     ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
-    if (verbose > 0) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+    if (verbose > 1) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
     H_r = min(ret_min_entropy, H_r);
 
     ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
-    if (verbose > 0) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+    if (verbose > 1) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
     H_c = min(ret_min_entropy, H_c);
 
     NonIidTestCase tc631nonIid;
@@ -398,15 +408,15 @@ int main(int argc, char* argv[]) {
 
         if (data.alph_size == 2) {
 
-            if (!quietMode) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
+            if (verbose > 0) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
             // Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
             ret_min_entropy = collision_test(rdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
+            if (verbose > 1) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
             H_r = min(ret_min_entropy, H_r);
 
             ret_min_entropy = collision_test(cdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
+            if (verbose > 1) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
             H_c = min(ret_min_entropy, H_c);
 
             NonIidTestCase tc632;
@@ -419,11 +429,11 @@ int main(int argc, char* argv[]) {
 
             // Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
             ret_min_entropy = markov_test(rdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
+            if (verbose > 1) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
             H_r = min(ret_min_entropy, H_r);
 
             ret_min_entropy = markov_test(cdata, data.len, verbose, "Literal");
-            if (verbose > 0) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
+            if (verbose > 1) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
             H_c = min(ret_min_entropy, H_c);
 
             NonIidTestCase tc633;
@@ -437,13 +447,13 @@ int main(int argc, char* argv[]) {
             // Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
             ret_min_entropy = compression_test(rdata, data.len, verbose, "Literal");
             if (ret_min_entropy >= 0) {
-                if (verbose > 0) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
+                if (verbose > 1) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
                 H_r = min(ret_min_entropy, H_r);
             }
 
             ret_min_entropy = compression_test(cdata, data.len, verbose, "Literal");
             if (ret_min_entropy >= 0) {
-                if (verbose > 0) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
+                if (verbose > 1) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
                 H_c = min(ret_min_entropy, H_c);
             }
 
@@ -456,7 +466,7 @@ int main(int argc, char* argv[]) {
             testRunNonIid.testCases.push_back(tc634);
         }
 
-        if (!quietMode) printf("\nRunning Tuple Estimates...\n");
+        if (verbose > 0) printf("\nRunning Tuple Estimates...\n");
 
         // Section 6.3.5 - Estimate entropy with t-Tuple Test
         double row_t_tuple_res, row_lrs_res;
@@ -464,10 +474,10 @@ int main(int argc, char* argv[]) {
         SAalgs(rdata, data.len, data.alph_size, row_t_tuple_res, row_lrs_res, verbose, "Literal");
         SAalgs(cdata, data.len, data.alph_size, col_t_tuple_res, col_lrs_res, verbose, "Literal");
 
-        if (verbose > 0) printf("\tT-Tuple Test Estimate (Rows) = %f / %d bit(s)\n", row_t_tuple_res, data.word_size);
+        if (verbose > 1) printf("\tT-Tuple Test Estimate (Rows) = %f / %d bit(s)\n", row_t_tuple_res, data.word_size);
         H_r = min(row_t_tuple_res, H_r);
 
-        if (verbose > 0) printf("\tT-Tuple Test Estimate (Cols) = %f / %d bit(s)\n", col_t_tuple_res, data.word_size);
+        if (verbose > 1) printf("\tT-Tuple Test Estimate (Cols) = %f / %d bit(s)\n", col_t_tuple_res, data.word_size);
         H_c = min(col_t_tuple_res, H_c);
 
         NonIidTestCase tc635;
@@ -479,10 +489,10 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc635);
 
         // Section 6.3.6 - Estimate entropy with LRS Test
-        if (verbose > 0) printf("\tLRS Test Estimate (Rows) = %f / %d bit(s)\n", row_lrs_res, data.word_size);
+        if (verbose > 1) printf("\tLRS Test Estimate (Rows) = %f / %d bit(s)\n", row_lrs_res, data.word_size);
         H_r = min(row_lrs_res, H_r);
 
-        if (verbose > 0) printf("\tLRS Test Estimate (Cols) = %f / %d bit(s)\n", col_lrs_res, data.word_size);
+        if (verbose > 1) printf("\tLRS Test Estimate (Cols) = %f / %d bit(s)\n", col_lrs_res, data.word_size);
         H_c = min(col_lrs_res, H_c);
 
         NonIidTestCase tc636;
@@ -493,18 +503,18 @@ int main(int argc, char* argv[]) {
         tc636.testCaseNumber = "Estimate entropy with LRS Test";
         testRunNonIid.testCases.push_back(tc636);
 
-        if (!quietMode) printf("\nRunning Predictor Estimates...\n");
+        if (verbose > 0) printf("\nRunning Predictor Estimates...\n");
 
         // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
         ret_min_entropy = multi_mcw_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = multi_mcw_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_c = min(ret_min_entropy, H_c);
         }
 
@@ -519,13 +529,13 @@ int main(int argc, char* argv[]) {
         // Section 6.3.8 - Estimate entropy with Lag Prediction Test
         ret_min_entropy = lag_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = lag_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_c = min(ret_min_entropy, H_c);
         }
 
@@ -540,13 +550,13 @@ int main(int argc, char* argv[]) {
         // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
         ret_min_entropy = multi_mmc_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = multi_mmc_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_c = min(ret_min_entropy, H_c);
         }
 
@@ -561,13 +571,13 @@ int main(int argc, char* argv[]) {
         // Section 6.3.10 - Estimate entropy with LZ78Y Test
         ret_min_entropy = LZ78Y_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = LZ78Y_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
-            if (verbose > 0) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            if (verbose > 1) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
             H_c = min(ret_min_entropy, H_c);
         }
 
@@ -580,12 +590,25 @@ int main(int argc, char* argv[]) {
         testRunNonIid.testCases.push_back(tc6310);
     }
 
-    if (!quietMode) {
+    if (verbose > 0) {
         printf("\n");
         printf("H_r: %f\n", H_r);
         printf("H_c: %f\n", H_c);
         printf("H_I: %f\n", H_I);
         printf("\n");
+    }
+
+    if (min(H_r, H_c) < H_I / 2.0) {
+        if(verbose > 0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
+        if (jsonOutput) {
+            testRunIid.errorLevel = -1;
+            testRunIid.errorMsg = "min(H_r, H_c) < H_I/2, Validation Testing Failed.";
+            ofstream output;
+            output.open(outputfilename);
+            output << testRunIid.GetAsJson();
+            output.close();
+        }
+        exit(-1);
     }
 
     IidTestCase tcOverallIid;
@@ -607,12 +630,9 @@ int main(int argc, char* argv[]) {
         output.close();
 
     }
-    if (!quietMode) {
-        if (min(H_r, H_c) < H_I / 2.0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
-        else {
-            printf("Validation Test Passed...\n\n");
-            printf("min(H_r, H_c, H_I): %f\n\n", min(min(H_r, H_c), H_I));
-        }
+    if (verbose > 0) {
+        printf("Validation Test Passed...\n\n");
+        printf("min(H_r, H_c, H_I): %f\n\n", min(min(H_r, H_c), H_I));
     }
     free(cdata);
     free_data(&data);
