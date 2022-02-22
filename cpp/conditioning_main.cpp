@@ -356,9 +356,7 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
         // NON-IID path
         h_assessed = data.word_size;
         double ret_min_entropy = 0.0;
-        double h_original = data.word_size;
         double bin_t_tuple_res = -1.0, bin_lrs_res = -1.0;
-        double t_tuple_res = -1.0, lrs_res = -1.0;
 
         if (data.alph_size > 2) {
             
@@ -421,7 +419,7 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
 }
 
 int main(int argc, char* argv[]) {
-	bool vetted, quietMode = false, iid;
+	bool vetted, quietMode = false, iid=false;
 	long double h_p = -1.0L;
 	long double h_in, h_out; 
 	unsigned int n_in, n_out, nw, n;

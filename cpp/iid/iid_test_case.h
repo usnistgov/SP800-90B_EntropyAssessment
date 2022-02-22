@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <vector> 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include "permutation_test_result.h"
 #include "../shared/test_case_base.h"
@@ -47,7 +47,7 @@ public:
             json["h_i"] = h_i;
 
         Json::Value permutationTestResults;
-        for (int i = 0; i < testResults.size(); i++) {
+        for (int i = 0; i < (int)testResults.size(); i++) {
             permutationTestResults[i] = testResults[i].GetAsJson();
         }
 

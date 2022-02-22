@@ -285,7 +285,6 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 //
 // Can handle binary and non-binary data
 unsigned int compression(const byte data[], const int sample_size, const byte max_symbol){
-	char buffer[5];
 	char *msg;
 	unsigned int curlen = 0;
 	char *curmsg;
