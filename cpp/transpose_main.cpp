@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-	int verbose = 0;
+	int verbose = 1;
 	const int r=1000;
 	const int c=1000;
 	int opt;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 		print_usage();
 	}
 
-        if(verbose>0) {
+        if(verbose>1) {
                 if(subsetSize == 0) printf("Opening input file: '%s'\n", argv[0]);
                 else printf("Opening file: '%s', reading block %ld of size %ld\n", argv[0], subsetIndex, subsetSize);
         }
@@ -76,14 +76,14 @@ int main(int argc, char* argv[])
                 print_usage();
         }
 
-	if(verbose > 0) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
+	if(verbose > 1) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
 	if(data.len != r*c) {
                 printf("Data must be %d samples.\n", r*c);
                 print_usage();
 	}
 
-	if(verbose>0) printf("Opening output file: '%s'\n", argv[1]);
+	if(verbose>1) printf("Opening output file: '%s'\n", argv[1]);
 	if((fp = fopen(argv[1], "wb"))==NULL) {
 		perror("Can't open output file");
                 print_usage();

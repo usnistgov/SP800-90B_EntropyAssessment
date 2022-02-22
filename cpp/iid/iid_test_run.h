@@ -15,7 +15,7 @@ public:
         json["IID"] = IID;
 
         Json::Value testCasesJson;
-        for (int i = 0; i < testCases.size(); i++){
+        for (int i = 0; i < (int)testCases.size(); i++){
             testCasesJson[i] = testCases[i].GetAsJson();
         }
 

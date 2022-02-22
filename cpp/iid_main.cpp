@@ -52,7 +52,7 @@
 int main(int argc, char* argv[]){
 
 	bool initial_entropy, all_bits;
-	int verbose = 0;
+	int verbose = 1;  //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
 	double rawmean, median;
 	char* file_path;
 	data_t data;
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-    if(verbose > 0) {
+    if(verbose > 1) {
         if(subsetSize == 0) {
             printf("Opening file: '%s'\n", file_path);
         } else {
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]){
 		print_usage();
 	}
 
-	if(verbose > 0) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
+	if(verbose > 1) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
 	if(data.alph_size <= 1) {
 
@@ -207,9 +207,9 @@ int main(int argc, char* argv[]){
 
 	if(!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
 
-	if((verbose > 0) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary samples: %ld\n", data.blen);
+	if((verbose > 1) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary samples: %ld\n", data.blen);
 	if(data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
-	if(verbose > 0) {
+	if(verbose > 1) {
 		if(data.alph_size < (1 << data.word_size)) printf("\nSamples have been translated\n");
 	}
 
@@ -217,12 +217,12 @@ int main(int argc, char* argv[]){
 	int alphabet_size = data.alph_size;
 	int sample_size = data.len;
 
-    if (!quietMode)
+    if (verbose >= 1)
 	   printf("Calculating baseline statistics...\n");
 	
     calc_stats(&data, rawmean, median);
 
-	if(verbose > 0){
+	if(verbose > 1){
 		printf("\tRaw Mean: %f\n", rawmean);
 		printf("\tMedian: %f\n", median);
 		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
@@ -248,20 +248,17 @@ int main(int argc, char* argv[]){
     tc.h_bitstring = H_bitstring;
     
     double h_assessed = data.word_size;
-    if(verbose <= 1) {
-        if (!quietMode) {
-            if(initial_entropy) {
-                
-                printf("H_original: %f\n", H_original);
-                if(data.alph_size > 2) {
-                    printf("H_bitstring: %f\n", H_bitstring);
-                    printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
-                }
-            } else {
-                printf("h': %f\n", H_bitstring);
+    if((verbose == 1) || (verbose == 2)) {
+        if(initial_entropy) {
+            printf("H_original: %f\n", H_original);
+            if(data.alph_size > 2) {
+                printf("H_bitstring: %f\n", H_bitstring);
+                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
             }
+        } else {
+            printf("h': %f\n", H_bitstring);
         }
-    } else {
+    } else if(verbose > 2) {
         h_assessed = data.word_size;
 
         if((data.alph_size > 2) || !initial_entropy) {
@@ -282,7 +279,7 @@ int main(int argc, char* argv[]){
     bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
     tc.passed_chi_square_tests = chi_square_test_pass;
 
-    if (!quietMode) {
+    if (verbose > 0) {
         if (chi_square_test_pass) {
             printf("** Passed chi square tests\n\n");
         } else {
@@ -294,7 +291,7 @@ int main(int argc, char* argv[]){
     bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
     tc.passed_longest_repeated_substring_test = len_LRS_test_pass;
 
-    if (!quietMode) {
+    if (verbose>0) {
         if (len_LRS_test_pass) {
             printf("** Passed length of longest repeated substring test\n\n");
         } else {
@@ -306,7 +303,7 @@ int main(int argc, char* argv[]){
     bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
     tc.passed_iid_permutation_tests = perm_test_pass;
 
-    if (!quietMode) {
+    if (verbose > 0) {
         if (perm_test_pass) {
             printf("** Passed IID permutation tests\n\n");
         } else {

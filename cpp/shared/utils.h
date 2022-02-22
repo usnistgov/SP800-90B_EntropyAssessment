@@ -915,10 +915,10 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 
 	entEst = -log2(curMax);
 
-	if(verbose == 1) {
+	if(verbose == 2) {
 		if(p_local > 0.0) printf("%s %s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal = %.17g (r = %ld)\n", label, testname, N, p_globalPrime, C, p_local, max_run_len+1);
 		else printf("%s %s Prediction Estimate: N = %ld, Pglobal' = %.17g (C = %ld) Plocal can't affect result (r = %ld)\n", label, testname, N, p_globalPrime, C, max_run_len+1);
-	} else if(verbose == 2) {
+	} else if(verbose == 3) {
 		printf("%s %s Prediction Estimate: C = %ld\n", label, testname, C);
 		printf("%s %s Prediction Estimate: r = %ld\n", label, testname, max_run_len + 1);
 		printf("%s %s Prediction Estimate: N = %ld\n", label, testname, N);

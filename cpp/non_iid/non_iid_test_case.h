@@ -2,7 +2,7 @@
 #define NONIIDTESTCASE_H
 
 #include <string>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include "../shared/test_case_base.h"
 

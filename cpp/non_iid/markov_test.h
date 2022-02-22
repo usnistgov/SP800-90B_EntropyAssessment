@@ -51,8 +51,8 @@ double markov_test(byte* data, long len, const int verbose, const char *label){
 	P_0 = C_0 / (double)len;
 	P_1 = 1.0 - P_0;
 
-	if(verbose == 1) printf("%s Markov Estimate: P_0 = %.17g, P_1 = %.17g, P_0,0 = %.17g, P_0,1 = %.17g, P_1,0 = %.17g, P_1,1 = %.17g, ", label, P_0, P_1, P_00, P_01, P_10, P_11);
-	else if(verbose == 2) {
+	if(verbose == 2) printf("%s Markov Estimate: P_0 = %.17g, P_1 = %.17g, P_0,0 = %.17g, P_0,1 = %.17g, P_1,0 = %.17g, P_1,1 = %.17g, ", label, P_0, P_1, P_00, P_01, P_10, P_11);
+	else if(verbose == 3) {
 		printf("%s Markov Estimate: P_0 = %.17g\n", label, P_0);
 		printf("%s Markov Estimate: P_1 = %.17g\n", label, P_1);
 		printf("%s Markov Estimate: P_{0,0} = %.17g\n", label, P_00);
@@ -104,8 +104,8 @@ double markov_test(byte* data, long len, const int verbose, const char *label){
 
 	entEst = fmin(H_min/128.0, 1.0);
 
-	if(verbose == 1) printf("p_max = %.17g\n", pow(2.0, -H_min));
-	else if(verbose == 2) {
+	if(verbose == 2) printf("p_max = %.17g\n", pow(2.0, -H_min));
+	else if(verbose == 3) {
 		printf("%s Markov Estimate: p-hat_max = %.17g\n", label, pow(2.0, -H_min));
 		printf("%s Markov Estimate: min entropy = %.17g\n", label, entEst);
 	}

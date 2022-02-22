@@ -130,10 +130,10 @@ double compression_test(byte* data, long len, const int verbose, const char *lab
 	X /= v;
 	sigma = 0.5907 * sqrt(sigma/(v-1.0) - X*X);
 
-	if(verbose == 1) {
+	if(verbose == 2) {
 		printf("%s Compression Estimate: X-bar = %.17g, ", label, X);
 		printf("sigma-hat = %.17g, ", sigma);
-	} else if(verbose == 2) {
+	} else if(verbose == 3) {
 		printf("%s Compression Estimate: X-bar = %.17g\n", label, X);
 		printf("%s Compression Estimate: sigma-hat = %.17g\n", label, sigma);
 	}
@@ -141,7 +141,7 @@ double compression_test(byte* data, long len, const int verbose, const char *lab
         // binary search for p
 	X -= ZALPHA * sigma/sqrt(v);
 
-	if(verbose == 2) printf("%s Compression Estimate: X-bar' = %.17g\n", label, X);
+	if(verbose == 3) printf("%s Compression Estimate: X-bar' = %.17g\n", label, X);
 
 	if(com_exp(1.0/(double)alph_size, alph_size, d, num_blocks) > X) {
 		ldomain = 1.0 / (double)alph_size;
@@ -228,15 +228,15 @@ double compression_test(byte* data, long len, const int verbose, const char *lab
 	if(p > 1.0 / (double)alph_size) {
         	entEst = -log2(p)/b;
 	
-		if(verbose == 2) printf("%s Compression Estimate: Found p.\n", label);
+		if(verbose == 3) printf("%s Compression Estimate: Found p.\n", label);
 	} else {
 		p = 1.0 / (double)alph_size;
 		entEst = 1.0;
-		if(verbose == 2) printf("%s Compression Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
+		if(verbose == 3) printf("%s Compression Estimate: Could Not Find p. Proceeding with the lower bound for p.\n", label);
 	}
 
-	if(verbose == 1) printf("p = %.17g\n", p);
-	else if(verbose == 2) {
+	if(verbose == 2) printf("p = %.17g\n", p);
+	else if(verbose == 3) {
 		printf("%s Compression Estimate: p = %.17g\n", label, p);
 		printf("%s Compression Estimate: min entropy = %.17g\n", label, entEst);
 	}

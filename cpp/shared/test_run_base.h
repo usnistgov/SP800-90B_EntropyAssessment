@@ -2,7 +2,7 @@
 #define TESTRUN_H
 
 #include <string>
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 using namespace std;
 

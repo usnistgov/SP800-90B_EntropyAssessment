@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <vector> 
-#include <jsoncpp/json/json.h>
+#include <json/json.h>
 
 #include "permutation_test_result.h"
 #include "../shared/test_case_base.h"
@@ -32,14 +32,12 @@ public:
             json["mean"] = mean;
         if (median != -1)
             json["median"] = median;
-        if (binary != -1)
+        if (binary)
             json["binary"] = binary;
-        if (passed_chi_square_tests != -1)
-            json["passedChiSquareTests"] = passed_chi_square_tests;
-        if (passed_longest_repeated_substring_test != -1)
-            json["passedLongestRepeatedSubstringTest"] = passed_longest_repeated_substring_test;
-        if (passed_iid_permutation_tests != -1)
-            json["passedIidPermutationTests"] = passed_iid_permutation_tests;
+
+        json["passedChiSquareTests"] = passed_chi_square_tests;
+        json["passedLongestRepeatedSubstringTest"] = passed_longest_repeated_substring_test;
+        json["passedIidPermutationTests"] = passed_iid_permutation_tests;
 
         if (h_r != -1)
             json["h_r"] = h_r;
@@ -49,7 +47,7 @@ public:
             json["h_i"] = h_i;
 
         Json::Value permutationTestResults;
-        for (int i = 0; i < testResults.size(); i++) {
+        for (int i = 0; i < (int)testResults.size(); i++) {
             permutationTestResults[i] = testResults[i].GetAsJson();
         }
 

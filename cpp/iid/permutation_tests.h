@@ -285,7 +285,6 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 //
 // Can handle binary and non-binary data
 unsigned int compression(const byte data[], const int sample_size, const byte max_symbol){
-	char buffer[5];
 	char *msg;
 	unsigned int curlen = 0;
 	char *curmsg;
@@ -600,12 +599,12 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	}
 
 	// Run initial tests
-	if(verbose) cout << "Beginning initial tests..." << endl;
+	if(verbose > 1) cout << "Beginning initial tests..." << endl;
 	seed(xoshiro256starstarMainSeed);
 
 	run_tests(dp, dp->symbols, dp->rawsymbols, rawmean, median, t, test_status);
 
-	if(verbose){
+	if(verbose > 1){
 		cout << endl << "Initial test results" << endl;
 		for(unsigned int i = 0; i < num_tests; i++){
 			cout << setw(23) << test_names[i] << ": ";
@@ -614,7 +613,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 		cout << endl;
 	}
 	
-	if(verbose) cout << "Beginning permutation tests... these may take some time" << endl;
+	if(verbose > 1) cout << "Beginning permutation tests... these may take some time" << endl;
 
 	#pragma omp parallel
 	{
@@ -673,7 +672,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 					completed ++;
 				} // end resultUpdate
 
-				if(verbose){
+				if(verbose > 1) {
 					int res;
 					/* Construct pretty output regardless of whether on terminal (tty) or 
 					* redirected to another file descriptor (eg. redirect to file).
@@ -722,7 +721,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
         	delete[](rawdata);
 	} //end parallel
 
-	if(verbose) print_results(C);
+	if(verbose > 1) print_results(C);
         
     populateTestCase(tc, C);
 	

@@ -25,8 +25,8 @@ double most_common(byte* data, const long len, const int alph_size, const int ve
 
 	ubound = min(1.0,pmax + ZALPHA*sqrt(pmax*(1.0-pmax)/(len-1.0)));
 	entEst = -log2(ubound);
-	if(verbose == 1) printf("%s MCV Estimate: mode = %ld, p-hat = %.17g, p_u = %.17g\n", label, mode, pmax, ubound);
-	else if(verbose == 2) {
+	if(verbose == 2) printf("%s MCV Estimate: mode = %ld, p-hat = %.17g, p_u = %.17g\n", label, mode, pmax, ubound);
+	else if(verbose == 3) {
 		printf("%s Most Common Value Estimate: Mode count = %ld\n", label, mode);
 		printf("%s Most Common Value Estimate: p-hat = %.17g\n", label, pmax);
 		printf("%s Most Common Value Estimate: p_u = %.17g\n", label, ubound);
