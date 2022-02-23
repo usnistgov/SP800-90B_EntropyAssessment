@@ -16,7 +16,7 @@ This code package requires a C++11 compiler. The code uses OpenMP directives, so
 
 The resulting binary is linked with bzlib, divsufsort, jsoncpp, GMP MP and GNU MPFR, so these libraries (and their associated include files) must be installed and accessible to the compiler.
 
-On Ubuntu they can be installed with `apt-get install libbz2-dev libdivsufsort-dev libjsoncpp-dev libssl-dev`.
+On Ubuntu they can be installed with `apt-get install libbz2-dev libdivsufsort-dev libjsoncpp-dev libssl-dev libmpfr-dev`.
 
 See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-Packages) for some distribution-specific instructions on installing the mentioned packages.
 
