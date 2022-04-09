@@ -294,7 +294,7 @@ unsigned int compression(const byte data[], const int sample_size, const byte ma
 	// Build string of bytes
 	// Reserve the necessary size sample_size*(floor(log10(max_symbol))+2)
 	// This is "worst case" and accounts for the space at the end of the number, as well.
-	msg = new char[(size_t)(floor(log10(max_symbol))+2.0)*sample_size];
+	msg = new char[(size_t)(floor(log10(max_symbol))+2.0)*sample_size+1];
 	msg[0] = '\0';
 	curmsg = msg;
 
