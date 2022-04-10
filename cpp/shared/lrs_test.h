@@ -339,7 +339,12 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 	// It is possible for p_col to be exactly 1 (e.g., if the input data is all one symbol)
 	// In this instance, a collision of any length up to L-1 has probability 1.
 	if(p_col > 1.0L - LDBL_EPSILON) {
-		if(verbose > 1) cout << "\tPr(X >= 1) = 1.0" << endl;
+		if(verbose == 2) {
+			printf("\tPr(X >= 1) = 1.0\n");
+		} else if(verbose > 2) {
+			printf("%s Longest Repeated Substring: P_col = 1.0\n", label);
+			printf("%s Longest Repeated Substring: Pr(X >= 1) = 1.0\n", label);
+		} 
 		return true;
 	}
 	assert(p_col < 1.0L);
@@ -373,10 +378,15 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 	// This is the number of ways of choosing 2 substrings of length W from a string of length L.
 	long int N = n_choose_2(L - W + 1);
 
-	if(verbose > 1){
-		cout << label << "Longest Repeated Substring results" << endl;
-		cout << "\tP_col: " << p_col << endl;
-		cout << "\tLength of LRS: " << W << endl;
+	if(verbose > 1) {
+		if(verbose > 2) {
+			printf("%s Longest Repeated Substring results: P_col = %.22Lg\n", label, p_col);
+			printf("%s Longest Repeated Substring results: W = %d\n", label, W);
+		} else {
+			printf("%s Longest Repeated Substring results\n", label);
+			printf("\tP_col: %Lf\n", p_col);
+			printf("\tLength of LRS: %d\n", W);
+		}
 
 		// Calculate the probability of not encountering a collision after N sets of independent pairs;
 		// this is an application of the Binomial Distribution.
@@ -392,10 +402,10 @@ bool len_LRS_test(const byte data[], const int L, const int k, const int verbose
 		// in this case, this probability isn't accurately representable using the precision that we have to work with, but it is expected to
 		// round reasonably.
 		long double probNoCols = expl(((long double)N)*logProbNoColsPerPair);
-		if((probNoCols <= 1.0L - LDBL_EPSILON) && (probNoCols >= LDBL_EPSILON)) {
-			cout << "\tPr(X >= 1): " << 1.0L - probNoCols << endl;
+		if(verbose > 2) {
+			printf("%s Longest Repeated Substring results: Pr(X >= 1) = %.22Lg\n",  label, 1.0L - probNoCols);
 		} else {
-			cout << "\tPr(X >= 1) rounds to " << 1.0L - probNoCols << ", but there is precision loss. The test verdict is still expected to be valid." << endl;
+			printf("\tPr(X >= 1): %Lf\n", 1.0L - probNoCols);
 		}
 	}
 

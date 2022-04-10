@@ -480,10 +480,11 @@ int main(int argc, char* argv[]) {
     } else if(verbose > 2) {
         if((data.alph_size > 2) || !initial_entropy) {
             printf("H_bitstring = %.17g\n", H_bitstring);
+            printf("H_bitstring Per Symbol = %.17g\n", H_bitstring * data.word_size);
         }
 
         if (initial_entropy) {
-            printf("H_original: %.17g\n", H_original);
+            printf("H_original = %.17g\n", H_original);
         }
 
         printf("Assessed min entropy: %.17g\n", h_assessed);

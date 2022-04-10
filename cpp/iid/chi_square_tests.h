@@ -648,11 +648,15 @@ bool chi_square_tests(const byte data[], const int sample_size, const int alphab
 	pvalue = chi_square_pvalue(score, df);
 
 	// Print results
-	if(verbose > 1){
+	if(verbose == 2) {
 		printf("Chi square independence\n");
 		printf("\tscore = %f\n", score);
 		printf("\tdegrees of freedom = %d\n", df);
 		printf("\tp-value = %f\n\n", pvalue);
+	} else if(verbose >= 3) {
+		printf("Chi square independence: T = %.17g\n", score);
+		printf("Chi square independence: df = %d\n", df);
+		printf("Chi square independence: P-value = %.17g\n", pvalue);
 	}
 
 	// Check result to return if test failed
@@ -674,11 +678,15 @@ bool chi_square_tests(const byte data[], const int sample_size, const int alphab
 	pvalue = chi_square_pvalue(score, df);
 
 	// Print results
-	if(verbose > 1){
+	if(verbose == 2) {
 		printf("Chi square goodness of fit\n");
 		printf("\tscore = %f\n", score);
 		printf("\tdegrees of freedom = %d\n", df);
 		printf("\tp-value = %f\n\n", pvalue);
+	} else if(verbose >= 3) {
+		printf("Chi square goodness of fit: T = %.17g\n", score);
+		printf("Chi square goodness of fit: df = %d\n", df);
+		printf("Chi square goodness of fit: P-value = %.17g\n", pvalue);
 	}
 
 	// Check result to return if test failed
