@@ -1,3 +1,6 @@
+/* VERSION information is kept in utils.h. Please update when a new version is released */
+
+
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
@@ -46,51 +49,61 @@
     printf("\n");
     printf("\t\t Changes the output format to JSON and sets the file location for the output file.\n");
     printf("\n");
+    printf("\t --version: Prints tool version information");
+    printf("\n");
     exit(-1);
 }
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
 
-	bool initial_entropy, all_bits;
-	int verbose = 1;  //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
-	double rawmean, median;
-	char* file_path;
-	data_t data;
-	int opt;
-	unsigned long subsetIndex = ULONG_MAX;
-	unsigned long subsetSize = 0;
-	unsigned long long inint;
-	char *nextOption;
+    bool initial_entropy, all_bits;
+    int verbose = 1; //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
+    double rawmean, median;
+    char* file_path;
+    data_t data;
+    int opt;
+    unsigned long subsetIndex = ULONG_MAX;
+    unsigned long subsetSize = 0;
+    unsigned long long inint;
+    char *nextOption;
 
-	data.word_size = 0;
-	initial_entropy = true;
-	all_bits = true;
+    data.word_size = 0;
+    initial_entropy = true;
+    all_bits = true;
 
     bool quietMode = false;
     bool jsonOutput = false;
     string timestamp = getCurrentTimestamp();
     string outputfilename;
 
-	while ((opt = getopt(argc, argv, "icatvlqo:")) != -1) {
-		switch(opt) {
-			case 'i':
-				initial_entropy = true;
-				break;
-			case 'c':
-				initial_entropy = false;
-				break;
-			case 'a':
-				all_bits = true;
-				break;
-			case 't':
-				all_bits = false;
-				break;
-			case 'v':
-				verbose++;
-				break;
+    for(int i = 0; i < argc; i++) {
+        std::string Str = std::string(argv[i]);
+        if("--version" == Str) {
+            printVersion("iid");
+            exit(0);
+        }    
+    }
+ 
+    while ((opt = getopt(argc, argv, "icatvlqo:")) != -1) {
+        switch (opt) {
+            case 'i':
+                initial_entropy = true;
+                break;
+            case 'c':
+                initial_entropy = false;
+                break;
+            case 'a':
+                all_bits = true;
+                break;
+            case 't':
+                all_bits = false;
+                break;
+            case 'v':
+                verbose++;
+                break;
             case 'l':
                 inint = strtoull(optarg, &nextOption, 0);
-                if((inint > ULONG_MAX) || (errno == EINVAL) || (nextOption == NULL) || (*nextOption != ',')) {
+                if ((inint > ULONG_MAX) || (errno == EINVAL) || (nextOption == NULL) || (*nextOption != ',')) {
                     print_usage();
                 }
                 subsetIndex = inint;
@@ -98,7 +111,7 @@ int main(int argc, char* argv[]){
                 nextOption++;
 
                 inint = strtoull(nextOption, NULL, 0);
-                if((inint > ULONG_MAX) || (errno == EINVAL)) {
+                if ((inint > ULONG_MAX) || (errno == EINVAL)) {
                     print_usage();
                 }
 
@@ -111,37 +124,37 @@ int main(int argc, char* argv[]){
                 jsonOutput = true;
                 outputfilename = optarg;
                 break;
-			default:
-				print_usage();
-		}
-	}
+            default:
+                print_usage();
+        }
+    }
 
-	argc -= optind;
-	argv += optind;
+    argc -= optind;
+    argv += optind;
 
-	// Parse args
-	if((argc != 2) && (argc != 1)){
-		printf("Incorrect usage.\n");
-		print_usage();
-	}
+    // Parse args
+    if ((argc != 2) && (argc != 1)) {
+        printf("Incorrect usage.\n");
+        print_usage();
+    }
 
     // If quiet mode is enabled, force minimum verbose
     if (quietMode) {
         verbose = 0;
     }
 
-	// get filename
-	file_path = argv[0];
+    // get filename
+    file_path = argv[0];
 
     IidTestRun testRun;
     testRun.timestamp = timestamp;
     testRun.filename = file_path;
 
-	if(argc == 2) {
-		// get bits per word
-		data.word_size = atoi(argv[1]);
-		if(data.word_size < 1 || data.word_size > 8){
-			
+    if (argc == 2) {
+        // get bits per word
+        data.word_size = atoi(argv[1]);
+        if (data.word_size < 1 || data.word_size > 8) {
+
             testRun.errorLevel = -1;
             testRun.errorMsg = "Invalid bits per symbol.";
 
@@ -153,12 +166,12 @@ int main(int argc, char* argv[]){
             }
 
             printf("Invalid bits per symbol.\n");
-			print_usage();
-		}
-	}
+            print_usage();
+        }
+    }
 
-    if(verbose > 1) {
-        if(subsetSize == 0) {
+    if (verbose > 1) {
+        if (subsetSize == 0) {
             printf("Opening file: '%s'\n", file_path);
         } else {
             printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
@@ -170,7 +183,7 @@ int main(int argc, char* argv[]){
     sha256_file(file_path, hash);
     testRun.sha256 = hash;
 
-	if(!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
+    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
 
         testRun.errorLevel = -1;
         testRun.errorMsg = "Error reading file.";
@@ -182,13 +195,13 @@ int main(int argc, char* argv[]){
             output.close();
         }
 
-		printf("Error reading file.\n");
-		print_usage();
-	}
+        printf("Error reading file.\n");
+        print_usage();
+    }
 
-	if(verbose > 1) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
+    if (verbose > 1) printf("Loaded %ld samples of %d distinct %d-bit-wide symbols\n", data.len, data.alph_size, data.word_size);
 
-	if(data.alph_size <= 1) {
+    if (data.alph_size <= 1) {
 
         testRun.errorLevel = -1;
         testRun.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
@@ -200,68 +213,68 @@ int main(int argc, char* argv[]){
             output.close();
         }
 
-		printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
-		free_data(&data);
-		exit(-1);
-	}
+        printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
+        free_data(&data);
+        exit(-1);
+    }
 
-	if(!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
+    if (!all_bits && (data.blen > MIN_SIZE)) data.blen = MIN_SIZE;
 
-	if((verbose > 1) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary samples: %ld\n", data.blen);
-	if(data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
-	if(verbose > 1) {
-		if(data.alph_size < (1 << data.word_size)) printf("\nSamples have been translated\n");
-	}
+    if ((verbose > 1) && ((data.alph_size > 2) || !initial_entropy)) printf("Number of Binary samples: %ld\n", data.blen);
+    if (data.len < MIN_SIZE) printf("\n*** Warning: data contains less than %d samples ***\n\n", MIN_SIZE);
+    if (verbose > 1) {
+        if (data.alph_size < (1 << data.word_size)) printf("\nSamples have been translated\n");
+    }
 
-	// Calculate baseline statistics
-	int alphabet_size = data.alph_size;
-	int sample_size = data.len;
+    // Calculate baseline statistics
+    int alphabet_size = data.alph_size;
+    int sample_size = data.len;
 
     if (verbose >= 1)
-	   printf("Calculating baseline statistics...\n");
-	
+        printf("Calculating baseline statistics...\n");
+
     calc_stats(&data, rawmean, median);
 
-	if(verbose > 1){
-		printf("\tRaw Mean: %f\n", rawmean);
-		printf("\tMedian: %f\n", median);
-		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
-	}
+    if (verbose > 1) {
+        printf("\tRaw Mean: %f\n", rawmean);
+        printf("\tMedian: %f\n", median);
+        printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
+    }
 
     IidTestCase tc;
     tc.mean = rawmean;
     tc.median = median;
     tc.binary = (alphabet_size == 2);
 
-	double H_original = data.word_size;
-	double H_bitstring = 1.0;
+    double H_original = data.word_size;
+    double H_bitstring = 1.0;
 
-	// Compute the min-entropy of the dataset
-	if(initial_entropy) {
-		H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal");
-	}
+    // Compute the min-entropy of the dataset
+    if (initial_entropy) {
+        H_original = most_common(data.symbols, sample_size, alphabet_size, verbose, "Literal");
+    }
     tc.h_original = H_original;
 
-	if(((data.alph_size > 2) || !initial_entropy)) {
-		H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
-	}
+    if (((data.alph_size > 2) || !initial_entropy)) {
+        H_bitstring = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+    }
     tc.h_bitstring = H_bitstring;
-    
+
     double h_assessed = data.word_size;
-    if((verbose == 1) || (verbose == 2)) {
-        if(initial_entropy) {
+    if ((verbose == 1) || (verbose == 2)) {
+        if (initial_entropy) {
             printf("H_original: %f\n", H_original);
-            if(data.alph_size > 2) {
+            if (data.alph_size > 2) {
                 printf("H_bitstring: %f\n", H_bitstring);
-                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
+                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size * H_bitstring));
             }
         } else {
             printf("h': %f\n", H_bitstring);
         }
-    } else if(verbose > 2) {
+    } else if (verbose > 2) {
         h_assessed = data.word_size;
 
-        if((data.alph_size > 2) || !initial_entropy) {
+        if ((data.alph_size > 2) || !initial_entropy) {
             h_assessed = min(h_assessed, H_bitstring * data.word_size);
             printf("H_bitstring = %.17g\n", H_bitstring);
         }
@@ -286,19 +299,19 @@ int main(int argc, char* argv[]){
             printf("** Failed chi square tests\n\n");
         }
     }
-    
+
     // Compute length of the longest repeated substring stats
     bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
     tc.passed_longest_repeated_substring_test = len_LRS_test_pass;
 
-    if (verbose>0) {
+    if (verbose > 0) {
         if (len_LRS_test_pass) {
             printf("** Passed length of longest repeated substring test\n\n");
         } else {
             printf("** Failed length of longest repeated substring test\n\n");
         }
     }
-    
+
     // Compute permutation stats
     bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
     tc.passed_iid_permutation_tests = perm_test_pass;
@@ -308,7 +321,7 @@ int main(int argc, char* argv[]){
             printf("** Passed IID permutation tests\n\n");
         } else {
             printf("** Failed IID permutation tests\n\n");
-        }        
+        }
     }
 
     testRun.testCases.push_back(tc);

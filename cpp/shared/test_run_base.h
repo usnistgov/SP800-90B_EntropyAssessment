@@ -3,6 +3,7 @@
 
 #include <string>
 #include <json/json.h>
+#include "utils.h"
 
 using namespace std;
 
@@ -23,6 +24,7 @@ protected:
         baseJson["sha256"] = sha256;
         baseJson["errorLevel"] = errorLevel;
         baseJson["type"] = type;
+        baseJson["toolVersion"] = VERSION;
 
         if (errorLevel != 0){
             baseJson["errorMessage"] = errorMsg;

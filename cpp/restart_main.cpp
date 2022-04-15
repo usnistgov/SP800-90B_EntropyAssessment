@@ -1,3 +1,5 @@
+/* VERSION information is kept in utils.h. Please update when a new version is released */
+
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
@@ -41,6 +43,8 @@
     printf("\t If the restart data passes the sanity check and validation test, this program returns\n");
     printf("\t min(H_r, H_c, H_I), which is either the validated entropy assessment or used to derive\n");
     printf("\t 'h_in' if conditioning is used (Section 3.1.5).\n");
+    printf("\n");
+    printf("\t --version: Prints tool version information");
     printf("\n");
     exit(-1);
 }
@@ -151,6 +155,14 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename = timestamp + ".json";
 
+    for(int i = 0; i < argc; i++) {
+        std::string Str = std::string(argv[i]);
+        if("--version" == Str) {
+            printVersion("restart");
+            exit(0);
+        }    
+    }
+    
     while ((opt = getopt(argc, argv, "invqo:")) != -1) {
         switch (opt) {
             case 'i':

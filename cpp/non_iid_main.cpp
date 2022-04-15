@@ -1,3 +1,5 @@
+/* VERSION information is kept in utils.h. Please update when a new version is released */
+
 #include "shared/utils.h"
 #include "shared/most_common.h"
 #include "shared/lrs_test.h"
@@ -50,10 +52,13 @@
     printf("\n");
     printf("\t\t Changes the output format to JSON and sets the file location for the output file.\n");
     printf("\n");
+    printf("\t --version: Prints tool version information");
+    printf("\n");
     exit(-1);
 }
 
 int main(int argc, char* argv[]) {
+
     bool initial_entropy, all_bits;
     int verbose = 1; //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
     bool quietMode = false;
@@ -76,6 +81,14 @@ int main(int argc, char* argv[]) {
     initial_entropy = true;
     all_bits = true;
 
+    for(int i = 0; i < argc; i++) {
+        std::string Str = std::string(argv[i]);
+        if("--version" == Str) {
+            printVersion("noniid");
+            exit(0);
+        }    
+    }
+    
     while ((opt = getopt(argc, argv, "icatvqlo:")) != -1) {
         switch (opt) {
             case 'i':
