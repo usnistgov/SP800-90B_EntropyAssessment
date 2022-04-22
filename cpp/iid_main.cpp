@@ -230,16 +230,20 @@ int main(int argc, char* argv[]) {
     int alphabet_size = data.alph_size;
     int sample_size = data.len;
 
-    if (verbose >= 1)
-        printf("Calculating baseline statistics...\n");
-
+    if ((verbose == 1) || (verbose == 2))
+	   printf("Calculating baseline statistics...\n");
+	
     calc_stats(&data, rawmean, median);
 
-    if (verbose > 1) {
-        printf("\tRaw Mean: %f\n", rawmean);
-        printf("\tMedian: %f\n", median);
-        printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
-    }
+	if(verbose == 2) {
+		printf("\tRaw Mean: %f\n", rawmean);
+		printf("\tMedian: %f\n", median);
+		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
+	} else if(verbose > 2) {
+		printf("Raw Mean = %.17g\n", rawmean);
+		printf("Median = %.17g\n", median);
+		printf("Binary = %s\n", (alphabet_size == 2 ? "true" : "false"));
+	}
 
     IidTestCase tc;
     tc.mean = rawmean;
@@ -277,11 +281,12 @@ int main(int argc, char* argv[]) {
         if ((data.alph_size > 2) || !initial_entropy) {
             h_assessed = min(h_assessed, H_bitstring * data.word_size);
             printf("H_bitstring = %.17g\n", H_bitstring);
+            printf("H_bitstring Per Symbol = %.17g\n", H_bitstring * data.word_size);
         }
 
         if (initial_entropy) {
             h_assessed = min(h_assessed, H_original);
-            printf("H_original: %.17g\n", H_original);
+            printf("H_original = %.17g\n", H_original);
         }
 
         printf("Assessed min entropy: %.17g\n", h_assessed);
@@ -292,11 +297,17 @@ int main(int argc, char* argv[]) {
     bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
     tc.passed_chi_square_tests = chi_square_test_pass;
 
-    if (verbose > 0) {
+    if ((verbose == 1) || (verbose == 2)) {
         if (chi_square_test_pass) {
             printf("** Passed chi square tests\n\n");
         } else {
             printf("** Failed chi square tests\n\n");
+        }
+    } else if(verbose > 2) {
+        if (chi_square_test_pass) {
+            printf("Chi square tests: Passed\n");
+        } else {
+            printf("Chi square tests: Failed\n");
         }
     }
 
@@ -304,11 +315,17 @@ int main(int argc, char* argv[]) {
     bool len_LRS_test_pass = len_LRS_test(data.symbols, sample_size, alphabet_size, verbose, "Literal");
     tc.passed_longest_repeated_substring_test = len_LRS_test_pass;
 
-    if (verbose > 0) {
+    if ((verbose == 1) || (verbose == 2)) {
         if (len_LRS_test_pass) {
             printf("** Passed length of longest repeated substring test\n\n");
         } else {
             printf("** Failed length of longest repeated substring test\n\n");
+        }
+    } else if(verbose > 2) {
+        if (len_LRS_test_pass) {
+            printf("Length of longest repeated substring test: Passed\n");
+        } else {
+            printf("Length of longest repeated substring test: Failed\n");
         }
     }
 
@@ -316,12 +333,18 @@ int main(int argc, char* argv[]) {
     bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
     tc.passed_iid_permutation_tests = perm_test_pass;
 
-    if (verbose > 0) {
+    if ((verbose == 1) || (verbose == 2)) {
         if (perm_test_pass) {
             printf("** Passed IID permutation tests\n\n");
         } else {
             printf("** Failed IID permutation tests\n\n");
-        }
+        }        
+    } else if(verbose > 2) {
+        if (perm_test_pass) {
+            printf("IID permutation tests: Passed\n");
+        } else {
+            printf("IID permutation tests: Failed\n");
+        }        
     }
 
     testRun.testCases.push_back(tc);

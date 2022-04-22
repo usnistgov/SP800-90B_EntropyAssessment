@@ -294,7 +294,7 @@ unsigned int compression(const byte data[], const int sample_size, const byte ma
 	// Build string of bytes
 	// Reserve the necessary size sample_size*(floor(log10(max_symbol))+2)
 	// This is "worst case" and accounts for the space at the end of the number, as well.
-	msg = new char[(size_t)(floor(log10(max_symbol))+2.0)*sample_size];
+	msg = new char[(size_t)(floor(log10(max_symbol))+2.0)*sample_size+1];
 	msg[0] = '\0';
 	curmsg = msg;
 
@@ -463,7 +463,7 @@ void run_tests(const data_t *dp, const byte data[], const byte rawdata[], const 
  * ---------------------------------------------
  */
 
-void print_results(int C[][3]){
+void print_results(int C[][3], const int verbose){
 	cout << endl << endl;
 	cout << "                statistic  C[i][0]  C[i][1]  C[i][2]" << endl;
 	cout << "----------------------------------------------------" << endl;
@@ -599,21 +599,25 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 	}
 
 	// Run initial tests
-	if(verbose > 1) cout << "Beginning initial tests..." << endl;
+	if(verbose == 2) cout << "Beginning initial tests..." << endl;
 	seed(xoshiro256starstarMainSeed);
 
 	run_tests(dp, dp->symbols, dp->rawsymbols, rawmean, median, t, test_status);
 
-	if(verbose > 1){
+	if(verbose == 2) {
 		cout << endl << "Initial test results" << endl;
 		for(unsigned int i = 0; i < num_tests; i++){
 			cout << setw(23) << test_names[i] << ": ";
 			cout << t[i] << endl;
 		}
 		cout << endl;
+	} else if (verbose >= 3) {
+		for(unsigned int i = 0; i < num_tests; i++){
+			printf("Permutation testing: Unpermuted result %s = %.22Lg\n", test_names[i].c_str(), t[i]);
+		}
 	}
 	
-	if(verbose > 1) cout << "Beginning permutation tests... these may take some time" << endl;
+	if(verbose == 2) cout << "Beginning permutation tests... these may take some time" << endl;
 
 	#pragma omp parallel
 	{
@@ -672,7 +676,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 					completed ++;
 				} // end resultUpdate
 
-				if(verbose > 1) {
+				if(verbose == 2) {
 					int res;
 					/* Construct pretty output regardless of whether on terminal (tty) or 
 					* redirected to another file descriptor (eg. redirect to file).
@@ -721,7 +725,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
         	delete[](rawdata);
 	} //end parallel
 
-	if(verbose > 1) print_results(C);
+	if(verbose > 1) print_results(C, verbose);
         
     populateTestCase(tc, C);
 	
