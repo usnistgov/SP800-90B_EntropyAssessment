@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
         }    
     }
  
-    while ((opt = getopt(argc, argv, "icatvlqo:")) != -1) {
+    while ((opt = getopt(argc, argv, "icatvl:qo:")) != -1) {
         switch (opt) {
             case 'i':
                 initial_entropy = true;
