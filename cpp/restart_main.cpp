@@ -408,13 +408,13 @@ int main(int argc, char* argv[]) {
     tc631nonIid.testCaseNumber = "Estimate entropy with Most Common Value";
     testRunNonIid.testCases.push_back(tc631nonIid);
 
-    NonIidTestCase tc631Iid;
+    IidTestCase tc631Iid;
     tc631Iid.ret_min_entropy = ret_min_entropy;
     tc631Iid.data_word_size = data.word_size;
     tc631Iid.h_r = H_r;
     tc631Iid.h_c = H_c;
     tc631Iid.testCaseNumber = "Estimate entropy with Most Common Value";
-    testRunNonIid.testCases.push_back(tc631Iid);
+    testRunIid.testCases.push_back(tc631Iid);
 
     if (!iid) {
 

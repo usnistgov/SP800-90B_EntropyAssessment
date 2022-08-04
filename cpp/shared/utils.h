@@ -36,7 +36,7 @@
 #define ZALPHA 2.5758293035489008
 
 //Version of the tool
-#define VERSION "1.1.3"
+#define VERSION "1.1.4"
 
 typedef unsigned char byte;
 
