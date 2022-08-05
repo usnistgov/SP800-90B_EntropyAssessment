@@ -405,7 +405,7 @@ int main(int argc, char* argv[]) {
     tc631nonIid.data_word_size = data.word_size;
     tc631nonIid.h_r = H_r;
     tc631nonIid.h_c = H_c;
-    tc631nonIid.testCaseNumber = "Estimate entropy with Most Common Value";
+    tc631nonIid.testCaseNumber = "Most Common Value";
     testRunNonIid.testCases.push_back(tc631nonIid);
 
     IidTestCase tc631Iid;
@@ -413,7 +413,7 @@ int main(int argc, char* argv[]) {
     tc631Iid.data_word_size = data.word_size;
     tc631Iid.h_r = H_r;
     tc631Iid.h_c = H_c;
-    tc631Iid.testCaseNumber = "Estimate entropy with Most Common Value";
+    tc631Iid.testCaseNumber = "Most Common Value";
     testRunIid.testCases.push_back(tc631Iid);
 
     if (!iid) {
@@ -436,7 +436,7 @@ int main(int argc, char* argv[]) {
             tc632.data_word_size = data.word_size;
             tc632.h_r = H_r;
             tc632.h_c = H_c;
-            tc632.testCaseNumber = "Estimate entropy with Collision Test (for bit strings only)";
+            tc632.testCaseNumber = "Collision Test (for bit strings only)";
             testRunNonIid.testCases.push_back(tc632);
 
             // Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
@@ -453,7 +453,7 @@ int main(int argc, char* argv[]) {
             tc633.data_word_size = data.word_size;
             tc633.h_r = H_r;
             tc633.h_c = H_c;
-            tc633.testCaseNumber = "Estimate entropy with Markov Test (for bit strings only)";
+            tc633.testCaseNumber = "Markov Test (for bit strings only)";
             testRunNonIid.testCases.push_back(tc633);
 
             // Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
@@ -474,7 +474,7 @@ int main(int argc, char* argv[]) {
             tc634.data_word_size = data.word_size;
             tc634.h_r = H_r;
             tc634.h_c = H_c;
-            tc634.testCaseNumber = "Estimate entropy with Compression Test (for bit strings only)";
+            tc634.testCaseNumber = "Compression Test (for bit strings only)";
             testRunNonIid.testCases.push_back(tc634);
         }
 
@@ -497,7 +497,7 @@ int main(int argc, char* argv[]) {
         tc635.data_word_size = data.word_size;
         tc635.h_r = H_r;
         tc635.h_c = H_c;
-        tc635.testCaseNumber = "Estimate entropy with t-Tuple Test";
+        tc635.testCaseNumber = "T-Tuple Test";
         testRunNonIid.testCases.push_back(tc635);
 
         // Section 6.3.6 - Estimate entropy with LRS Test
@@ -512,7 +512,7 @@ int main(int argc, char* argv[]) {
         tc636.data_word_size = data.word_size;
         tc636.h_r = H_r;
         tc636.h_c = H_c;
-        tc636.testCaseNumber = "Estimate entropy with LRS Test";
+        tc636.testCaseNumber = "LRS Test";
         testRunNonIid.testCases.push_back(tc636);
 
         if (verbose > 0) printf("\nRunning Predictor Estimates...\n");
@@ -535,7 +535,7 @@ int main(int argc, char* argv[]) {
         tc637.data_word_size = data.word_size;
         tc637.h_r = H_r;
         tc637.h_c = H_c;
-        tc637.testCaseNumber = "Estimate entropy with Multi Most Common in Window Test";
+        tc637.testCaseNumber = "Multi Most Common in Window Test";
         testRunNonIid.testCases.push_back(tc637);
 
         // Section 6.3.8 - Estimate entropy with Lag Prediction Test
@@ -556,7 +556,7 @@ int main(int argc, char* argv[]) {
         tc638.data_word_size = data.word_size;
         tc638.h_r = H_r;
         tc638.h_c = H_c;
-        tc638.testCaseNumber = "Estimate entropy with Lag Prediction Test";
+        tc638.testCaseNumber = "Lag Prediction Test";
         testRunNonIid.testCases.push_back(tc638);
 
         // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
@@ -577,7 +577,7 @@ int main(int argc, char* argv[]) {
         tc639.data_word_size = data.word_size;
         tc639.h_r = H_r;
         tc639.h_c = H_c;
-        tc639.testCaseNumber = "Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)";
+        tc639.testCaseNumber = "Multi Markov Model with Counting Test (MultiMMC)";
         testRunNonIid.testCases.push_back(tc639);
 
         // Section 6.3.10 - Estimate entropy with LZ78Y Test
@@ -598,7 +598,7 @@ int main(int argc, char* argv[]) {
         tc6310.data_word_size = data.word_size;
         tc6310.h_r = H_r;
         tc6310.h_c = H_c;
-        tc6310.testCaseNumber = "Estimate entropy with LZ78Y Test";
+        tc6310.testCaseNumber = "LZ78Y Test";
         testRunNonIid.testCases.push_back(tc6310);
     }
 
