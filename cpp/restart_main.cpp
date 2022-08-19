@@ -136,7 +136,7 @@ long int simulateBound(double alpha, int k, double H_I) {
 
 int main(int argc, char* argv[]) {
     bool iid;
-    int verbose = 1;  //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
+    int verbose = 1; //verbose 0 is for JSON output, 1 is the normal mode, 2 is the NIST tool verbose mode, and 3 is for extra verbose output
     bool quietMode = false;
     char *file_path;
     int r = 1000, c = 1000;
@@ -155,14 +155,14 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename = timestamp + ".json";
 
-    for(int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
-        if("--version" == Str) {
+        if ("--version" == Str) {
             printVersion("restart");
             exit(0);
-        }    
+        }
     }
-    
+
     while ((opt = getopt(argc, argv, "invqo:")) != -1) {
         switch (opt) {
             case 'i':
@@ -200,7 +200,7 @@ int main(int argc, char* argv[]) {
     argv++;
     argc--;
 
-    if(quietMode) verbose = 0;
+    if (quietMode) verbose = 0;
 
     char hash[65];
     sha256_file(file_path, hash);
@@ -369,7 +369,7 @@ int main(int argc, char* argv[]) {
     X_max = max(X_r, X_c);
     if (verbose > 0) printf("X_max: %ld\n", X_max);
     if (X_max > X_cutoff) {
-        if(verbose > 0) printf("\n*** Restart Sanity Check Failed ***\n");
+        if (verbose > 0) printf("\n*** Restart Sanity Check Failed ***\n");
         if (jsonOutput) {
             testRunIid.errorLevel = -1;
             testRunIid.errorMsg = "Restart Sanity Check Failed.";
@@ -392,28 +392,29 @@ int main(int argc, char* argv[]) {
     }
 
     // Section 6.3.1 - Estimate entropy with Most Common Value
+
+    NonIidTestCase tc631nonIid;
+    tc631nonIid.testCaseNumber = "Most Common Value";
+    tc631nonIid.data_word_size = data.word_size;
+     
+    IidTestCase tc631Iid;
+    tc631Iid.testCaseNumber = "Most Common Value";
+    tc631Iid.data_word_size = data.word_size;
+      
     ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
     if (verbose > 1) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+    tc631nonIid.h_r = ret_min_entropy;
+    tc631Iid.h_r = ret_min_entropy;
+    
     H_r = min(ret_min_entropy, H_r);
 
     ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
     if (verbose > 1) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+    tc631nonIid.h_c = ret_min_entropy;
+    tc631Iid.h_c = ret_min_entropy;
     H_c = min(ret_min_entropy, H_c);
 
-    NonIidTestCase tc631nonIid;
-    tc631nonIid.ret_min_entropy = ret_min_entropy;
-    tc631nonIid.data_word_size = data.word_size;
-    tc631nonIid.h_r = H_r;
-    tc631nonIid.h_c = H_c;
-    tc631nonIid.testCaseNumber = "Most Common Value";
     testRunNonIid.testCases.push_back(tc631nonIid);
-
-    IidTestCase tc631Iid;
-    tc631Iid.ret_min_entropy = ret_min_entropy;
-    tc631Iid.data_word_size = data.word_size;
-    tc631Iid.h_r = H_r;
-    tc631Iid.h_c = H_c;
-    tc631Iid.testCaseNumber = "Most Common Value";
     testRunIid.testCases.push_back(tc631Iid);
 
     if (!iid) {
@@ -423,183 +424,187 @@ int main(int argc, char* argv[]) {
             if (verbose > 0) printf("\nRunning Entropic Statistic Estimates (bit strings only)...\n");
 
             // Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
+
+            NonIidTestCase tc632;
+            tc632.testCaseNumber = "Collision Test (for bit strings only)";
+            tc632.data_word_size = 1;
             ret_min_entropy = collision_test(rdata, data.len, verbose, "Literal");
             if (verbose > 1) printf("\tCollision Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
+            tc632.h_r = ret_min_entropy;
             H_r = min(ret_min_entropy, H_r);
 
             ret_min_entropy = collision_test(cdata, data.len, verbose, "Literal");
             if (verbose > 1) printf("\tCollision Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
+            tc632.h_c = ret_min_entropy;
             H_c = min(ret_min_entropy, H_c);
 
-            NonIidTestCase tc632;
-            tc632.ret_min_entropy = ret_min_entropy;
-            tc632.data_word_size = data.word_size;
-            tc632.h_r = H_r;
-            tc632.h_c = H_c;
-            tc632.testCaseNumber = "Collision Test (for bit strings only)";
             testRunNonIid.testCases.push_back(tc632);
 
             // Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
+
+            NonIidTestCase tc633;
+            tc633.testCaseNumber = "Markov Test (for bit strings only)";
+            tc633.data_word_size = 1;
+
             ret_min_entropy = markov_test(rdata, data.len, verbose, "Literal");
             if (verbose > 1) printf("\tMarkov Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
+            tc633.h_r = ret_min_entropy;
             H_r = min(ret_min_entropy, H_r);
 
             ret_min_entropy = markov_test(cdata, data.len, verbose, "Literal");
             if (verbose > 1) printf("\tMarkov Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
+            tc633.h_c = ret_min_entropy;
             H_c = min(ret_min_entropy, H_c);
 
-            NonIidTestCase tc633;
-            tc633.ret_min_entropy = ret_min_entropy;
-            tc633.data_word_size = data.word_size;
-            tc633.h_r = H_r;
-            tc633.h_c = H_c;
-            tc633.testCaseNumber = "Markov Test (for bit strings only)";
             testRunNonIid.testCases.push_back(tc633);
 
             // Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
+
+            NonIidTestCase tc634;
+            tc634.testCaseNumber = "Compression Test (for bit strings only)";
+            tc634.data_word_size = 1;
+
             ret_min_entropy = compression_test(rdata, data.len, verbose, "Literal");
             if (ret_min_entropy >= 0) {
                 if (verbose > 1) printf("\tCompression Test Estimate (Rows) = %f / 1 bit(s)\n", ret_min_entropy);
+                tc634.h_r = ret_min_entropy;
                 H_r = min(ret_min_entropy, H_r);
             }
 
             ret_min_entropy = compression_test(cdata, data.len, verbose, "Literal");
             if (ret_min_entropy >= 0) {
                 if (verbose > 1) printf("\tCompression Test Estimate (Cols) = %f / 1 bit(s)\n", ret_min_entropy);
+                tc634.h_c = ret_min_entropy;
                 H_c = min(ret_min_entropy, H_c);
             }
-
-            NonIidTestCase tc634;
-            tc634.ret_min_entropy = ret_min_entropy;
-            tc634.data_word_size = data.word_size;
-            tc634.h_r = H_r;
-            tc634.h_c = H_c;
-            tc634.testCaseNumber = "Compression Test (for bit strings only)";
             testRunNonIid.testCases.push_back(tc634);
+
         }
+
 
         if (verbose > 0) printf("\nRunning Tuple Estimates...\n");
 
         // Section 6.3.5 - Estimate entropy with t-Tuple Test
+
+        NonIidTestCase tc635;
+        tc635.testCaseNumber = "T-Tuple Test";
+        tc635.data_word_size = data.word_size;
+
         double row_t_tuple_res, row_lrs_res;
         double col_t_tuple_res, col_lrs_res;
         SAalgs(rdata, data.len, data.alph_size, row_t_tuple_res, row_lrs_res, verbose, "Literal");
         SAalgs(cdata, data.len, data.alph_size, col_t_tuple_res, col_lrs_res, verbose, "Literal");
 
         if (verbose > 1) printf("\tT-Tuple Test Estimate (Rows) = %f / %d bit(s)\n", row_t_tuple_res, data.word_size);
+        tc635.h_r = row_t_tuple_res;
         H_r = min(row_t_tuple_res, H_r);
 
         if (verbose > 1) printf("\tT-Tuple Test Estimate (Cols) = %f / %d bit(s)\n", col_t_tuple_res, data.word_size);
+        tc635.h_c = col_t_tuple_res;
         H_c = min(col_t_tuple_res, H_c);
 
-        NonIidTestCase tc635;
-        tc635.ret_min_entropy = ret_min_entropy;
-        tc635.data_word_size = data.word_size;
-        tc635.h_r = H_r;
-        tc635.h_c = H_c;
-        tc635.testCaseNumber = "T-Tuple Test";
         testRunNonIid.testCases.push_back(tc635);
-
         // Section 6.3.6 - Estimate entropy with LRS Test
+
+        NonIidTestCase tc636;
+        tc636.testCaseNumber = "LRS Test";
+        tc636.data_word_size = data.word_size;
+
         if (verbose > 1) printf("\tLRS Test Estimate (Rows) = %f / %d bit(s)\n", row_lrs_res, data.word_size);
+        tc636.h_r = row_lrs_res;
         H_r = min(row_lrs_res, H_r);
 
         if (verbose > 1) printf("\tLRS Test Estimate (Cols) = %f / %d bit(s)\n", col_lrs_res, data.word_size);
+        tc636.h_c = col_lrs_res;
         H_c = min(col_lrs_res, H_c);
 
-        NonIidTestCase tc636;
-        tc636.ret_min_entropy = ret_min_entropy;
-        tc636.data_word_size = data.word_size;
-        tc636.h_r = H_r;
-        tc636.h_c = H_c;
-        tc636.testCaseNumber = "LRS Test";
         testRunNonIid.testCases.push_back(tc636);
 
         if (verbose > 0) printf("\nRunning Predictor Estimates...\n");
 
         // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
+
+        NonIidTestCase tc637;
+        tc637.testCaseNumber = "Multi Most Common in Window Test";
+        tc637.data_word_size = data.word_size;
+
         ret_min_entropy = multi_mcw_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc637.h_r = ret_min_entropy;
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = multi_mcw_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc637.h_c = ret_min_entropy;
             H_c = min(ret_min_entropy, H_c);
         }
 
-        NonIidTestCase tc637;
-        tc637.ret_min_entropy = ret_min_entropy;
-        tc637.data_word_size = data.word_size;
-        tc637.h_r = H_r;
-        tc637.h_c = H_c;
-        tc637.testCaseNumber = "Multi Most Common in Window Test";
         testRunNonIid.testCases.push_back(tc637);
-
         // Section 6.3.8 - Estimate entropy with Lag Prediction Test
+
+        NonIidTestCase tc638;
+        tc638.testCaseNumber = "Lag Prediction Test";
+        tc638.data_word_size = data.word_size;
+
         ret_min_entropy = lag_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tLag Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc638.h_r = ret_min_entropy;
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = lag_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tLag Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc638.h_c = ret_min_entropy;
             H_c = min(ret_min_entropy, H_c);
         }
-
-        NonIidTestCase tc638;
-        tc638.ret_min_entropy = ret_min_entropy;
-        tc638.data_word_size = data.word_size;
-        tc638.h_r = H_r;
-        tc638.h_c = H_c;
-        tc638.testCaseNumber = "Lag Prediction Test";
         testRunNonIid.testCases.push_back(tc638);
 
         // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
+        NonIidTestCase tc639;
+        tc639.testCaseNumber = "Multi Markov Model with Counting Test (MultiMMC)";
+        tc639.data_word_size = data.word_size;
+        
         ret_min_entropy = multi_mmc_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc639.h_r = ret_min_entropy;
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = multi_mmc_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc639.h_c = ret_min_entropy;
             H_c = min(ret_min_entropy, H_c);
         }
-
-        NonIidTestCase tc639;
-        tc639.ret_min_entropy = ret_min_entropy;
-        tc639.data_word_size = data.word_size;
-        tc639.h_r = H_r;
-        tc639.h_c = H_c;
-        tc639.testCaseNumber = "Multi Markov Model with Counting Test (MultiMMC)";
         testRunNonIid.testCases.push_back(tc639);
 
         // Section 6.3.10 - Estimate entropy with LZ78Y Test
+
+        NonIidTestCase tc6310;
+        tc6310.testCaseNumber = "LZ78Y Test";
+        tc6310.data_word_size = data.word_size;
+
         ret_min_entropy = LZ78Y_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tLZ78Y Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc6310.h_r = ret_min_entropy;
             H_r = min(ret_min_entropy, H_r);
         }
 
         ret_min_entropy = LZ78Y_test(cdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tLZ78Y Prediction Test Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
+            tc6310.h_c = ret_min_entropy;
             H_c = min(ret_min_entropy, H_c);
         }
-
-        NonIidTestCase tc6310;
-        tc6310.ret_min_entropy = ret_min_entropy;
-        tc6310.data_word_size = data.word_size;
-        tc6310.h_r = H_r;
-        tc6310.h_c = H_c;
-        tc6310.testCaseNumber = "LZ78Y Test";
         testRunNonIid.testCases.push_back(tc6310);
+
     }
 
     if (verbose > 0) {
@@ -611,7 +616,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (min(H_r, H_c) < H_I / 2.0) {
-        if(verbose > 0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
+        if (verbose > 0) printf("*** min(H_r, H_c) < H_I/2, Validation Testing Failed ***\n");
         if (jsonOutput) {
             testRunIid.errorLevel = -1;
             testRunIid.errorMsg = "min(H_r, H_c) < H_I/2, Validation Testing Failed.";
@@ -630,6 +635,15 @@ int main(int argc, char* argv[]) {
     tcOverallIid.testCaseNumber = "Overall";
     testRunIid.testCases.push_back(tcOverallIid);
     testRunIid.errorLevel = 0;
+
+    NonIidTestCase tcOverallNonIid;
+    tcOverallNonIid.h_r = H_r;
+    tcOverallNonIid.h_c = H_c;
+    tcOverallNonIid.h_i = H_I;
+    tcOverallNonIid.testCaseNumber = "Overall";
+    testRunNonIid.testCases.push_back(tcOverallNonIid);
+    testRunNonIid.errorLevel = 0;
+
 
     if (jsonOutput) {
         ofstream output;
