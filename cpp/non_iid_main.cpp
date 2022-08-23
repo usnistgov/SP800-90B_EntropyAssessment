@@ -234,18 +234,18 @@ int main(int argc, char* argv[]) {
     if (((data.alph_size > 2) || !initial_entropy)) {
         ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring", tc631);
         if (verbose == 2) printf("\tMost Common Value Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-        H_bitstring = min(ret_min_entropy, H_bitstring);
         tc631.h_bitstring = ret_min_entropy;
+        H_bitstring = min(ret_min_entropy, H_bitstring);
     }
 
     if (initial_entropy) {
         ret_min_entropy = most_common(data.symbols, data.len, data.alph_size, verbose, "Literal", tc631);
         if (verbose == 2) printf("\tMost Common Value Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-        H_original = min(ret_min_entropy, H_original);
         tc631.h_original = ret_min_entropy;
+        H_original = min(ret_min_entropy, H_original);
     }
 
-    tc631.testCaseNumber = "Estimate entropy with Most Common Value";
+    tc631.testCaseNumber = "Most Common Value";
     testRun.testCases.push_back(tc631);
 
     // Section 6.3.2 - Estimate entropy with Collision Test (for bit strings only)
@@ -256,18 +256,18 @@ int main(int argc, char* argv[]) {
     if (((data.alph_size > 2) || !initial_entropy)) {
         ret_min_entropy = collision_test(data.bsymbols, data.blen, verbose, "Bitstring");
         if (verbose == 2) printf("\tCollision Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-        H_bitstring = min(ret_min_entropy, H_bitstring);
         tc632.h_bitstring = ret_min_entropy;
+        H_bitstring = min(ret_min_entropy, H_bitstring);
     }
 
     if (initial_entropy && (data.alph_size == 2)) {
         ret_min_entropy = collision_test(data.symbols, data.len, verbose, "Literal");
         if (verbose == 2) printf("\tCollision Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
-        H_original = min(ret_min_entropy, H_original);
         tc632.h_original = ret_min_entropy;
+        H_original = min(ret_min_entropy, H_original);
     }
 
-    tc632.testCaseNumber = "Estimate entropy with Collision Test (for bit strings only)";
+    tc632.testCaseNumber = "Collision Test (for bit strings only)";
     testRun.testCases.push_back(tc632);
 
     // Section 6.3.3 - Estimate entropy with Markov Test (for bit strings only)
@@ -276,18 +276,18 @@ int main(int argc, char* argv[]) {
     if (((data.alph_size > 2) || !initial_entropy)) {
         ret_min_entropy = markov_test(data.bsymbols, data.blen, verbose, "Bitstring");
         if (verbose == 2) printf("\tMarkov Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-        H_bitstring = min(ret_min_entropy, H_bitstring);
         tc633.h_bitstring = ret_min_entropy;
+        H_bitstring = min(ret_min_entropy, H_bitstring);
     }
 
     if (initial_entropy && (data.alph_size == 2)) {
         ret_min_entropy = markov_test(data.symbols, data.len, verbose, "Literal");
         if (verbose == 2) printf("\tMarkov Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
-        H_original = min(ret_min_entropy, H_original);
         tc633.h_original = ret_min_entropy;
+        H_original = min(ret_min_entropy, H_original);
     }
 
-    tc633.testCaseNumber = "Estimate entropy with Markov Test (for bit strings only)";
+    tc633.testCaseNumber = "Markov Test (for bit strings only)";
     testRun.testCases.push_back(tc633);
 
     // Section 6.3.4 - Estimate entropy with Compression Test (for bit strings only)
@@ -297,8 +297,8 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = compression_test(data.bsymbols, data.blen, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tCompression Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_bitstring = min(ret_min_entropy, H_bitstring);
             tc634.h_bitstring = ret_min_entropy;
+            H_bitstring = min(ret_min_entropy, H_bitstring);
         }
     }
 
@@ -306,12 +306,12 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = compression_test(data.symbols, data.len, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tCompression Test Estimate = %f / 1 bit(s)\n", ret_min_entropy);
-            H_original = min(ret_min_entropy, H_original);
             tc634.h_original = ret_min_entropy;
+            H_original = min(ret_min_entropy, H_original);
         }
     }
 
-    tc634.testCaseNumber = "Estimate entropy with Compression Test (for bit strings only)";
+    tc634.testCaseNumber = "Compression Test (for bit strings only)";
     testRun.testCases.push_back(tc634);
 
     // Section 6.3.5 - Estimate entropy with t-Tuple Test
@@ -323,8 +323,8 @@ int main(int argc, char* argv[]) {
         SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose, "Bitstring");
         if (bin_t_tuple_res >= 0.0) {
             if (verbose == 2) printf("\tT-Tuple Test Estimate (bit string) = %f / 1 bit(s)\n", bin_t_tuple_res);
-            H_bitstring = min(bin_t_tuple_res, H_bitstring);
             tc635.bin_t_tuple_res = bin_t_tuple_res;
+            H_bitstring = min(bin_t_tuple_res, H_bitstring);
         }
     }
 
@@ -332,12 +332,12 @@ int main(int argc, char* argv[]) {
         SAalgs(data.symbols, data.len, data.alph_size, t_tuple_res, lrs_res, verbose, "Literal");
         if (t_tuple_res >= 0.0) {
             if (verbose == 2) printf("\tT-Tuple Test Estimate = %f / %d bit(s)\n", t_tuple_res, data.word_size);
-            H_original = min(t_tuple_res, H_original);
             tc635.t_tuple_res = t_tuple_res;
+            H_original = min(t_tuple_res, H_original);
         }
     }
 
-    tc635.testCaseNumber = "Estimate entropy with t-Tuple Test";
+    tc635.testCaseNumber = "T-Tuple Test";
     testRun.testCases.push_back(tc635);
 
      // Section 6.3.6 - Estimate entropy with LRS Test
@@ -345,17 +345,17 @@ int main(int argc, char* argv[]) {
 
     if ((((data.alph_size > 2) || !initial_entropy)) && (bin_lrs_res >= 0.0)) {
         if (verbose == 2) printf("\tLRS Test Estimate (bit string) = %f / 1 bit(s)\n", bin_lrs_res);
-        H_bitstring = min(bin_lrs_res, H_bitstring);
         tc636.bin_lrs_res = bin_lrs_res;
+        H_bitstring = min(bin_lrs_res, H_bitstring);
     }
 
     if (initial_entropy && (lrs_res >= 0.0)) {
         if (verbose == 2) printf("\tLRS Test Estimate = %f / %d bit(s)\n", lrs_res, data.word_size);
-        H_original = min(lrs_res, H_original);
         tc636.lrs_res = lrs_res;
+        H_original = min(lrs_res, H_original);
     }
 
-    tc636.testCaseNumber = "Estimate entropy with LRS Test";
+    tc636.testCaseNumber = "LRS Test";
     testRun.testCases.push_back(tc636);
 
     // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
@@ -367,8 +367,8 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_bitstring = min(ret_min_entropy, H_bitstring);
             tc637.h_bitstring = ret_min_entropy;
+            H_bitstring = min(ret_min_entropy, H_bitstring);
         }
     }
 
@@ -376,12 +376,12 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = multi_mcw_test(data.symbols, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tMulti Most Common in Window (MultiMCW) Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_original = min(ret_min_entropy, H_original);
             tc637.h_original = ret_min_entropy;
+            H_original = min(ret_min_entropy, H_original);
         }
     }
 
-    tc637.testCaseNumber = "Estimate entropy with Multi Most Common in Window Test";
+    tc637.testCaseNumber = "Multi Most Common in Window Test";
     testRun.testCases.push_back(tc637);
 
     // Section 6.3.8 - Estimate entropy with Lag Prediction Test
@@ -391,8 +391,8 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = lag_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tLag Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_bitstring = min(ret_min_entropy, H_bitstring);
             tc638.h_bitstring = ret_min_entropy;
+            H_bitstring = min(ret_min_entropy, H_bitstring);
         }
     }
 
@@ -400,12 +400,12 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = lag_test(data.symbols, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tLag Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_original = min(ret_min_entropy, H_original);
             tc638.h_original = ret_min_entropy;
+            H_original = min(ret_min_entropy, H_original);
         }
     }
 
-    tc638.testCaseNumber = "Estimate entropy with Lag Prediction Test";
+    tc638.testCaseNumber = "Lag Prediction Test";
     testRun.testCases.push_back(tc638);
 
     // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
@@ -415,8 +415,8 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = multi_mmc_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_bitstring = min(ret_min_entropy, H_bitstring);
             tc639.h_bitstring = ret_min_entropy;
+            H_bitstring = min(ret_min_entropy, H_bitstring);
         }
     }
 
@@ -424,12 +424,12 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = multi_mmc_test(data.symbols, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_original = min(ret_min_entropy, H_original);
             tc639.h_original = ret_min_entropy;
+            H_original = min(ret_min_entropy, H_original);
         }
     }
 
-    tc639.testCaseNumber = "Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)";
+    tc639.testCaseNumber = "Multi Markov Model with Counting Test (MultiMMC)";
     testRun.testCases.push_back(tc639);
 
     // Section 6.3.10 - Estimate entropy with LZ78Y Test
@@ -439,8 +439,8 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = LZ78Y_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tLZ78Y Prediction Test Estimate (bit string) = %f / 1 bit(s)\n", ret_min_entropy);
-            H_bitstring = min(ret_min_entropy, H_bitstring);
             tc6310.h_bitstring = ret_min_entropy;
+            H_bitstring = min(ret_min_entropy, H_bitstring);
         }
     }
 
@@ -448,12 +448,12 @@ int main(int argc, char* argv[]) {
         ret_min_entropy = LZ78Y_test(data.symbols, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose == 2) printf("\tLZ78Y Prediction Test Estimate = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
-            H_original = min(ret_min_entropy, H_original);
             tc6310.h_original = ret_min_entropy;
+            H_original = min(ret_min_entropy, H_original);
         }
     }
 
-    tc6310.testCaseNumber = "Estimate entropy with LZ78Y Test";
+    tc6310.testCaseNumber = "LZ78Y Test";
     testRun.testCases.push_back(tc6310);
 
     double h_assessed;

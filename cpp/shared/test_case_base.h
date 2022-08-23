@@ -17,6 +17,9 @@ public:
     double mcv_estimate_p_hat = -1.0;
     double mcv_estimate_p_u = -1.0;
     bool literal_mcv_estimate = false;
+    
+    double ret_min_entropy = -1.0;
+    double data_word_size = -1.0;
 
     string testCaseNumber;
 
@@ -24,7 +27,10 @@ protected:
     Json::Value GetBaseJson() {
         Json::Value baseJson;
         baseJson["testCaseDesc"] = testCaseNumber;
-        
+        if(ret_min_entropy != -1)
+            baseJson["retMinEntropy"] = ret_min_entropy;
+        if(data_word_size != -1)
+            baseJson["dataWordSize"] = data_word_size;
         if(h_original != -1)
             baseJson["hOriginal"] = h_original;
         if(h_bitstring != -1)
