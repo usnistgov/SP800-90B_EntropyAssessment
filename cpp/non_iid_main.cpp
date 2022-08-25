@@ -76,6 +76,8 @@ int main(int argc, char* argv[]) {
     bool jsonOutput = false;
     string timestamp = getCurrentTimestamp();
     string outputfilename;
+    string commandline = recreateCommandLine(argc, argv);
+    
     data.word_size = 0;
 
     initial_entropy = true;
@@ -157,6 +159,7 @@ int main(int argc, char* argv[]) {
     testRun.timestamp = timestamp;
     testRun.sha256 = hash;
     testRun.filename = file_path;
+    testRun.commandline = commandline;
 
     if (argc == 2) {
         // get bits per word

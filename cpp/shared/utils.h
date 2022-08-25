@@ -36,7 +36,7 @@
 #define ZALPHA 2.5758293035489008
 
 //Version of the tool
-#define VERSION "1.1.4"
+#define VERSION "1.1.5"
 
 typedef unsigned char byte;
 
@@ -971,6 +971,16 @@ static void printVersion(string name) {
     cout << "\n\n";
 }
 
+static string recreateCommandLine(int argc, char* argv[]) {
+    string commandLine = "";
+    for(int i = 0; i < argc; ++i) {
+        commandLine.append(argv[i]);
+        if((i + 1) != argc) {
+            commandLine.append(" ");
+        }
+    }
+    return commandLine;
+}
 
 class PostfixDictionary {
 	map<byte, long> postfixes;

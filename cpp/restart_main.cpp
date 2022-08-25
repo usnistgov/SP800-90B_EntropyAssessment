@@ -154,7 +154,8 @@ int main(int argc, char* argv[]) {
     bool jsonOutput = false;
     string timestamp = getCurrentTimestamp();
     string outputfilename = timestamp + ".json";
-
+    string commandline = recreateCommandLine(argc, argv);
+    
     for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
         if ("--version" == Str) {
@@ -209,6 +210,7 @@ int main(int argc, char* argv[]) {
     testRunIid.type = "Restart";
     testRunIid.timestamp = timestamp;
     testRunIid.filename = file_path;
+    testRunIid.commandline = commandline;
     testRunIid.sha256 = hash;
 
     NonIidTestRun testRunNonIid;
@@ -216,6 +218,7 @@ int main(int argc, char* argv[]) {
     testRunNonIid.timestamp = timestamp;
     testRunNonIid.sha256 = hash;
     testRunNonIid.filename = file_path;
+    testRunNonIid.commandline = commandline;
 
     if (argc == 2) {
         // get bits per word

@@ -446,6 +446,7 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename;
     string inputfilename;
+    string commandline = recreateCommandLine(argc, argv);
 
     for(int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
@@ -489,6 +490,7 @@ int main(int argc, char* argv[]) {
     NonIidTestRun testRunNonIid;
     testRunNonIid.type = "Conditioning";
     testRunNonIid.timestamp = timestamp;
+    testRunNonIid.commandline = commandline;
 
     // Parse args
     if (vetted && argc != 4) {

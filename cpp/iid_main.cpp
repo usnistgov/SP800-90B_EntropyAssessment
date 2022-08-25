@@ -75,6 +75,7 @@ int main(int argc, char* argv[]) {
     bool jsonOutput = false;
     string timestamp = getCurrentTimestamp();
     string outputfilename;
+    string commandline = recreateCommandLine(argc, argv);
 
     for(int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
@@ -149,6 +150,7 @@ int main(int argc, char* argv[]) {
     IidTestRun testRun;
     testRun.timestamp = timestamp;
     testRun.filename = file_path;
+    testRun.commandline = commandline;
 
     if (argc == 2) {
         // get bits per word
