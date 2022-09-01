@@ -77,20 +77,24 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename;
     string commandline = recreateCommandLine(argc, argv);
-    
+
+    NonIidTestRun testRun;
+    testRun.timestamp = timestamp;
+    testRun.commandline = commandline;
+
     data.word_size = 0;
 
     initial_entropy = true;
     all_bits = true;
 
-    for(int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
-        if("--version" == Str) {
+        if ("--version" == Str) {
             printVersion("noniid");
             exit(0);
-        }    
+        }
     }
-    
+
     while ((opt = getopt(argc, argv, "icatvql:o:")) != -1) {
         switch (opt) {
             case 'i':
@@ -114,6 +118,15 @@ int main(int argc, char* argv[]) {
             case 'l':
                 inint = strtoull(optarg, &nextOption, 0);
                 if ((inint > ULONG_MAX) || (errno == EINVAL) || (nextOption == NULL) || (*nextOption != ',')) {
+                    testRun.errorLevel = -1;
+                    testRun.errorMsg = "Error on index/samples.";
+
+                    if (jsonOutput) {
+                        ofstream output;
+                        output.open(outputfilename);
+                        output << testRun.GetAsJson();
+                        output.close();
+                    }
                     print_usage();
                 }
                 subsetIndex = inint;
@@ -122,6 +135,15 @@ int main(int argc, char* argv[]) {
 
                 inint = strtoull(nextOption, NULL, 0);
                 if ((inint > ULONG_MAX) || (errno == EINVAL)) {
+                    testRun.errorLevel = -1;
+                    testRun.errorMsg = "Error on index/samples.";
+
+                    if (jsonOutput) {
+                        ofstream output;
+                        output.open(outputfilename);
+                        output << testRun.GetAsJson();
+                        output.close();
+                    }
                     print_usage();
                 }
                 subsetSize = inint;
@@ -155,16 +177,24 @@ int main(int argc, char* argv[]) {
     char hash[65];
     sha256_file(file_path, hash);
 
-    NonIidTestRun testRun;
-    testRun.timestamp = timestamp;
     testRun.sha256 = hash;
     testRun.filename = file_path;
-    testRun.commandline = commandline;
 
     if (argc == 2) {
         // get bits per word
         inint = atoi(argv[1]);
         if (inint < 1 || inint > 8) {
+
+            testRun.errorLevel = -1;
+            testRun.errorMsg = "Invalid bits per symbol.";
+
+            if (jsonOutput) {
+                ofstream output;
+                output.open(outputfilename);
+                output << testRun.GetAsJson();
+                output.close();
+            }
+
             printf("Invalid bits per symbol.\n");
             print_usage();
         } else {
@@ -172,8 +202,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if(verbose>1) {
-        if(subsetSize == 0) printf("Opening file: '%s'\n", file_path);
+    if (verbose > 1) {
+        if (subsetSize == 0) printf("Opening file: '%s'\n", file_path);
         else printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
     }
 
@@ -321,7 +351,7 @@ int main(int argc, char* argv[]) {
     NonIidTestCase tc635;
 
     if ((verbose == 1) || (verbose == 2)) printf("\nRunning Tuple Estimates...\n");
-    
+
     if (((data.alph_size > 2) || !initial_entropy)) {
         SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose, "Bitstring");
         if (bin_t_tuple_res >= 0.0) {
@@ -343,7 +373,7 @@ int main(int argc, char* argv[]) {
     tc635.testCaseNumber = "T-Tuple Test";
     testRun.testCases.push_back(tc635);
 
-     // Section 6.3.6 - Estimate entropy with LRS Test
+    // Section 6.3.6 - Estimate entropy with LRS Test
     NonIidTestCase tc636;
 
     if ((((data.alph_size > 2) || !initial_entropy)) && (bin_lrs_res >= 0.0)) {
@@ -470,18 +500,18 @@ int main(int argc, char* argv[]) {
         h_assessed = min(h_assessed, H_original);
     }
 
-    if((verbose == 1) || (verbose == 2)) {
-        if(initial_entropy) {
+    if ((verbose == 1) || (verbose == 2)) {
+        if (initial_entropy) {
             printf("\nH_original: %f\n", H_original);
-            if(data.alph_size > 2) {
+            if (data.alph_size > 2) {
                 printf("H_bitstring: %f\n", H_bitstring);
-                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size*H_bitstring));
+                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size * H_bitstring));
             }
         } else {
             printf("\nh': %f\n", H_bitstring);
         }
-    } else if(verbose > 2) {
-        if((data.alph_size > 2) || !initial_entropy) {
+    } else if (verbose > 2) {
+        if ((data.alph_size > 2) || !initial_entropy) {
             printf("H_bitstring = %.17g\n", H_bitstring);
             printf("H_bitstring Per Symbol = %.17g\n", H_bitstring * data.word_size);
         }
