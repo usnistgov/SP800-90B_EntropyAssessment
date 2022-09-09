@@ -75,15 +75,20 @@ int main(int argc, char* argv[]) {
     bool jsonOutput = false;
     string timestamp = getCurrentTimestamp();
     string outputfilename;
+    string commandline = recreateCommandLine(argc, argv);
 
-    for(int i = 0; i < argc; i++) {
+    IidTestRun testRun;
+    testRun.timestamp = timestamp;
+    testRun.commandline = commandline;
+    
+    for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
-        if("--version" == Str) {
+        if ("--version" == Str) {
             printVersion("iid");
             exit(0);
-        }    
+        }
     }
- 
+
     while ((opt = getopt(argc, argv, "icatvl:qo:")) != -1) {
         switch (opt) {
             case 'i':
@@ -104,6 +109,16 @@ int main(int argc, char* argv[]) {
             case 'l':
                 inint = strtoull(optarg, &nextOption, 0);
                 if ((inint > ULONG_MAX) || (errno == EINVAL) || (nextOption == NULL) || (*nextOption != ',')) {
+
+                    testRun.errorLevel = -1;
+                    testRun.errorMsg = "Error on index/samples.";
+
+                    if (jsonOutput) {
+                        ofstream output;
+                        output.open(outputfilename);
+                        output << testRun.GetAsJson();
+                        output.close();
+                    }
                     print_usage();
                 }
                 subsetIndex = inint;
@@ -112,6 +127,15 @@ int main(int argc, char* argv[]) {
 
                 inint = strtoull(nextOption, NULL, 0);
                 if ((inint > ULONG_MAX) || (errno == EINVAL)) {
+                    testRun.errorLevel = -1;
+                    testRun.errorMsg = "Error on index/samples.";
+
+                    if (jsonOutput) {
+                        ofstream output;
+                        output.open(outputfilename);
+                        output << testRun.GetAsJson();
+                        output.close();
+                    }
                     print_usage();
                 }
 
@@ -146,8 +170,6 @@ int main(int argc, char* argv[]) {
     // get filename
     file_path = argv[0];
 
-    IidTestRun testRun;
-    testRun.timestamp = timestamp;
     testRun.filename = file_path;
 
     if (argc == 2) {
@@ -231,19 +253,19 @@ int main(int argc, char* argv[]) {
     int sample_size = data.len;
 
     if ((verbose == 1) || (verbose == 2))
-	   printf("Calculating baseline statistics...\n");
-	
+        printf("Calculating baseline statistics...\n");
+
     calc_stats(&data, rawmean, median);
 
-	if(verbose == 2) {
-		printf("\tRaw Mean: %f\n", rawmean);
-		printf("\tMedian: %f\n", median);
-		printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
-	} else if(verbose > 2) {
-		printf("Raw Mean = %.17g\n", rawmean);
-		printf("Median = %.17g\n", median);
-		printf("Binary = %s\n", (alphabet_size == 2 ? "true" : "false"));
-	}
+    if (verbose == 2) {
+        printf("\tRaw Mean: %f\n", rawmean);
+        printf("\tMedian: %f\n", median);
+        printf("\tBinary: %s\n\n", (alphabet_size == 2 ? "true" : "false"));
+    } else if (verbose > 2) {
+        printf("Raw Mean = %.17g\n", rawmean);
+        printf("Median = %.17g\n", median);
+        printf("Binary = %s\n", (alphabet_size == 2 ? "true" : "false"));
+    }
 
     IidTestCase tc;
     tc.mean = rawmean;
@@ -303,7 +325,7 @@ int main(int argc, char* argv[]) {
         } else {
             printf("** Failed chi square tests\n\n");
         }
-    } else if(verbose > 2) {
+    } else if (verbose > 2) {
         if (chi_square_test_pass) {
             printf("Chi square tests: Passed\n");
         } else {
@@ -321,7 +343,7 @@ int main(int argc, char* argv[]) {
         } else {
             printf("** Failed length of longest repeated substring test\n\n");
         }
-    } else if(verbose > 2) {
+    } else if (verbose > 2) {
         if (len_LRS_test_pass) {
             printf("Length of longest repeated substring test: Passed\n");
         } else {
@@ -338,13 +360,13 @@ int main(int argc, char* argv[]) {
             printf("** Passed IID permutation tests\n\n");
         } else {
             printf("** Failed IID permutation tests\n\n");
-        }        
-    } else if(verbose > 2) {
+        }
+    } else if (verbose > 2) {
         if (perm_test_pass) {
             printf("IID permutation tests: Passed\n");
         } else {
             printf("IID permutation tests: Failed\n");
-        }        
+        }
     }
 
     testRun.testCases.push_back(tc);

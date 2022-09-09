@@ -446,13 +446,14 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename;
     string inputfilename;
+    string commandline = recreateCommandLine(argc, argv);
 
-    for(int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
-        if("--version" == Str) {
+        if ("--version" == Str) {
             printVersion("conditioning");
             exit(0);
-        }    
+        }
     }
 
     while ((opt = getopt(argc, argv, "vnqo:i:c:")) != -1) {
@@ -489,6 +490,7 @@ int main(int argc, char* argv[]) {
     NonIidTestRun testRunNonIid;
     testRunNonIid.type = "Conditioning";
     testRunNonIid.timestamp = timestamp;
+    testRunNonIid.commandline = commandline;
 
     // Parse args
     if (vetted && argc != 4) {
@@ -511,7 +513,17 @@ int main(int argc, char* argv[]) {
 
         // get h_in; note that h_in <= n_in
         h_in = inputLongDoubleOption(argv[3], 0.0L, (long double) n_in, "h_in");
-        if (h_in <= 0.0L) print_usage();
+        if (h_in <= 0.0L) {
+            if (jsonOutput) {
+                testRunNonIid.errorLevel = -1;
+                testRunNonIid.errorMsg = "Error with input: generating h_in.";
+                ofstream output;
+                output.open(outputfilename);
+                output << testRunNonIid.GetAsJson();
+                output.close();
+            }
+            print_usage();
+        }
 
         if (!vetted) {
             if (argc == 4) {
@@ -520,7 +532,17 @@ int main(int argc, char* argv[]) {
             } else {
                 // If h_p is provided via command line, use that value
                 h_p = inputLongDoubleOption(argv[4], 0.0L, 1.0L, "h_p");
-                if (h_p <= 0) print_usage();
+                if (h_p <= 0) {
+                    if (jsonOutput) {
+                        testRunNonIid.errorLevel = -1;
+                        testRunNonIid.errorMsg = "Error with input: generating h_p.";
+                        ofstream output;
+                        output.open(outputfilename);
+                        output << testRunNonIid.GetAsJson();
+                        output.close();
+                    }
+                    print_usage();
+                }
             }
         }
     }
