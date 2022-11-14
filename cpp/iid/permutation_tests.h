@@ -547,25 +547,25 @@ void populateTestCase(IidTestCase &tc, int C[][3]){
     tr1.covariance1 = C[13][1];
     tr2.covariance1 = C[13][2];
 
-    tr0.covariance2 = C[13][0];
-    tr1.covariance2 = C[13][1];
-    tr2.covariance2 = C[13][2];
+    tr0.covariance2 = C[14][0];
+    tr1.covariance2 = C[14][1];
+    tr2.covariance2 = C[14][2];
 
-    tr0.covariance8 = C[13][0];
-    tr1.covariance8 = C[13][1];
-    tr2.covariance8 = C[13][2];
+    tr0.covariance8 = C[15][0];
+    tr1.covariance8 = C[15][1];
+    tr2.covariance8 = C[15][2];
     
-    tr0.covariance16 = C[13][0];
-    tr1.covariance16 = C[13][1];
-    tr2.covariance16 = C[13][2];
+    tr0.covariance16 = C[16][0];
+    tr1.covariance16 = C[16][1];
+    tr2.covariance16 = C[16][2];
 
-    tr0.covariance32 = C[13][0];
-    tr1.covariance32 = C[13][1];
-    tr2.covariance32 = C[13][2];
+    tr0.covariance32 = C[17][0];
+    tr1.covariance32 = C[17][1];
+    tr2.covariance32 = C[17][2];
 
-    tr0.compression = C[14][0];
-    tr1.compression = C[14][1];
-    tr2.compression = C[14][2];
+    tr0.compression = C[18][0];
+    tr1.compression = C[18][1];
+    tr2.compression = C[18][2];
     
     tc.testResults.push_back(tr0);
     tc.testResults.push_back(tr1);
