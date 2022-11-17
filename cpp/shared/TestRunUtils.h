@@ -52,18 +52,17 @@ string getCurrentTimestamp() {
 
 }
 
-void sha256_hash_string (unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuffer[65])
-{
+void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuffer[65]) {
     int i = 0;
 
-    for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
+    for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
     }
 
     outputBuffer[64] = 0;
 }
 
+/* Removed deprecated SHA256 generation 11/17/2022
 void sha256_string(char *string, char outputBuffer[65])
 {
     unsigned char hash[SHA256_DIGEST_LENGTH];
@@ -78,28 +77,51 @@ void sha256_string(char *string, char outputBuffer[65])
     }
     outputBuffer[64] = 0;
 }
-
-int sha256_file(char *path, char outputBuffer[65])
-{
+ */
+int sha256_file(char *path, char outputBuffer[65]) {
+    
+    unsigned const char *buffer;
+    unsigned long fileLength;
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    
     FILE *file = fopen(path, "rb");
-    if(!file) return -534;
+    if (!file) return -1;
 
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    const int bufSize = 32768;
-    unsigned char *buffer = (unsigned char*) malloc(bufSize);
-    int bytesRead = 0;
-    if(!buffer) return ENOMEM;
-    while((bytesRead = fread(buffer, 1, bufSize, file)))
-    {
-        SHA256_Update(&sha256, buffer, bytesRead);
+    /*Removed deprecated SHA256 generation 11/17/2022
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        SHA256_CTX sha256;
+        SHA256_Init(&sha256);
+        const int bufSize = 32768;
+        unsigned char *buffer = (unsigned char*) malloc(bufSize);
+        int bytesRead = 0;
+        if(!buffer) return ENOMEM;
+        while((bytesRead = fread(buffer, 1, bufSize, file)))
+        {
+            SHA256_Update(&sha256, buffer, bytesRead);
+        }
+        SHA256_Final(hash, &sha256);
+     */
+
+    
+    fseek(file, 0, SEEK_END);
+    fileLen = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    buffer = (unsigned const char *) malloc(fileLen + 1);
+    if (!buffer) {
+        fprintf(stderr, "Out of memory error!");
+        fclose(file);
+        return 0;
     }
-    SHA256_Final(hash, &sha256);
-
-    sha256_hash_string(hash, outputBuffer);
+    int i;
+    i = fread((char *) buffer, fileLength, 1, file);
     fclose(file);
-    free(buffer);
+
+    SHA256(buffer, fileLen, (unsigned char*) &digest);
+
+    sha256_hash_string(digest, outputBuffer);
+    fclose(file);
+
     return 0;
 }
 #endif /* TESTRUNUTILS_H */
