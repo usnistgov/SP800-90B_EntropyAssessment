@@ -81,7 +81,7 @@ void sha256_string(char *string, char outputBuffer[65])
 int sha256_file(char *path, char outputBuffer[65]) {
     
     unsigned const char *buffer;
-    unsigned long fileLength;
+    unsigned long fileLen;
     unsigned char digest[SHA256_DIGEST_LENGTH];
     
     FILE *file = fopen(path, "rb");
@@ -114,7 +114,7 @@ int sha256_file(char *path, char outputBuffer[65]) {
         return 0;
     }
     int i;
-    i = fread((char *) buffer, fileLength, 1, file);
+    i = fread((char *) buffer, fileLen, 1, file);
     fclose(file);
 
     SHA256(buffer, fileLen, (unsigned char*) &digest);
