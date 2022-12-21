@@ -62,65 +62,48 @@ void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuf
     outputBuffer[64] = 0;
 }
 
-/* Removed deprecated SHA256 generation 11/17/2022
-void sha256_string(char *string, char outputBuffer[65])
-{
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, string, strlen(string));
-    SHA256_Final(hash, &sha256);
-    int i = 0;
-    for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }
-    outputBuffer[64] = 0;
-}
- */
 int sha256_file(char *path, char outputBuffer[65]) {
     
-    unsigned const char *buffer;
-    unsigned long fileLength;
+    unsigned char *buffer;
+    unsigned long fileLen;
     unsigned char digest[SHA256_DIGEST_LENGTH];
-    
+    int i;
+
+    /*open the file*/
     FILE *file = fopen(path, "rb");
     if (!file) return -1;
 
-    /*Removed deprecated SHA256 generation 11/17/2022
-        unsigned char hash[SHA256_DIGEST_LENGTH];
-        SHA256_CTX sha256;
-        SHA256_Init(&sha256);
-        const int bufSize = 32768;
-        unsigned char *buffer = (unsigned char*) malloc(bufSize);
-        int bytesRead = 0;
-        if(!buffer) return ENOMEM;
-        while((bytesRead = fread(buffer, 1, bufSize, file)))
-        {
-            SHA256_Update(&sha256, buffer, bytesRead);
-        }
-        SHA256_Final(hash, &sha256);
-     */
-
-    
+    /* Get the file length */ 
     fseek(file, 0, SEEK_END);
     fileLen = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    buffer = (unsigned const char *) malloc(fileLen + 1);
+    /* Allocate the buffer */
+    buffer = new unsigned char[fileLen];
     if (!buffer) {
         fprintf(stderr, "Out of memory error!");
         fclose(file);
-        return 0;
+        return -1;
     }
-    int i;
-    i = fread((char *) buffer, fileLength, 1, file);
+
+    /* Read in the data to the buffer. */
+    if((i = fread(buffer, fileLen, 1, file))!=1) {
+        fprintf(stderr, "Can't read the input data\n");
+        fclose(file);
+        return -1;
+    };
+
+    /* Close the file. */
     fclose(file);
 
+    /* Calculate the hash. */
     SHA256(buffer, fileLen, (unsigned char*) &digest);
 
+    /* Output the hash as a string. */
     sha256_hash_string(digest, outputBuffer);
-    fclose(file);
+
+   /* De-allocate the buffer. */
+    delete[] buffer;
 
     return 0;
 }
