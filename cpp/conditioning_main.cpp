@@ -357,6 +357,8 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
 
     data_t data;
     double h_bitstring = 1.0;
+    const int verbose = 0;
+
 
     //Have the code establish the symbol width.
     data.word_size = 0;
@@ -366,51 +368,66 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
 
     if (iid) {
         // IID path
-        h_bitstring = min(h_bitstring, most_common(data.bsymbols, data.blen, 2, true, "Bitstring"));
+        //All of these run the bitstring version of the test (as per SP 800-90B Section 3.1.5.2 Paragraph 2)
+        // Section 6.3.1 - Estimate entropy with Most Common Value
+        h_bitstring = min(h_bitstring, most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring"));
     } else {
         // NON-IID path
         double ret_min_entropy;
         double bin_t_tuple_res = -1.0, bin_lrs_res = -1.0;
 
-        ret_min_entropy = most_common(data.bsymbols, data.blen, 2, true, "Bitstring");
+        //All of these run the bitstring version of the test (as per SP 800-90B Section 3.1.5.2 Paragraph 2)
+        // Section 6.3.1 - Estimate entropy with Most Common Value
+        ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         h_bitstring = min(ret_min_entropy, h_bitstring);
 
-        ret_min_entropy = collision_test(data.bsymbols, data.blen, true, "Bitstring");
+        // Section 6.3.2 - Estimate entropy with Collision Test
+        ret_min_entropy = collision_test(data.bsymbols, data.blen, verbose, "Bitstring");
         h_bitstring = min(ret_min_entropy, h_bitstring);
 
-        ret_min_entropy = markov_test(data.bsymbols, data.blen, true, "Bitstring");
+        // Section 6.3.3 - Estimate entropy with Markov Test
+        ret_min_entropy = markov_test(data.bsymbols, data.blen, verbose, "Bitstring");
         h_bitstring = min(ret_min_entropy, h_bitstring);
 
-        ret_min_entropy = compression_test(data.bsymbols, data.blen, true, "Bitstring");
+        // Section 6.3.4 - Estimate entropy with Compression Test
+        ret_min_entropy = compression_test(data.bsymbols, data.blen, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             h_bitstring = min(ret_min_entropy, h_bitstring);
         }
 
-        SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, true, "Bitstring");
+        //This call performs both the t-Tuple Test and the LRS Test
+        SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose, "Bitstring");
+
+        // Section 6.3.5 - Estimate entropy with t-Tuple Test
         if (bin_t_tuple_res >= 0.0) {
             h_bitstring = min(bin_t_tuple_res, h_bitstring);
         }
 
+        // Section 6.3.6 - Estimate entropy with LRS Test
         if (bin_lrs_res >= 0) {
             h_bitstring = min(bin_lrs_res, h_bitstring);
         }
 
-        ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, true, "Bitstring");
+        // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
+        ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             h_bitstring = min(ret_min_entropy, h_bitstring);
         }
 
-        ret_min_entropy = lag_test(data.bsymbols, data.blen, 2, true, "Bitstring");
+        // Section 6.3.8 - Estimate entropy with Lag Prediction Test
+        ret_min_entropy = lag_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             h_bitstring = min(ret_min_entropy, h_bitstring);
         }
 
-        ret_min_entropy = multi_mmc_test(data.bsymbols, data.blen, 2, true, "Bitstring");
+        // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
+        ret_min_entropy = multi_mmc_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             h_bitstring = min(ret_min_entropy, h_bitstring);
         }
 
-        ret_min_entropy = LZ78Y_test(data.bsymbols, data.blen, 2, true, "Bitstring");
+        // Section 6.3.10 - Estimate entropy with LZ78Y Test
+        ret_min_entropy = LZ78Y_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
         if (ret_min_entropy >= 0) {
             h_bitstring = min(ret_min_entropy, h_bitstring);
         }
