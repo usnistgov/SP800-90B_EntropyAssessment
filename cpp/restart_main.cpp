@@ -18,6 +18,7 @@
 #include <limits.h>
 #include <iostream>
 #include <fstream>
+#include <openssl/sha.h>
 
 //Each test has a targeted chance of roughly 0.000005, and we need to witness at least 5 failures, so this should be no less than 1000000
 #define SIMULATION_ROUNDS 5000000
@@ -203,7 +204,7 @@ int main(int argc, char* argv[]) {
 
     if (quietMode) verbose = 0;
 
-    char hash[65];
+    char hash[2*SHA256_DIGEST_LENGTH+1];
     sha256_file(file_path, hash);
 
     IidTestRun testRunIid;
@@ -274,7 +275,7 @@ int main(int argc, char* argv[]) {
         print_usage();
     }
 
-    if (verbose > 1) printf("Opening file: '%s'\n", file_path);
+    if (verbose > 1) printf("Opening file: '%s' (SHA-256 hash %s)\n", file_path, hash);
 
     if (!read_file(file_path, &data)) {
         printf("Error reading file.\n");

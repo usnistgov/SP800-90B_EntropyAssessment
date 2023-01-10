@@ -17,6 +17,7 @@
 #include <limits.h>
 #include <iostream>
 #include <fstream>
+#include <openssl/sha.h>
 
 [[ noreturn ]] void print_usage() {
     printf("Usage is: ea_non_iid [-i|-c] [-a|-t] [-v] [-q] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
@@ -174,7 +175,7 @@ int main(int argc, char* argv[]) {
     // get filename
     file_path = argv[0];
 
-    char hash[65];
+    char hash[2*SHA256_DIGEST_LENGTH+1];
     sha256_file(file_path, hash);
 
     testRun.sha256 = hash;
@@ -203,8 +204,8 @@ int main(int argc, char* argv[]) {
     }
 
     if (verbose > 1) {
-        if (subsetSize == 0) printf("Opening file: '%s'\n", file_path);
-        else printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
+        if (subsetSize == 0) printf("Opening file: '%s' (SHA-256 hash %s)\n", file_path, hash);
+        else printf("Opening file: '%s' (SHA-256 hash %s), reading block %ld of size %ld\n", file_path, hash, subsetIndex, subsetSize);
     }
 
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {

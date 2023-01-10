@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string.h>
 
+#include <openssl/evp.h>
 #include <openssl/sha.h>
 
 using namespace std;
@@ -52,59 +53,87 @@ string getCurrentTimestamp() {
 
 }
 
-void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuffer[65]) {
-    int i = 0;
-
-    for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+void sha256_hash_string(unsigned char *hash, char *outputBuffer) {
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
     }
-
-    outputBuffer[64] = 0;
 }
 
-int sha256_file(char *path, char outputBuffer[65]) {
-    
-    unsigned char *buffer;
-    unsigned long fileLen;
+int sha256_file(char *path, char *outputBuffer) {
+    unsigned char *buffer=NULL;
     unsigned char digest[SHA256_DIGEST_LENGTH];
-    int i;
+    size_t bytesRead;
+    FILE *file=NULL;
+    const int bufSize = 32768;
+    int res = 0;
+    EVP_MD_CTX *mdctx = NULL;
 
-    /*open the file*/
-    FILE *file = fopen(path, "rb");
-    if (!file) return -1;
-
-    /* Get the file length */ 
-    fseek(file, 0, SEEK_END);
-    fileLen = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    /* Allocate the buffer */
-    buffer = new unsigned char[fileLen];
-    if (!buffer) {
-        fprintf(stderr, "Out of memory error!");
-        fclose(file);
-        return -1;
+    // open the file
+    if((file = fopen(path, "rb"))==NULL) {
+        perror("Can't open the provided file name");
+	res=-1;
+        goto err;
     }
 
-    /* Read in the data to the buffer. */
-    if((i = fread(buffer, fileLen, 1, file))!=1) {
-        fprintf(stderr, "Can't read the input data\n");
-        fclose(file);
-        return -1;
-    };
+    // Allocate the buffer
+    if ( (buffer = new unsigned char[bufSize]) == NULL) {
+        perror("Can't allocate the FILE I/O buffer");
+	res=-1;
+        goto err;
+    }
 
-    /* Close the file. */
-    fclose(file);
+    // Get a hash context.
+    if ( (mdctx = EVP_MD_CTX_new()) == NULL ) {
+        fprintf(stderr, "Can't allocate a new hash context.");
+        res = -1;
+        goto err;
+    }
 
-    /* Calculate the hash. */
-    SHA256(buffer, fileLen, (unsigned char*) &digest);
+   // In this call, we implicitly fetch the SHA256 algorithm automatically from the relevant API
+   // Setup the SHA256 context.
+   if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) != 1) {
+        fprintf(stderr, "Can't setup mdctx as a SHA256 context.");
+        res = -1;
+        goto err;
+    }
 
-    /* Output the hash as a string. */
+    while(!feof(file)) {
+        bytesRead = fread(buffer, 1, bufSize, file);
+
+	if(ferror(file)) {
+            perror("Error reading file for hashing");
+            res=-1;
+            goto err;
+        }
+
+        if(bytesRead > 0) {
+	    if(EVP_DigestUpdate(mdctx, buffer, bytesRead)!=1) {
+                fprintf(stderr, "Can't hash in new data.");
+                res = -1;
+                goto err;
+            }
+        }
+    }
+
+    // Finalize the hash.
+    if(EVP_DigestFinal_ex(mdctx, digest, NULL)!=1) {
+        fprintf(stderr, "Can't finalize the hash.");
+        res = -1;
+        goto err;
+    }
+
+    // Output the hash as a string.
     sha256_hash_string(digest, outputBuffer);
+err:
+    // Close the file.
+    if(file) fclose(file);
 
-   /* De-allocate the buffer. */
-    delete[] buffer;
+    // De-allocate the buffer.
+    if(buffer) delete[] buffer;
 
-    return 0;
+    // Free the hash context
+    if(mdctx) EVP_MD_CTX_free(mdctx);
+
+    return res;
 }
 #endif /* TESTRUNUTILS_H */
