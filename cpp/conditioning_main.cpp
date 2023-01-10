@@ -131,6 +131,7 @@ static unsigned int inputUnsignedOption(const char *input, unsigned int low, uns
 static long double calculateEpsilon(mpfr_t calcValue, mpfr_t maxValue, mpfr_prec_t precision) {
     mpfr_t ratio, output, ap_log2;
     mpfr_inits2(precision, ratio, output, ap_log2, NULL);
+    long double value;
 
     // We're going to need an arbitrary precision version of log(2)
     mpfr_set_ui(ap_log2, 2U, MPFR_RNDZ);
@@ -151,13 +152,17 @@ static long double calculateEpsilon(mpfr_t calcValue, mpfr_t maxValue, mpfr_prec
     mpfr_neg(output, output, MPFR_RNDZ);
 
     // return this value
-    return mpfr_get_ld(output, MPFR_RNDZ);
+    value = mpfr_get_ld(output, MPFR_RNDZ);
+    mpfr_clears(ratio, output, ap_log2, NULL);
+
+    return value;
 }
 
 // General goal: want to round to cause psi and omega to be as large as possible (to provide a conservative estimate)
 // If any estimate is not appropriate, increase the precision and start again
 
 static long double computeEntropyWithPrecision(mpfr_prec_t precision, long double h_in, unsigned int n_in, unsigned int n, unsigned int n_out, unsigned int nw, long double &noutEpsilonExp, long double &hinEpsilonExp, long double &nwEpsilonExp) {
+    long double value;
 
     // TODO quietmode?
     printf("Attempting to compute entropy with %ld bits of precision.\n", precision);
@@ -169,6 +174,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // Initialize arbitrary precision versions of h_in
     // We want to make sure not to lose precision here.
     if (mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ) != 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -181,10 +187,12 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
 
     // p_high must be in the interval (0,1)
     if (mpfr_cmp_ui(ap_p_high, 0UL) <= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
     if (mpfr_cmp_ui(ap_p_high, 1UL) >= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -194,6 +202,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // This is an integer value, and should be exact
     // ap_inputSpaceSize = 2^(n_in)
     if (mpfr_ui_pow_ui(ap_inputSpaceSize, 2UL, n_in, MPFR_RNDZ) != 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -204,6 +213,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     mpfr_sub(ap_diff, ap_inputSpaceSize, ap_denom, MPFR_RNDZ);
     if (mpfr_cmp_ui(ap_diff, 1UL) != 0) {
         // Evidently not. Increase the precision.
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -212,10 +222,12 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
 
     // p_low must be in the interval (0,1)
     if (mpfr_cmp_ui(ap_p_low, 0UL) <= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
     if (mpfr_cmp_ui(ap_p_low, 1UL) >= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -223,6 +235,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // This is an integer value, and should be exact
     // power_term = 2^(n_in - n)
     if (mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU) != 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -235,6 +248,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
 
     // h_in > 0 so Psi > P_high. If this isn't so, then we're doing the calculation at too low of a precision.
     if (mpfr_cmp(ap_p_high, ap_psi) >= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -243,6 +257,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
 
     // If we have equality, then we didn't use adaquate precision.
     if (mpfr_cmp_ui(ap_psi, 0UL) == 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -256,6 +271,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // We're going to need an arbitrary precision version of log(2)
     // omega = 2
     if (mpfr_set_ui(ap_omega, 2U, MPFR_RNDZ) != 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -276,6 +292,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
 
     if (mpfr_cmp_ui(ap_omega, 0UL) == 0) {
         // Omega is expected to be non-zero for all parameters
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -302,11 +319,13 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // Could outputEntropy be valid?
     // We know that n_out > ap_outputEntropy for all finite inputs...
     if (mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
     //We know that h_in > ap_outputEntropy for all finite inputs...
     if (mpfr_cmp(ap_outputEntropy, ap_h_in) >= 0) {
+        mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
         return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
     }
 
@@ -326,101 +345,97 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // If we get here, then adequate precision was used
     // Extract a value for display.
     // Note, this may round up, but we'll deal with this later.
-    return mpfr_get_ld(ap_outputEntropy, MPFR_RNDN);
+    value =  mpfr_get_ld(ap_outputEntropy, MPFR_RNDN);
+    mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
+
+    return value;
 }
 
+//This function performs statistical testing on the bitwise input data.
+//It returns h', which is a value in the range [0,1].
 static long double computeEntropyOfConditionedData(string inputfilename, bool iid) {
 
     data_t data;
+    double h_bitstring = 1.0;
+    const int verbose = 0;
+
+
+    //Have the code establish the symbol width.
     data.word_size = 0;
 
-    read_file_subset(inputfilename.c_str(), &data, ULONG_MAX, 0);
-
-    double h_bitstring = 1.0;
-    double h_assessed = data.word_size;
-    double h_original = data.word_size;
-    int sample_size = data.len;
-    int alphabet_size = data.alph_size;
+    //Read in the complete file.
+    read_file_subset(inputfilename.c_str(), &data, 0, 0);
 
     if (iid) {
         // IID path
-        if (data.alph_size > 2) {
-            h_bitstring = most_common(data.bsymbols, data.blen, 2, false, "Bitstring");
-            h_assessed = min(h_assessed, h_bitstring * data.word_size);
-        }
-
-        h_assessed = min(h_assessed, h_bitstring * data.word_size);
-        h_original = most_common(data.symbols, sample_size, alphabet_size, false, "Literal");
-        h_assessed = min(h_assessed, h_original);
-
-        if (h_assessed != 0) {
-            h_assessed = h_assessed / data.word_size;
-        }
+        //All of these run the bitstring version of the test (as per SP 800-90B Section 3.1.5.2 Paragraph 2)
+        // Section 6.3.1 - Estimate entropy with Most Common Value
+        h_bitstring = min(h_bitstring, most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring"));
     } else {
-
         // NON-IID path
-        h_assessed = data.word_size;
-        double ret_min_entropy = 0.0;
+        double ret_min_entropy;
         double bin_t_tuple_res = -1.0, bin_lrs_res = -1.0;
 
-        if (data.alph_size > 2) {
+        //All of these run the bitstring version of the test (as per SP 800-90B Section 3.1.5.2 Paragraph 2)
+        // Section 6.3.1 - Estimate entropy with Most Common Value
+        ret_min_entropy = most_common(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+        h_bitstring = min(ret_min_entropy, h_bitstring);
 
-            ret_min_entropy = most_common(data.bsymbols, data.blen, 2, false, "Bitstring");
+        // Section 6.3.2 - Estimate entropy with Collision Test
+        ret_min_entropy = collision_test(data.bsymbols, data.blen, verbose, "Bitstring");
+        h_bitstring = min(ret_min_entropy, h_bitstring);
+
+        // Section 6.3.3 - Estimate entropy with Markov Test
+        ret_min_entropy = markov_test(data.bsymbols, data.blen, verbose, "Bitstring");
+        h_bitstring = min(ret_min_entropy, h_bitstring);
+
+        // Section 6.3.4 - Estimate entropy with Compression Test
+        ret_min_entropy = compression_test(data.bsymbols, data.blen, verbose, "Bitstring");
+        if (ret_min_entropy >= 0) {
             h_bitstring = min(ret_min_entropy, h_bitstring);
-
-            ret_min_entropy = collision_test(data.bsymbols, data.blen, false, "Bitstring");
-            h_bitstring = min(ret_min_entropy, h_bitstring);
-
-            ret_min_entropy = markov_test(data.bsymbols, data.blen, false, "Bitstring");
-            h_bitstring = min(ret_min_entropy, h_bitstring);
-
-            ret_min_entropy = compression_test(data.bsymbols, data.blen, false, "Bitstring");
-            if (ret_min_entropy >= 0) {
-                h_bitstring = min(ret_min_entropy, h_bitstring);
-            }
-
-            SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, false, "Bitstring");
-            if (bin_t_tuple_res >= 0.0) {
-                h_bitstring = min(bin_t_tuple_res, h_bitstring);
-            }
-
-            if (bin_lrs_res >= 0) {
-                h_bitstring = min(bin_lrs_res, h_bitstring);
-            }
-
-            ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, false, "Bitstring");
-            if (ret_min_entropy >= 0) {
-                h_bitstring = min(ret_min_entropy, h_bitstring);
-            }
-
-            ret_min_entropy = lag_test(data.bsymbols, data.blen, 2, false, "Bitstring");
-            if (ret_min_entropy >= 0) {
-                h_bitstring = min(ret_min_entropy, h_bitstring);
-            }
-
-            ret_min_entropy = multi_mmc_test(data.bsymbols, data.blen, 2, false, "Bitstring");
-            if (ret_min_entropy >= 0) {
-                h_bitstring = min(ret_min_entropy, h_bitstring);
-            }
-
-            ret_min_entropy = LZ78Y_test(data.bsymbols, data.blen, 2, false, "Bitstring");
-            if (ret_min_entropy >= 0) {
-                h_bitstring = min(ret_min_entropy, h_bitstring);
-            }
         }
 
-        h_assessed = data.word_size;
+        //This call performs both the t-Tuple Test and the LRS Test
+        SAalgs(data.bsymbols, data.blen, 2, bin_t_tuple_res, bin_lrs_res, verbose, "Bitstring");
 
-        if (data.alph_size > 2) {
-            h_assessed = min(h_assessed, h_bitstring * data.word_size);
+        // Section 6.3.5 - Estimate entropy with t-Tuple Test
+        if (bin_t_tuple_res >= 0.0) {
+            h_bitstring = min(bin_t_tuple_res, h_bitstring);
         }
 
-        if (h_assessed != 0) {
-            h_assessed = h_assessed / data.word_size;
+        // Section 6.3.6 - Estimate entropy with LRS Test
+        if (bin_lrs_res >= 0) {
+            h_bitstring = min(bin_lrs_res, h_bitstring);
+        }
+
+        // Section 6.3.7 - Estimate entropy with Multi Most Common in Window Test
+        ret_min_entropy = multi_mcw_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+        if (ret_min_entropy >= 0) {
+            h_bitstring = min(ret_min_entropy, h_bitstring);
+        }
+
+        // Section 6.3.8 - Estimate entropy with Lag Prediction Test
+        ret_min_entropy = lag_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+        if (ret_min_entropy >= 0) {
+            h_bitstring = min(ret_min_entropy, h_bitstring);
+        }
+
+        // Section 6.3.9 - Estimate entropy with Multi Markov Model with Counting Test (MultiMMC)
+        ret_min_entropy = multi_mmc_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+        if (ret_min_entropy >= 0) {
+            h_bitstring = min(ret_min_entropy, h_bitstring);
+        }
+
+        // Section 6.3.10 - Estimate entropy with LZ78Y Test
+        ret_min_entropy = LZ78Y_test(data.bsymbols, data.blen, 2, verbose, "Bitstring");
+        if (ret_min_entropy >= 0) {
+            h_bitstring = min(ret_min_entropy, h_bitstring);
         }
     }
 
-    return h_assessed;
+    free_data(&data);
+
+    return h_bitstring;
 }
 
 int main(int argc, char* argv[]) {

@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string.h>
 
+#include <openssl/evp.h>
 #include <openssl/sha.h>
 
 using namespace std;
@@ -52,76 +53,87 @@ string getCurrentTimestamp() {
 
 }
 
-void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuffer[65]) {
-    int i = 0;
-
-    for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+void sha256_hash_string(unsigned char *hash, char *outputBuffer) {
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
     }
-
-    outputBuffer[64] = 0;
 }
 
-/* Removed deprecated SHA256 generation 11/17/2022
-void sha256_string(char *string, char outputBuffer[65])
-{
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, string, strlen(string));
-    SHA256_Final(hash, &sha256);
-    int i = 0;
-    for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }
-    outputBuffer[64] = 0;
-}
- */
-int sha256_file(char *path, char outputBuffer[65]) {
-    
-    unsigned const char *buffer;
-    unsigned long fileLength;
+int sha256_file(char *path, char *outputBuffer) {
+    unsigned char *buffer=NULL;
     unsigned char digest[SHA256_DIGEST_LENGTH];
-    
-    FILE *file = fopen(path, "rb");
-    if (!file) return -1;
+    size_t bytesRead;
+    FILE *file=NULL;
+    const int bufSize = 32768;
+    int res = 0;
+    EVP_MD_CTX *mdctx = NULL;
 
-    /*Removed deprecated SHA256 generation 11/17/2022
-        unsigned char hash[SHA256_DIGEST_LENGTH];
-        SHA256_CTX sha256;
-        SHA256_Init(&sha256);
-        const int bufSize = 32768;
-        unsigned char *buffer = (unsigned char*) malloc(bufSize);
-        int bytesRead = 0;
-        if(!buffer) return ENOMEM;
-        while((bytesRead = fread(buffer, 1, bufSize, file)))
-        {
-            SHA256_Update(&sha256, buffer, bytesRead);
-        }
-        SHA256_Final(hash, &sha256);
-     */
-
-    
-    fseek(file, 0, SEEK_END);
-    fileLen = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    buffer = (unsigned const char *) malloc(fileLen + 1);
-    if (!buffer) {
-        fprintf(stderr, "Out of memory error!");
-        fclose(file);
-        return 0;
+    // open the file
+    if((file = fopen(path, "rb"))==NULL) {
+        perror("Can't open the provided file name");
+	res=-1;
+        goto err;
     }
-    int i;
-    i = fread((char *) buffer, fileLength, 1, file);
-    fclose(file);
 
-    SHA256(buffer, fileLen, (unsigned char*) &digest);
+    // Allocate the buffer
+    if ( (buffer = new unsigned char[bufSize]) == NULL) {
+        perror("Can't allocate the FILE I/O buffer");
+	res=-1;
+        goto err;
+    }
 
+    // Get a hash context.
+    if ( (mdctx = EVP_MD_CTX_new()) == NULL ) {
+        fprintf(stderr, "Can't allocate a new hash context.");
+        res = -1;
+        goto err;
+    }
+
+   // In this call, we implicitly fetch the SHA256 algorithm automatically from the relevant API
+   // Setup the SHA256 context.
+   if (EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL) != 1) {
+        fprintf(stderr, "Can't setup mdctx as a SHA256 context.");
+        res = -1;
+        goto err;
+    }
+
+    while(!feof(file)) {
+        bytesRead = fread(buffer, 1, bufSize, file);
+
+	if(ferror(file)) {
+            perror("Error reading file for hashing");
+            res=-1;
+            goto err;
+        }
+
+        if(bytesRead > 0) {
+	    if(EVP_DigestUpdate(mdctx, buffer, bytesRead)!=1) {
+                fprintf(stderr, "Can't hash in new data.");
+                res = -1;
+                goto err;
+            }
+        }
+    }
+
+    // Finalize the hash.
+    if(EVP_DigestFinal_ex(mdctx, digest, NULL)!=1) {
+        fprintf(stderr, "Can't finalize the hash.");
+        res = -1;
+        goto err;
+    }
+
+    // Output the hash as a string.
     sha256_hash_string(digest, outputBuffer);
-    fclose(file);
+err:
+    // Close the file.
+    if(file) fclose(file);
 
-    return 0;
+    // De-allocate the buffer.
+    if(buffer) delete[] buffer;
+
+    // Free the hash context
+    if(mdctx) EVP_MD_CTX_free(mdctx);
+
+    return res;
 }
 #endif /* TESTRUNUTILS_H */

@@ -8,6 +8,7 @@
 #include "shared/TestRunUtils.h"
 #include "iid/permutation_tests.h"
 #include "iid/chi_square_tests.h"
+#include <openssl/sha.h>
 #include <omp.h>
 #include <getopt.h>
 #include <limits.h>
@@ -192,18 +193,18 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (verbose > 1) {
-        if (subsetSize == 0) {
-            printf("Opening file: '%s'\n", file_path);
-        } else {
-            printf("Opening file: '%s', reading block %ld of size %ld\n", file_path, subsetIndex, subsetSize);
-        }
-    }
-
     // Record hash of input file
-    char hash[65];
+    char hash[2*SHA256_DIGEST_LENGTH+1];
     sha256_file(file_path, hash);
     testRun.sha256 = hash;
+
+    if (verbose > 1) {
+        if (subsetSize == 0) {
+            printf("Opening file: '%s' (SHA-256 hash %s)\n", file_path, hash);
+        } else {
+            printf("Opening file: '%s' (SHA-256 hash %s), reading block %ld of size %ld\n", file_path, hash, subsetIndex, subsetSize);
+        }
+    }
 
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
 

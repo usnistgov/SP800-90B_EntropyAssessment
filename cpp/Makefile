@@ -7,13 +7,13 @@ ifeq ($(ARCH),x86)
 CXXFLAGS += -msse2 -march=native
 endif
 
-#CXX = clang++-8
-#CXXFLAGS = -Wno-padded -Wno-disabled-macro-expansion -Wno-gnu-statement-expression -Wno-bad-function-cast -fopenmp -O1 -fsanitize=address -fsanitize=undefined -fdenormal-fp-math=ieee -msse2 -march=native
+#CXX = clang++-15
+#CXXFLAGS = -g -Wno-padded -Wno-disabled-macro-expansion -Wno-gnu-statement-expression -Wno-bad-function-cast -fopenmp -O1 -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -fdenormal-fp-math=ieee -msse2 -march=native -I/usr/include/jsoncpp
 #static analysis in clang using
-#scan-build-8 --use-c++=/usr/bin/clang++-8 make
+#scan-build-15 --use-c++=/usr/bin/clang++-15 make
 LIB = -lbz2 -lpthread -ldivsufsort 
 COND_LIB = -lmpfr -lgmp
-SHARED_LIB = -ljsoncpp -lssl -lcrypto
+SHARED_LIB = -ljsoncpp -lcrypto
 INC =
 
 ######
