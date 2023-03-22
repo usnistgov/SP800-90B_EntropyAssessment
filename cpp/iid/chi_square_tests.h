@@ -420,7 +420,7 @@ void allocate_bins(vector<struct tupleTranslateEntry> &e, vector<double> &bin_ex
 	}
 }
 
-void independence_calc_observed(const byte data[], const vector<struct tupleTranslateEntry> &e, vector<int> &o, const int sample_size, const int alphabet_size){
+void independence_calc_observed(const uint8_t data[], const vector<struct tupleTranslateEntry> &e, vector<int> &o, const int sample_size, const int alphabet_size){
 	for(int j = 0; j < sample_size-1; j+=2){
 		uint16_t index = (uint16_t)((data[j] * alphabet_size) + data[j+1]);
 		o[e[index].bin]++;
@@ -442,7 +442,7 @@ double calc_T(const vector<double> &bin_expectations, const vector<int> &o){
 	return T;
 }
 
-void goodness_of_fit_calc_observed(const byte data[], const vector<struct tupleTranslateEntry> &e, vector<int> &o, const int sample_size){
+void goodness_of_fit_calc_observed(const uint8_t data[], const vector<struct tupleTranslateEntry> &e, vector<int> &o, const int sample_size){
 	for(int j = 0; j < sample_size; j++){
 		o[e[data[j]].bin]++;
 	}
@@ -454,7 +454,7 @@ void goodness_of_fit_calc_observed(const byte data[], const vector<struct tupleT
 * ---------------------------------------------
 */
 
-void binary_chi_square_independence(const byte data[], double &score, int &df, const int sample_size){
+void binary_chi_square_independence(const uint8_t data[], double &score, int &df, const int sample_size){
 
 	// Compute proportion of 0s and 1s
 	double p0 = 0.0, p1 = 0.0;
@@ -528,7 +528,7 @@ bool tupleOrder(const struct tupleTranslateEntry &a, const struct tupleTranslate
 	return a.tuple < b.tuple;
 }
 
-void chi_square_independence(const byte data[], double &score, int &df,  const int sample_size, const int alphabet_size){
+void chi_square_independence(const uint8_t data[], double &score, int &df,  const int sample_size, const int alphabet_size){
 	// Proportion of each element to the entire set
 	vector<double> p(alphabet_size, 0.0);
 	calc_proportions(data, p, sample_size);
@@ -557,7 +557,7 @@ void chi_square_independence(const byte data[], double &score, int &df,  const i
 	df = bin_expectations.size() - alphabet_size;
 }
 
-void binary_goodness_of_fit(const byte data[], double &score, int &df, const int sample_size){
+void binary_goodness_of_fit(const uint8_t data[], double &score, int &df, const int sample_size){
 
 	// Find proportion of 1s to the whole data set
 	int sublength = sample_size / 10;
@@ -593,7 +593,7 @@ void binary_goodness_of_fit(const byte data[], double &score, int &df, const int
 	df = 9;
 }
 
-void goodness_of_fit(const byte data[], double &score, int &df, const int sample_size, const int alphabet_size){
+void goodness_of_fit(const uint8_t data[], double &score, int &df, const int sample_size, const int alphabet_size){
         vector<double> p(alphabet_size, 0.0);
         calc_proportions(data, p, sample_size);
 
@@ -632,7 +632,7 @@ void goodness_of_fit(const byte data[], double &score, int &df, const int sample
 	df = 9*(bin_expectations.size()-1);
 }
 
-bool chi_square_tests(const byte data[], const int sample_size, const int alphabet_size, const int verbose){
+bool chi_square_tests(const uint8_t data[], const int sample_size, const int alphabet_size, const int verbose){
 
 	double score = 0.0;
 	double pvalue;

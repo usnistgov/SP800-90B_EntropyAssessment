@@ -24,8 +24,8 @@ using namespace std;
 // Blocks have the number of 1's counted and totaled
 //
 // Requires binary data
-vector<byte> conversion1(const byte data[], const int sample_size){
-	vector<byte> ret((sample_size / 8) + ((sample_size%8==0)?0:1), 0);
+vector<uint8_t> conversion1(const uint8_t data[], const int sample_size){
+	vector<uint8_t> ret((sample_size / 8) + ((sample_size%8==0)?0:1), 0);
 
 	for(int i = 0; i < sample_size; ++i){
 		ret[i/8] += data[i];	// integer division to ensure the size of ret is sample_size / 8
@@ -39,8 +39,8 @@ vector<byte> conversion1(const byte data[], const int sample_size){
 // Blocks are then converted to decimal
 //
 // Requires binary data
-vector<byte> conversion2(const byte data[], const int sample_size){
-	vector<byte> ret((sample_size / 8) + ((sample_size%8==0)?0:1), 0);
+vector<uint8_t> conversion2(const uint8_t data[], const int sample_size){
+	vector<uint8_t> ret((sample_size / 8) + ((sample_size%8==0)?0:1), 0);
 
 	for(int i = 0; i < sample_size; ++i) {
 		ret[i/8] += data[i] << (7 - i%8);
@@ -54,7 +54,7 @@ vector<byte> conversion2(const byte data[], const int sample_size){
 // average value at each point in the set
 //
 // Requires binary or non-binary data
-double excursion(const byte data[], const double rawmean, const int sample_size){
+double excursion(const uint8_t data[], const double rawmean, const int sample_size){
 	double d_i = 0;
 	double max = 0;
 	double running_sum = 0;
@@ -77,7 +77,7 @@ double excursion(const byte data[], const double rawmean, const int sample_size)
 // Pushes +1 to the array if the value is <= than the next
 //
 // Requires non-binary data
-vector<int> alt_sequence1(const byte data[], const int sample_size){
+vector<int> alt_sequence1(const uint8_t data[], const int sample_size){
 	vector<int> ret(sample_size-1, 0);
 
 	for(int i = 0; i < sample_size-1; ++i){
@@ -91,7 +91,7 @@ vector<int> alt_sequence1(const byte data[], const int sample_size){
 // Builds a array of the runs of values compared to the median
 // Pushes +1 to the array if the value is >= the median
 // Pushes -1 to the array if the value is < than the median
-vector<int> alt_sequence2(const byte data[], const double median, const int sample_size){
+vector<int> alt_sequence2(const uint8_t data[], const double median, const int sample_size){
 	vector<int> ret(sample_size, 0);
 
 	for(int i = 0; i < sample_size; ++i){
@@ -187,7 +187,7 @@ unsigned int num_increases_decreases(const vector<int> &alt_seq){
 }
 
 // Helper function to prepare for 5.1.7 and 5.1.8
-vector<unsigned int> find_collisions(const byte data[], const unsigned int n, const unsigned int k){
+vector<unsigned int> find_collisions(const uint8_t data[], const unsigned int n, const unsigned int k){
 	vector<unsigned int> ret;
 	vector<bool> dups(k, false);
 
@@ -250,7 +250,7 @@ unsigned int max_collision(const vector<unsigned int> &col_seq){
 // Based on lag parameter p = [1, 2, 8, 16, 32]
 //
 // Requires non-binary data or binary data from conversion1
-unsigned int periodicity(const byte data[], const unsigned int p, const unsigned int n){
+unsigned int periodicity(const uint8_t data[], const unsigned int p, const unsigned int n){
 	unsigned int T = 0;
 
 	assert(n>=p);
@@ -269,7 +269,7 @@ unsigned int periodicity(const byte data[], const unsigned int p, const unsigned
 // Based on lag parameter p = [1, 2, 8, 16, 32]
 //
 // Requires non-binary data or binary data from conversion1
-unsigned long int covariance(const byte data[], const unsigned int p, const unsigned int n){
+unsigned long int covariance(const uint8_t data[], const unsigned int p, const unsigned int n){
 	unsigned long int T = 0;
 
 	for(unsigned int i = 0; i < n-p; ++i){
@@ -284,7 +284,7 @@ unsigned long int covariance(const byte data[], const unsigned int p, const unsi
 // of the resulting compressed data
 //
 // Can handle binary and non-binary data
-unsigned int compression(const byte data[], const int sample_size, const byte max_symbol){
+unsigned int compression(const uint8_t data[], const int sample_size, const uint8_t max_symbol){
 	char *msg;
 	unsigned int curlen = 0;
 	char *curmsg;
@@ -339,18 +339,18 @@ unsigned int compression(const byte data[], const int sample_size, const byte ma
  * ---------------------------------------------
  */
 
-void excursion_test(const byte data[], const double rawmean, const int sample_size, long double* stats, const bool *test_status){
+void excursion_test(const uint8_t data[], const double rawmean, const int sample_size, long double* stats, const bool *test_status){
 
 	if(test_status[0]) stats[0] = excursion(data, rawmean, sample_size);
 }
 
-void directional_tests(const byte data[], const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
+void directional_tests(const uint8_t data[], const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
 
 	vector<int> alt_seq;
 
 	if(test_status[1] || test_status[2] || test_status[3]) {
 		if(alphabet_size == 2){
-			vector<byte> cs1 = conversion1(data, sample_size);
+			vector<uint8_t> cs1 = conversion1(data, sample_size);
 			alt_seq = alt_sequence1(cs1.data(), cs1.size());		// conversion1 reduces the total size by a factor of 8
 		}else{
 			alt_seq = alt_sequence1(data, sample_size);
@@ -362,7 +362,7 @@ void directional_tests(const byte data[], const int alphabet_size, const int sam
 	}
 }
 
-void consecutive_runs_tests(const byte data[], const double median, const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
+void consecutive_runs_tests(const uint8_t data[], const double median, const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
 
 	vector<int> alt_seq;
 
@@ -378,13 +378,13 @@ void consecutive_runs_tests(const byte data[], const double median, const int al
 	}
 }
 
-void collision_tests(const byte data[], const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
+void collision_tests(const uint8_t data[], const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
 
 	vector<unsigned int> col_seq;
 
 	if(test_status[7] || test_status[6]) {
 		if(alphabet_size == 2){
-			vector<byte> cs2 = conversion2(data, sample_size);
+			vector<uint8_t> cs2 = conversion2(data, sample_size);
 			col_seq = find_collisions(cs2.data(), cs2.size(), 256);		// conversion2 reduces the total size by a factor of 8
 		}else{
 			col_seq = find_collisions(data, sample_size, alphabet_size);
@@ -395,11 +395,11 @@ void collision_tests(const byte data[], const int alphabet_size, const int sampl
 	}
 }
 
-void periodicity_tests(const byte data[], const int alphabet_size, const int sample_size,long double *stats, const bool *test_status){
+void periodicity_tests(const uint8_t data[], const int alphabet_size, const int sample_size,long double *stats, const bool *test_status){
 
 	if(test_status[8] || test_status[9] || test_status[10] || test_status[11] || test_status[12]) {
 		if(alphabet_size == 2){
-			vector<byte> cs1 = conversion1(data, sample_size);
+			vector<uint8_t> cs1 = conversion1(data, sample_size);
 			if(test_status[8]) stats[8] = periodicity(cs1.data(), 1, cs1.size());
 			if(test_status[9]) stats[9] = periodicity(cs1.data(), 2, cs1.size());
 			if(test_status[10]) stats[10] = periodicity(cs1.data(), 8, cs1.size());
@@ -415,11 +415,11 @@ void periodicity_tests(const byte data[], const int alphabet_size, const int sam
 	}
 }
 
-void covariance_tests(const byte data[], const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
+void covariance_tests(const uint8_t data[], const int alphabet_size, const int sample_size, long double *stats, const bool *test_status){
 
 	if(test_status[13] || test_status[14] || test_status[15] || test_status[16] || test_status[17]) {
 		if(alphabet_size == 2){
-			vector<byte> cs1 = conversion1(data, sample_size);
+			vector<uint8_t> cs1 = conversion1(data, sample_size);
 			if(test_status[13]) stats[13] = covariance(cs1.data(), 1, cs1.size());		// top should be cs1
 			if(test_status[14]) stats[14]  = covariance(cs1.data(), 2, cs1.size());
 			if(test_status[15]) stats[15]  = covariance(cs1.data(), 8, cs1.size());
@@ -435,12 +435,12 @@ void covariance_tests(const byte data[], const int alphabet_size, const int samp
 	}
 }
 
-void compression_test(const byte data[], const int sample_size, long double *stats, const byte max_symbol, const bool *test_status){
+void compression_test(const uint8_t data[], const int sample_size, long double *stats, const uint8_t max_symbol, const bool *test_status){
 
 	if(test_status[18]) stats[18] = compression(data, sample_size, max_symbol);
 }
 
-void run_tests(const data_t *dp, const byte data[], const byte rawdata[], const double rawmean, const double median, long double *stats, const bool *test_status){
+void run_tests(const data_t *dp, const uint8_t data[], const uint8_t rawdata[], const double rawmean, const double median, long double *stats, const bool *test_status){
 
 	// Perform tests
 	excursion_test(rawdata, rawmean, dp->len, stats, test_status);
@@ -621,14 +621,14 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 
 	#pragma omp parallel
 	{
-		byte *data;
-		byte *rawdata;
+		uint8_t *data;
+		uint8_t *rawdata;
 		uint64_t xoshiro256starstarSeed[4];
 		long double tp[num_tests];
 		int passed_count;
 
-		data = new byte[dp->len];
-		rawdata = new byte[dp->len];
+		data = new uint8_t[dp->len];
+		rawdata = new uint8_t[dp->len];
 
 		// Init results
 		for(unsigned int i = 0; i < num_tests; ++i){

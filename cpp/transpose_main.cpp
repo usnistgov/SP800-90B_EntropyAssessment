@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 0; i < c; i++) {
         for (int j = 0; j < r; j++) {
-            if (fwrite(data.rawsymbols + c * j + i, sizeof (byte), 1, fp) != 1) {
+            if (fwrite(data.rawsymbols + c * j + i, sizeof (uint8_t), 1, fp) != 1) {
                 perror("Can't write output");
                 exit(-1);
             }

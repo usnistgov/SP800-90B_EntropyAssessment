@@ -28,7 +28,7 @@ struct lagBuf {
  * For this, one needs only check and update the current symbol's ring buffer, and we only need to spend
  * time looking at values that correspond to counters that must be updated.
  */
-double lag_test(byte *S, long L, int k, const int verbose, const char *label) {
+double lag_test(uint8_t *S, long L, int k, const int verbose, const char *label) {
 	long scoreboard[D_LAG] = {0};
 	int winner = 0;
 	long curRunOfCorrects = 0;
@@ -56,7 +56,7 @@ double lag_test(byte *S, long L, int k, const int verbose, const char *label) {
 
 	// The rest of the values yield a prediction
 	for (long i = 1; i < L; i++) {
-		const byte curSymbol = S[i];
+		const uint8_t curSymbol = S[i];
 		lagBuf *const curRingBuffer = &(ringBuffers[curSymbol]); // The pointer itself is a constant (not the structure it points to)
 
 		// Check the prediction first

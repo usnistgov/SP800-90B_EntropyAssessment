@@ -4,7 +4,7 @@
 #define B 16
 #define MAX_DICTIONARY_SIZE 65536
 
-static double binaryLZ78YPredictionEstimate(const byte *S, long L, const int verbose, const char *label)
+static double binaryLZ78YPredictionEstimate(const uint8_t *S, long L, const int verbose, const char *label)
 {
    long *binaryDict[B];
    long curRunOfCorrects=0;
@@ -42,8 +42,8 @@ static double binaryLZ78YPredictionEstimate(const byte *S, long L, const int ver
    for(i=B+1; i<L; i++) {
       bool found_x;
       bool havePrediction = false;
-      byte roundPrediction=2;
-      byte curPrediction=2;
+      uint8_t roundPrediction=2;
+      uint8_t curPrediction=2;
       long maxCount = 0;
 
       //But the first B bits into curPattern
@@ -113,14 +113,14 @@ static double binaryLZ78YPredictionEstimate(const byte *S, long L, const int ver
 }
 
 // Section 6.3.10 - LZ78Y Prediction Estimate
-double LZ78Y_test(byte *data, long len, int alph_size, const int verbose, const char *label) {
+double LZ78Y_test(uint8_t *data, long len, int alph_size, const int verbose, const char *label) {
 	int dict_size;
 	long i, j, N, C, run_len, max_run_len;
-	array<byte, B> x;
+	array<uint8_t, B> x;
 
 	if(alph_size==2) return binaryLZ78YPredictionEstimate(data, len, verbose, label);
 
-	array<map<array<byte, B>, PostfixDictionary>, B> D;
+	array<map<array<uint8_t, B>, PostfixDictionary>, B> D;
 
 	if(len < B+2){	
 		printf("\t*** Warning: not enough samples to run LZ78Y test (need more than %d) ***\n", B+2);
@@ -146,11 +146,11 @@ double LZ78Y_test(byte *data, long len, int alph_size, const int verbose, const 
 	for(i = B+1; i < len; i++) {
 		bool found_x;
 		bool have_prediction = false;
-		byte prediction = 0;
+		uint8_t prediction = 0;
 		long max_count = 0;
 
 		for(j = B; j > 0; j--) {
-			map<array<byte, B>, PostfixDictionary>::iterator curp;
+			map<array<uint8_t, B>, PostfixDictionary>::iterator curp;
 
 			// check if x has been previously seen. 
 			//For the prediction, roundPrediction is the max across all pairs
@@ -164,7 +164,7 @@ double LZ78Y_test(byte *data, long len, int alph_size, const int verbose, const 
 
 			if(found_x) {
 				long count;
-				byte y;
+				uint8_t y;
 
 				// x has occurred, find max (x,y) pair across all y's
 				// Check to see if the current prediction is correct.

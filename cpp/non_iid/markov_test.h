@@ -3,7 +3,7 @@
 
 // Section 6.3.3 - Markov Estimate
 // data is assumed to be binary (e.g., bit string)
-double markov_test(byte* data, long len, const int verbose, const char *label){
+double markov_test(uint8_t* data, long len, const int verbose, const char *label){
 	long i, C_0, C_1, C_00, C_10;
 	double H_min, tmp_min_entropy, P_0, P_1, P_00, P_01, P_10, P_11, entEst;
 

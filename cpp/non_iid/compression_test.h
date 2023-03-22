@@ -90,7 +90,7 @@ double com_exp(double p, unsigned int alph_size, int d, long num_blocks){
 
 // Section 6.3.4 - Compression Estimate
 // data is assumed to be binary (e.g., bit string)
-double compression_test(byte* data, long len, const int verbose, const char *label){
+double compression_test(uint8_t* data, long len, const int verbose, const char *label){
 	int j, d, b = 6;
 	long i, num_blocks, v;
 	unsigned int block, alph_size = 1 << b; 
