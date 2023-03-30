@@ -4,7 +4,7 @@
 #define D_MMC 16
 #define MAX_ENTRIES 100000
 
-static double binaryMultiMMCPredictionEstimate(const byte *S, long L, const int verbose, const char *label)
+static double binaryMultiMMCPredictionEstimate(const uint8_t *S, long L, const int verbose, const char *label)
 {
 
    long scoreboard[D_MMC] = {0};
@@ -144,16 +144,16 @@ static double binaryMultiMMCPredictionEstimate(const byte *S, long L, const int 
  *    some long string to the dictionary after no longer looking for a string to the dictionary when
  *    we should have), this can't happen in practice because we add strings from shortest to longest.
  */
-double multi_mmc_test(byte *data, long len, int alph_size, const int verbose, const char *label){
+double multi_mmc_test(uint8_t *data, long len, int alph_size, const int verbose, const char *label){
 	int winner, cur_winner;
 	int entries[D_MMC];
 	long i, d, N, C, run_len, max_run_len;
 	long scoreboard[D_MMC] = {0};
-	array<byte, D_MMC> x;
+	array<uint8_t, D_MMC> x;
 
 	if(alph_size == 2) return binaryMultiMMCPredictionEstimate(data, len, verbose, label);
 
-	array<map<array<byte, D_MMC>, PostfixDictionary>, D_MMC> M;
+	array<map<array<uint8_t, D_MMC>, PostfixDictionary>, D_MMC> M;
 
 	if(len < 3){	
 		printf("\t*** Warning: not enough samples to run multiMMC test (need more than %d) ***\n", 3);
@@ -190,7 +190,7 @@ double multi_mmc_test(byte *data, long len, int alph_size, const int verbose, co
 		memset(x.data(), 0, D_MMC);
 
 		for(d = 0; (d < D_MMC) && (i-2 >= d); d++) {
-			map<array<byte, D_MMC>, PostfixDictionary>::iterator curp;
+			map<array<uint8_t, D_MMC>, PostfixDictionary>::iterator curp;
 			// check if x has been previously seen as a prefix. If the prefix x has not occurred,
 			// then do not make a prediction for current d and larger d's
 			// as well, since it will not occur for them either. In other words,

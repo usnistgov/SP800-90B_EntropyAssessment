@@ -14,7 +14,7 @@ double col_exp(double p){
 
 // Section 6.3.2 - Collision Estimate
 // data is assumed to be binary (e.g., bit string)
-double collision_test(byte* data, long len, const int verbose, const char *label){
+double collision_test(uint8_t* data, long len, const int verbose, const char *label){
 	long v, i;
 	int t_v;
 	double X, s, p;

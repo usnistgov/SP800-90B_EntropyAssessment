@@ -36,19 +36,17 @@
 #define ZALPHA 2.5758293035489008
 
 //Version of the tool
-#define VERSION "1.1.5"
-
-typedef unsigned char byte;
+#define VERSION "GitHub Commit 0a2372810ad535158795177381f61ea4821bf2ce"
 
 typedef struct data_t data_t;
 
 struct data_t{
 	int word_size; 		// bits per symbol
 	int alph_size; 		// symbol alphabet size
-	byte maxsymbol; 	// the largest symbol present in the raw data stream
-	byte *rawsymbols; 	// raw data words
-	byte *symbols; 		// data words
-	byte *bsymbols; 	// data words as binary string
+	uint8_t maxsymbol; 	// the largest symbol present in the raw data stream
+	uint8_t *rawsymbols; 	// raw data words
+	uint8_t *symbols; 		// data words
+	uint8_t *bsymbols; 	// data words as binary string
 	long len; 		// number of words in data
 	long blen; 		// number of bits in data
 };
@@ -204,8 +202,8 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		return false;
 	}
 
-	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
-	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
+	dp->symbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
+	dp->rawsymbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
 	if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
 		printf("Error: failure to initialize memory for symbols\n");
 		fclose(file);
@@ -220,7 +218,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		return false;
 	}
 
-	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
+	rc = fread(dp->symbols, sizeof(uint8_t), dp->len, file);
 	if(rc != dp->len){
 		printf("Error: file read failure\n");
 		fclose(file);
@@ -234,8 +232,8 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	//Do we need to establish the word size?
 	if(dp->word_size == 0) {
-		byte datamask = 0;
-		byte curbit = 0x80;
+		uint8_t datamask = 0;
+		uint8_t curbit = 0x80;
 
 		for(i = 0; i < dp->len; i++) {
 			datamask = datamask | dp->symbols[i];
@@ -247,8 +245,8 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 		dp->word_size = i;
 	} else {
-		byte datamask = 0;
-		byte curbit = 0x80;
+		uint8_t datamask = 0;
+		uint8_t curbit = 0x80;
 
 		for(i = 0; i < dp->len; i++) {
 			datamask = datamask | dp->symbols[i];
@@ -270,7 +268,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		}
 	}
 
-	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
+	memcpy(dp->rawsymbols, dp->symbols, sizeof(uint8_t)* dp->len);
 	dp->maxsymbol = 0;
 
 	max_symbols = 1 << dp->word_size;
@@ -287,14 +285,14 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	}
 
 	for(i = 0; i < max_symbols; i++){
-		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (byte)dp->alph_size++;
+		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (uint8_t)dp->alph_size++;
 	}
 
 	// create bsymbols (bitstring) using the non-mapped data
 	dp->blen = dp->len * dp->word_size;
 	if(dp->word_size == 1) dp->bsymbols = dp->symbols;
 	else{
-		dp->bsymbols = (byte*)malloc(dp->blen);
+		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
 			free(dp->symbols);
@@ -314,7 +312,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	// map down symbols if less than 2^bits_per_word unique symbols
 	if(dp->alph_size < dp->maxsymbol + 1){
-		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
+		for(i = 0; i < dp->len; i++) dp->symbols[i] = (uint8_t)symbol_map_down_table[dp->symbols[i]];
 	} 
 
 	return true;
@@ -354,8 +352,8 @@ bool read_file(const char *file_path, data_t *dp){
 		return false;
 	}
 
-	dp->symbols = (byte*)malloc(sizeof(byte)*dp->len);
-	dp->rawsymbols = (byte*)malloc(sizeof(byte)*dp->len);
+	dp->symbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
+	dp->rawsymbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
         if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
                 printf("Error: failure to initialize memory for symbols\n");
                 fclose(file);
@@ -370,7 +368,7 @@ bool read_file(const char *file_path, data_t *dp){
                 return false;
         }
 
-	rc = fread(dp->symbols, sizeof(byte), dp->len, file);
+	rc = fread(dp->symbols, sizeof(uint8_t), dp->len, file);
 	if(rc != dp->len){
 		printf("Error: file read failure\n");
 		fclose(file);
@@ -385,8 +383,8 @@ bool read_file(const char *file_path, data_t *dp){
 	//Do we need to establish the word size?
 	if(dp->word_size == 0) {
 		//Yes. Establish the word size using the highest order bit in use
-		byte datamask = 0;
-		byte curbit = 0x80;
+		uint8_t datamask = 0;
+		uint8_t curbit = 0x80;
 
 		for(i = 0; i < dp->len; i++) {
 			datamask = datamask | dp->symbols[i];
@@ -398,8 +396,8 @@ bool read_file(const char *file_path, data_t *dp){
 
 		dp->word_size = i;
        } else {
-                byte datamask = 0;
-		byte curbit = 0x80;
+                uint8_t datamask = 0;
+		uint8_t curbit = 0x80;
 
                 for(i = 0; i < dp->len; i++) {
                         datamask = datamask | dp->symbols[i];
@@ -422,7 +420,7 @@ bool read_file(const char *file_path, data_t *dp){
         }
 
 
-	memcpy(dp->rawsymbols, dp->symbols, sizeof(byte)* dp->len);
+	memcpy(dp->rawsymbols, dp->symbols, sizeof(uint8_t)* dp->len);
 	dp->maxsymbol = 0;
 
 	max_symbols = 1 << dp->word_size;
@@ -439,14 +437,14 @@ bool read_file(const char *file_path, data_t *dp){
 	}
 
 	for(i = 0; i < max_symbols; i++){
-		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (byte)dp->alph_size++;
+		if(symbol_map_down_table[i] != 0) symbol_map_down_table[i] = (uint8_t)dp->alph_size++;
 	}
 
 	// create bsymbols (bitstring) using the non-mapped data
 	dp->blen = dp->len * dp->word_size;
 	if(dp->word_size == 1) dp->bsymbols = dp->symbols;
 	else{
-		dp->bsymbols = (byte*)malloc(dp->blen);
+		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
 			free(dp->symbols);
@@ -465,7 +463,7 @@ bool read_file(const char *file_path, data_t *dp){
 
 	// map down symbols if less than 2^bits_per_word unique symbols
 	if(dp->alph_size < dp->maxsymbol + 1){
-		for(i = 0; i < dp->len; i++) dp->symbols[i] = (byte)symbol_map_down_table[dp->symbols[i]];
+		for(i = 0; i < dp->len; i++) dp->symbols[i] = (uint8_t)symbol_map_down_table[dp->symbols[i]];
 	} 
 
 	return true;
@@ -603,7 +601,7 @@ double randomUnit(uint64_t *xoshiro256starstarState) {
 }
 
 // Fisher-Yates Fast (in place) shuffle algorithm
-void FYshuffle(byte data[], byte rawdata[], const int sample_size, uint64_t *xoshiro256starstarState) {
+void FYshuffle(uint8_t data[], uint8_t rawdata[], const int sample_size, uint64_t *xoshiro256starstarState) {
 	long int r;
 	static mutex shuffle_mutex;
 	unique_lock<mutex> lock(shuffle_mutex);
@@ -616,7 +614,7 @@ void FYshuffle(byte data[], byte rawdata[], const int sample_size, uint64_t *xos
 }
 
 // Quick sum array  // TODO
-long int sum(const byte arr[], const int sample_size) {
+long int sum(const uint8_t arr[], const int sample_size) {
 	long int sum = 0;
 	for (long int i = 0; i < sample_size; ++i) {
 		sum += arr[i];
@@ -655,7 +653,7 @@ void calc_stats(const data_t *dp, double &rawmean, double &median) {
 	rawmean = sum(dp->rawsymbols, dp->len) / (double)dp->len;
 
 	// Sort in a vector for median/min/max
-	vector<byte> v(dp->symbols, dp->symbols + dp->len);
+	vector<uint8_t> v(dp->symbols, dp->symbols + dp->len);
 	sort(v.begin(), v.end());
 
 	long int half = dp->len / 2;
@@ -676,37 +674,37 @@ void calc_stats(const data_t *dp, double &rawmean, double &median) {
 
 
 // Map initialization for integers
-void map_init(map<byte, int> &m) {
+void map_init(map<uint8_t, int> &m) {
 	for (int i = 0; i < 256; i++) {
 		m[i] = 0;
 	}
 }
 
 // Map initialization for doubles
-void map_init(map<byte, double> &m) {
+void map_init(map<uint8_t, double> &m) {
 	for (int i = 0; i < 256; i++) {
 		m[i] = 0.0;
 	}
 }
 
-// Map initialization for pair<byte, byte> to int
-void map_init(map<pair<byte, byte>, int> &m) {
+// Map initialization for pair<uint8_t, uint8_t> to int
+void map_init(map<pair<uint8_t, uint8_t>, int> &m) {
 	for (int i = 0; i < 256; i++) {
 		for (int j = 0; j < 256; j++) {
-			m[pair<byte, byte>(i, j)] = 0;
+			m[pair<uint8_t, uint8_t>(i, j)] = 0;
 		}
 	}
 }
 
 // Calculates proportions of each value as an index
-void calc_proportions(const byte data[], vector<double> &p, const int sample_size) {
+void calc_proportions(const uint8_t data[], vector<double> &p, const int sample_size) {
 	for (int i = 0; i < sample_size; i++) {
 		p[data[i]] += (1.0 / sample_size);
 	}
 }
 
 // Calculates proportions of each value as an index
-void calc_counts(const byte data[], vector<int> &c, const int sample_size) {
+void calc_counts(const uint8_t data[], vector<int> &c, const int sample_size) {
 	for (int i = 0; i < sample_size; i++) {
 		c[data[i]] ++;
 	}
@@ -728,14 +726,14 @@ long int n_choose_2(const long int n) {
 	return ((n*n) - n) / 2;
 }
 
-vector<byte> substr(const byte text[], const int pos, const int len, const int sample_size) {
+vector<uint8_t> substr(const uint8_t text[], const int pos, const int len, const int sample_size) {
 	int substr_len = len;
 
 	if (pos + len > sample_size) {
 		substr_len = sample_size - pos;
 	}
 
-	vector<byte> substring;
+	vector<uint8_t> substring;
 
 	for (int i = 0; i < substr_len; i++) {
 		substring.push_back(text[pos + i]);
@@ -745,8 +743,8 @@ vector<byte> substr(const byte text[], const int pos, const int len, const int s
 }
 
 // Fast substring with no bounds checking
-array<byte, 16> fast_substr(const byte text[], const int pos, const int len) {
-	array<byte, 16> substring = { 0 };
+array<uint8_t, 16> fast_substr(const uint8_t text[], const int pos, const int len) {
+	array<uint8_t, 16> substring = { 0 };
 
 	for (int i = 0; i < len; i++) {
 		substring[i] = text[pos + i];
@@ -943,7 +941,7 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 //We then multiply this by 2 (as each pattern is associated with a length-2 array) by left shifting by 1.
 #define BINARYDICTLOC(d, b) (binaryDict[(d)-1] + (((b) & ((1U << (d)) - 1))<<1))
 
-static uint32_t compressedBitSymbols(const byte *S, long length)
+static uint32_t compressedBitSymbols(const uint8_t *S, long length)
 {
    uint32_t retPattern;
    long j;
@@ -983,14 +981,14 @@ static string recreateCommandLine(int argc, char* argv[]) {
 }
 
 class PostfixDictionary {
-	map<byte, long> postfixes;
+	map<uint8_t, long> postfixes;
 	long curBest;
-	byte curPrediction;
+	uint8_t curPrediction;
 public:
 	PostfixDictionary() { curBest = 0; curPrediction = 0;}
-	byte predict(long &count) {assert(curBest > 0); count = curBest; return curPrediction;}
-	bool incrementPostfix(byte in, bool makeNew) {
-		map<byte, long>::iterator curp = postfixes.find(in);
+	uint8_t predict(long &count) {assert(curBest > 0); count = curBest; return curPrediction;}
+	bool incrementPostfix(uint8_t in, bool makeNew) {
+		map<uint8_t, long>::iterator curp = postfixes.find(in);
 		long curCount;
 		bool newEntry=false;
 

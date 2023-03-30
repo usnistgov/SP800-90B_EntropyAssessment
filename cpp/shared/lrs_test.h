@@ -11,7 +11,7 @@
 //http://web.cs.iastate.edu/~cs548/references/linear_lcp.pdf
 //The default implementation uses 4 byte indexes
 //Note that indexes should be signed, so the next natural size is int64_t
-static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vector<saidx_t> &lcp) {
+static void sa2lcp(const uint8_t text[], long int n, const vector<saidx_t> &sa, vector<saidx_t> &lcp) {
 	saidx_t h;
 	vector<saidx_t> rank(n+1,-1);
 
@@ -44,7 +44,7 @@ static void sa2lcp(const byte text[], long int n, const vector<saidx_t> &sa, vec
 	}
 }
 
-void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp) {
+void calcSALCP(const uint8_t text[], long int n, vector<saidx_t> &sa, vector<saidx_t> &lcp) {
 	int32_t res;
 
 	assert(n < INT32_MAX); //This is the default type, but it can be compiled to use 64 bit indexes (and then this should be INT64_MAX)
@@ -63,7 +63,7 @@ void calcSALCP(const byte text[], long int n, vector<saidx_t> &sa, vector<saidx_
  * This is described here:
  * http://www.untruth.org/~josh/sp80090b/Kaufer%20Further%20Improvements%20for%20SP%20800-90B%20Tuple%20Counts.pdf
  */
-void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &lrs_res, const int verbose, const char *label) {
+void SAalgs(const uint8_t text[], long int n, int k, double &t_tuple_res, double &lrs_res, const int verbose, const char *label) {
 	vector <saidx_t> sa(n+1, -1); //each value is at most n-1
 	vector <saidx_t> L(n+2, -1); //each value is at most n-1
 
@@ -289,7 +289,7 @@ void SAalgs(const byte text[], long int n, int k, double &t_tuple_res, double &l
 	return;
 }
 
-int len_LRS(const byte text[], const int sample_size){
+int len_LRS(const uint8_t text[], const int sample_size){
 	vector <saidx_t> sa(sample_size+1, -1);
 	vector <saidx_t> lcp(sample_size+1, -1);
 	saidx_t lrs_len = -1;
@@ -324,7 +324,7 @@ void calc_collision_proportion(const vector<double> &p, long double &p_col){
 * ---------------------------------------------
 */
 
-bool len_LRS_test(const byte data[], const int L, const int k, const int verbose, const char *label) {
+bool len_LRS_test(const uint8_t data[], const int L, const int k, const int verbose, const char *label) {
 	// p_col is the probability of collision on a per-symbol basis under an IID assumption (this is related to the collision entropy).
 	// p_col >= 1/k, which bounds this.
 	// Note, for SP 800-90B k<=256, so we can bound p_col >= 2^-8. 

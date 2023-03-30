@@ -4,14 +4,14 @@
 #define NUM_WINS 4
 
 // Section 6.3.7 - Multi Most Common in Window (MCW) Prediction Estimate
-double multi_mcw_test(byte *data, long len, int alph_size, const int verbose, const char *label){
+double multi_mcw_test(uint8_t *data, long len, int alph_size, const int verbose, const char *label){
 	int winner;
 	int W[NUM_WINS] = {63, 255, 1023, 4095};
 	long i, j, k, N, C, run_len, max_run_len, max_pos; 
 	long scoreboard[NUM_WINS] = {0};
 	long max_cnts[NUM_WINS] = {0};
 	long win_cnts[NUM_WINS][alph_size], win_poses[NUM_WINS][alph_size]; 
-	byte frequent[NUM_WINS];
+	uint8_t frequent[NUM_WINS];
 	
 	if(len < W[NUM_WINS-1]+1){	
 		printf("\t*** Warning: not enough samples to run multiMCW test (need more than %d) ***\n", W[NUM_WINS-1]+1);

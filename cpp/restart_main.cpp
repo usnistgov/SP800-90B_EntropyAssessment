@@ -14,6 +14,7 @@
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
 
+#include <cstdint>
 #include <getopt.h>
 #include <limits.h>
 #include <iostream>
@@ -145,7 +146,7 @@ int main(int argc, char* argv[]) {
     long int X_cutoff;
     long i, j, X_i, X_r, X_c, X_max;
     double H_I, H_r, H_c, alpha, ret_min_entropy;
-    byte *rdata, *cdata;
+    uint8_t *rdata, *cdata;
     data_t data;
     int opt;
 
@@ -376,7 +377,7 @@ int main(int argc, char* argv[]) {
     }
 
     rdata = data.symbols;
-    cdata = (byte*) malloc(data.len);
+    cdata = (uint8_t*) malloc(data.len);
     if (cdata == NULL) {
         printf("Error: failure to initialize memory for columns\n");
         if (jsonOutput) {
