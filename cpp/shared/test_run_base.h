@@ -21,9 +21,7 @@ protected:
     Json::Value GetBaseJson() {
         Json::Value baseJson;
         baseJson["dateTimeStamp"] = timestamp;
-        baseJson["filename"] = filename;
         baseJson["commandline"] = commandline;
-        baseJson["sha256"] = sha256;
         baseJson["errorLevel"] = errorLevel;
         baseJson["type"] = type;
         baseJson["toolVersion"] = VERSION;
@@ -31,7 +29,12 @@ protected:
         if (errorLevel != 0){
             baseJson["errorMessage"] = errorMsg;
         }
-
+        if(!filename.empty()) {
+            baseJson["filename"] = filename;
+        }
+        if(!sha256.empty()) {
+            baseJson["sha256"] = sha256;
+        }
         return baseJson;
     }
 };
