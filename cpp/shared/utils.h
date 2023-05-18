@@ -154,8 +154,9 @@ void free_data(data_t *dp){
 	if((dp->word_size > 1) && (dp->bsymbols != NULL)) free(dp->bsymbols);
 } 
 
+
 // Read in binary file to test
-bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
+bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize, string &errorMessage) {
 	FILE *file; 
 	int mask, j, max_symbols;
 	long rc, i;
@@ -164,12 +165,14 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	file = fopen(file_path, "rb");
 	if(!file){
 		printf("Error: could not open '%s'\n", file_path);
+                errorMessage = "Could not open data file";
 		return false;
 	}
 
 	rc = (long)fseek(file, 0, SEEK_END);
 	if(rc < 0){
 		printf("Error: fseek failed\n");
+                errorMessage = "fseek failed";
 		fclose(file);
 		return false;
 	}
@@ -177,6 +180,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	fileLen = ftell(file);
 	if(fileLen < 0){
 		printf("Error: ftell failed\n");
+                errorMessage = "ftell failed";
 		fclose(file);
 		return false;
 	}
@@ -189,6 +193,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		rc = (long)fseek(file, subsetIndex*subsetSize, SEEK_SET);
 		if(rc < 0){
 			printf("Error: fseek failed\n");
+                        errorMessage = "fseek failed";
 			fclose(file);
 			return false;
 		}
@@ -198,6 +203,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	if(dp->len == 0){
 		printf("Error: '%s' is empty\n", file_path);
+                errorMessage = "Data file is empty";
 		fclose(file);
 		return false;
 	}
@@ -206,6 +212,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	dp->rawsymbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
 	if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
 		printf("Error: failure to initialize memory for symbols\n");
+                errorMessage = "Failure to initialize memory for symbols";
 		fclose(file);
 		if(dp->symbols != NULL) {
 			free(dp->symbols);
@@ -221,6 +228,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	rc = fread(dp->symbols, sizeof(uint8_t), dp->len, file);
 	if(rc != dp->len){
 		printf("Error: file read failure\n");
+                errorMessage = "File read failure";
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
@@ -260,7 +268,8 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 			printf("Warning: Symbols appear to be narrower than described.\n");
 		} else if( i > dp->word_size ) {
 			printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
-			free(dp->symbols);
+			errorMessage = "Incorrect bit width specification: Data does not fit within described bit width";
+                        free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
 			dp->rawsymbols = NULL;
@@ -295,6 +304,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
+                        errorMessage = "Failure to initialize memory for bsymbols";
 			free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -318,8 +328,14 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	return true;
 }
 
+bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
+    
+    string errorMessage;
+    return read_file_subset(file_path, dp, subsetIndex, subsetSize, errorMessage);
 
-bool read_file(const char *file_path, data_t *dp){
+}
+
+bool read_file(const char *file_path, data_t *dp, string &errorMessage){
 	FILE *file; 
 	int mask, j, max_symbols;
 	long rc, i;
@@ -327,12 +343,14 @@ bool read_file(const char *file_path, data_t *dp){
 	file = fopen(file_path, "rb");
 	if(!file){
 		printf("Error: could not open '%s'\n", file_path);
+                errorMessage = "Could not open data file";
 		return false;
 	}
 
 	rc = (long)fseek(file, 0, SEEK_END);
 	if(rc < 0){
 		printf("Error: fseek failed\n");
+                errorMessage = "fseek failed";
 		fclose(file);
 		return false;
 	}
@@ -340,6 +358,7 @@ bool read_file(const char *file_path, data_t *dp){
 	dp->len = ftell(file);
 	if(dp->len < 0){
 		printf("Error: ftell failed\n");
+                errorMessage = "ftell failed";
 		fclose(file);
 		return false;
 	}
@@ -348,6 +367,7 @@ bool read_file(const char *file_path, data_t *dp){
 
 	if(dp->len == 0){
 		printf("Error: '%s' is empty\n", file_path);
+                errorMessage = "Data file is empty";
 		fclose(file);
 		return false;
 	}
@@ -356,6 +376,7 @@ bool read_file(const char *file_path, data_t *dp){
 	dp->rawsymbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
         if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
                 printf("Error: failure to initialize memory for symbols\n");
+                errorMessage = "Failure to initialize memory for symbols";
                 fclose(file);
                 if(dp->symbols != NULL) {
                         free(dp->symbols);
@@ -371,6 +392,7 @@ bool read_file(const char *file_path, data_t *dp){
 	rc = fread(dp->symbols, sizeof(uint8_t), dp->len, file);
 	if(rc != dp->len){
 		printf("Error: file read failure\n");
+                errorMessage = "File read failure";
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
@@ -411,6 +433,7 @@ bool read_file(const char *file_path, data_t *dp){
                         printf("Warning: Symbols appear to be narrower than described.\n");
                 } else if( i > dp->word_size ) {
                         printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
+                        errorMessage = "Incorrect bit width specification: Data does not fit within described bit width.";
                         free(dp->symbols);
                         dp->symbols = NULL;
                         free(dp->rawsymbols);
@@ -447,7 +470,8 @@ bool read_file(const char *file_path, data_t *dp){
 		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
-			free(dp->symbols);
+			errorMessage = "Failure to initialize memory for bsymbols";
+                        free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
 			dp->rawsymbols = NULL;
@@ -467,6 +491,13 @@ bool read_file(const char *file_path, data_t *dp){
 	} 
 
 	return true;
+}
+
+bool read_file(const char *file_path, data_t *dp) {
+    
+    string errorMessage;
+    return read_file(file_path, dp, errorMessage);
+    
 }
 
 /* This is xoshiro256** 1.0*/

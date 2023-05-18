@@ -205,11 +205,12 @@ int main(int argc, char* argv[]) {
             printf("Opening file: '%s' (SHA-256 hash %s), reading block %ld of size %ld\n", file_path, hash, subsetIndex, subsetSize);
         }
     }
-
-    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
+    
+    string errorMessage = "Error reading file";
+    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, errorMessage)) {
 
         testRun.errorLevel = -1;
-        testRun.errorMsg = "Error reading file.";
+        testRun.errorMsg = errorMessage;
 
         if (jsonOutput) {
             ofstream output;
