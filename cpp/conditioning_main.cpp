@@ -445,6 +445,7 @@ int main(int argc, char* argv[]) {
     unsigned int n_in, n_out, nw, n;
     mpfr_prec_t precision;
     int opt;
+    char *file_path;
     unsigned int maxval;
 
     long double noutEpsilonExp = -1.0L;
@@ -462,7 +463,7 @@ int main(int argc, char* argv[]) {
     string outputfilename;
     string inputfilename;
     string commandline = recreateCommandLine(argc, argv);
-
+    
     for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
         if ("--version" == Str) {
@@ -488,6 +489,7 @@ int main(int argc, char* argv[]) {
                 break;
             case 'i':
                 inputfilename = optarg;
+                file_path = optarg;
                 break;
             case 'c':
                 iid = (strcmp(optarg, "iid") == 0);
@@ -506,7 +508,16 @@ int main(int argc, char* argv[]) {
     testRunNonIid.type = "Conditioning";
     testRunNonIid.timestamp = timestamp;
     testRunNonIid.commandline = commandline;
-
+    
+    if(!inputfilename.empty()) {
+        testRunNonIid.filename = inputfilename;
+    
+        // Record hash of input file
+        char hash[2*SHA256_DIGEST_LENGTH+1];
+        sha256_file(file_path, hash);
+        testRunNonIid.sha256 = hash;
+    }
+    
     // Parse args
     if (vetted && argc != 4) {
         printf("Incorrect usage.\n");
@@ -605,7 +616,7 @@ int main(int argc, char* argv[]) {
             // outputEntropy rounded to full entropy, so the difference between this and full entropy is less than 1/2 ULP.
             printf("; Close to n_out (epsilon = 2^(-%.22Lg))", noutEpsilonExp);
         }
-
+        
         if (outputEntropy == h_in) {
             // outputEntropy rounded to the input entropy, so the difference between this and the input entropy is less than 1/2 ULP.
             printf("; Close to h_in (epsilon = 2^(-%.22Lg))", hinEpsilonExp);
