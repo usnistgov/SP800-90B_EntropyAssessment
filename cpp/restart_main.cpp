@@ -13,6 +13,8 @@
 #include "non_iid/multi_mcw_test.h"
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
+#include "iid/chi_square_tests.h"
+#include "iid/permutation_tests.h"
 
 #include <cstdint>
 #include <getopt.h>
@@ -146,6 +148,7 @@ int main(int argc, char* argv[]) {
     long int X_cutoff;
     long i, j, X_i, X_r, X_c, X_max;
     double H_I, H_r, H_c, alpha, ret_min_entropy;
+	double rawmean, median;
     uint8_t *rdata, *cdata;
     data_t data;
     int opt;
@@ -457,6 +460,16 @@ int main(int argc, char* argv[]) {
         }
         exit(-1);
     } else if (verbose > 1) printf("\nRestart Sanity Check Passed...\n");
+
+
+    // Calculate baseline statistics
+    int alphabet_size = data.alph_size;
+    int sample_size = data.len;
+
+    if ((verbose == 1) || (verbose == 2))
+        printf("Calculating baseline statistics...\n");
+
+    calc_stats(&data, rawmean, median);
 
     // The maximum min-entropy is -log2(1/2^word_size) = word_size
     H_c = data.word_size;
