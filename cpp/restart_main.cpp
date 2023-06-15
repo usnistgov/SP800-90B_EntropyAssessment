@@ -13,6 +13,8 @@
 #include "non_iid/multi_mcw_test.h"
 #include "non_iid/compression_test.h"
 #include "non_iid/markov_test.h"
+#include "iid/chi_square_tests.h"
+#include "iid/permutation_tests.h"
 
 #include <cstdint>
 #include <getopt.h>
@@ -146,6 +148,7 @@ int main(int argc, char* argv[]) {
     long int X_cutoff;
     long i, j, X_i, X_r, X_c, X_max;
     double H_I, H_r, H_c, alpha, ret_min_entropy;
+	double rawmean, median;
     uint8_t *rdata, *cdata;
     data_t data;
     int opt;
@@ -459,6 +462,16 @@ int main(int argc, char* argv[]) {
         exit(-1);
     } else if (verbose > 1) printf("\nRestart Sanity Check Passed...\n");
 
+
+    // Calculate baseline statistics
+    int alphabet_size = data.alph_size;
+    int sample_size = data.len;
+
+    if ((verbose == 1) || (verbose == 2))
+        printf("Calculating baseline statistics...\n");
+
+    calc_stats(&data, rawmean, median);
+
     // The maximum min-entropy is -log2(1/2^word_size) = word_size
     H_c = data.word_size;
     H_r = data.word_size;
@@ -494,6 +507,13 @@ int main(int argc, char* argv[]) {
 
     testRunNonIid.testCases.push_back(tc631nonIid);
     testRunIid.testCases.push_back(tc631Iid);
+
+    IidTestCase tcOverallIid;
+    tcOverallIid.h_r = H_r;
+    tcOverallIid.h_c = H_c;
+    tcOverallIid.h_i = H_I;
+    tcOverallIid.testCaseNumber = "Overall";
+
 
     if (!iid) {
 
@@ -683,6 +703,86 @@ int main(int argc, char* argv[]) {
         }
         testRunNonIid.testCases.push_back(tc6310);
 
+    } else { /* IID tests */
+
+        // Compute chi square stats
+        bool chi_square_test_pass_row = chi_square_tests(rdata, sample_size, alphabet_size, verbose);
+        bool chi_square_test_pass_col = chi_square_tests(cdata, sample_size, alphabet_size, verbose);
+        bool chi_square_test_pass = chi_square_test_pass_row && chi_square_test_pass_col;
+        
+        tcOverallIid.passed_chi_square_tests = chi_square_test_pass;
+        
+        if ((verbose == 1) || (verbose == 2)) {
+            if (chi_square_test_pass) {
+                printf("** Passed chi square tests\n\n");
+            }
+            else {
+                printf("** Failed chi square tests\n\n");
+            }
+        }
+        else if (verbose > 2) {
+            if (chi_square_test_pass) {
+                printf("Chi square tests: Passed\n");
+            }
+            else {
+                printf("Chi square tests: Failed\n");
+            }
+        }
+    
+        // Compute length of the longest repeated substring stats
+        bool len_LRS_test_pass_row = len_LRS_test(rdata, sample_size, alphabet_size, verbose, "Literal");
+        bool len_LRS_test_pass_col = len_LRS_test(cdata, sample_size, alphabet_size, verbose, "Literal");
+        bool len_LRS_test_pass = len_LRS_test_pass_row && len_LRS_test_pass_col;
+
+        tcOverallIid.passed_longest_repeated_substring_test = len_LRS_test_pass;
+
+        if ((verbose == 1) || (verbose == 2)) {
+            if (len_LRS_test_pass) {
+                printf("** Passed length of longest repeated substring test\n\n");
+            }
+            else {
+                printf("** Failed length of longest repeated substring test\n\n");
+            }
+        }
+        else if (verbose > 2) {
+            if (len_LRS_test_pass) {
+                printf("Length of longest repeated substring test: Passed\n");
+            }
+            else {
+                printf("Length of longest repeated substring test: Failed\n");
+            }
+        }
+
+        // Compute permutation stats
+        bool perm_test_pass_row = permutation_tests(&data, rawmean, median, verbose, tcOverallIid);
+
+        data_t data_col;
+        memcpy(&data_col, &data, sizeof(data));
+        data_col.symbols = rdata;
+
+        bool perm_test_pass_col = permutation_tests(&data_col, rawmean, median, verbose, tcOverallIid);
+        bool perm_test_pass = perm_test_pass_row && perm_test_pass_col;
+        
+        tcOverallIid.passed_iid_permutation_tests = perm_test_pass;
+
+        if ((verbose == 1) || (verbose == 2)) {
+            if (perm_test_pass) {
+                printf("** Passed IID permutation tests\n\n");
+            }
+            else {
+                printf("** Failed IID permutation tests\n\n");
+            }
+        }
+        else if (verbose > 2) {
+            if (perm_test_pass) {
+                printf("IID permutation tests: Passed\n");
+            }
+            else {
+                printf("IID permutation tests: Failed\n");
+            }
+        }
+
+
     }
 
     if (verbose > 0) {
@@ -715,11 +815,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    IidTestCase tcOverallIid;
-    tcOverallIid.h_r = H_r;
-    tcOverallIid.h_c = H_c;
-    tcOverallIid.h_i = H_I;
-    tcOverallIid.testCaseNumber = "Overall";
+    
     testRunIid.testCases.push_back(tcOverallIid);
     testRunIid.errorLevel = 0;
 

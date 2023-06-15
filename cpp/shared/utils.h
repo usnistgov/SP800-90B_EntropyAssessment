@@ -36,7 +36,7 @@
 #define ZALPHA 2.5758293035489008
 
 //Version of the tool
-#define VERSION "GitHub Commit 0a2372810ad535158795177381f61ea4821bf2ce"
+#define VERSION "1.1.6"
 
 typedef struct data_t data_t;
 
