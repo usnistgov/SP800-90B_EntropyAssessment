@@ -278,20 +278,21 @@ int main(int argc, char* argv[]) {
 
     if (verbose > 1) printf("Opening file: '%s' (SHA-256 hash %s)\n", file_path, hash);
 
-    if (!read_file(file_path, &data)) {
+    string errorMessage = "Error reading file";
+    if (!read_file(file_path, &data, errorMessage)) {
         printf("Error reading file.\n");
 
         if (jsonOutput) {
             if (iid) {
                 testRunIid.errorLevel = -1;
-                testRunIid.errorMsg = "Error reading file.";
+                testRunIid.errorMsg = errorMessage;
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunIid.GetAsJson();
                 output.close();
             } else {
                 testRunNonIid.errorLevel = -1;
-                testRunNonIid.errorMsg = "Error reading file.";
+                testRunNonIid.errorMsg = errorMessage;
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunNonIid.GetAsJson();
