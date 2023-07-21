@@ -24,15 +24,16 @@
 #include <openssl/sha.h>
 
 //Each test has a targeted chance of roughly 0.000005, and we need to witness at least 5 failures, so this should be no less than 1000000
-#define SIMULATION_ROUNDS 5000000
+#define DEFAULT_SIMULATION_ROUNDS 5000000UL
 
 [[ noreturn ]] void print_usage() {
-    printf("Usage is: ea_restart [-i|-n] [-v] [-q] <file_name> [bits_per_symbol] <H_I>\n\n");
+    printf("Usage is: ea_restart [-i|-n] [-v] [-q] [-s <simulation count>] <file_name> [bits_per_symbol] <H_I>\n\n");
     printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples),\n");
     printf("\t and in the \"row dataset\" format described in SP800-90B Section 3.1.4.1.\n");
     printf("\t [bits_per_symbol]: Must be between 1-8, inclusive.\n");
     printf("\t <H_I>: Initial entropy estimate.\n");
     printf("\t [-i|-n]: '-i' for IID data, '-n' for non-IID data. Non-IID is the default.\n");
+    printf("\t -s <simulation count>: Establish cutoff using <simulation count> rounds.\n");
     printf("\t -v: Optional verbosity flag for more output.\n");
     printf("\t -q: Quiet mode, less output to screen.\n");
     printf("\n");
@@ -56,45 +57,15 @@
 //Here, we simulate a sort of "worst case" for this test, where there are a maximal number of symbols with maximal probability,
 //and the rest is distributed to the other symbols
 
-long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
-    long int counts[256];
-    int current_symbol;
-    int k_max;
-    long int max_count = 0;
-    double p, max_cutoff, p_min, cur_rand;
-
-    assert(k <= 256);
-
-    p = pow(2.0, -H_I);
-
-    k_max = floor(1.0 / p);
-
-    assert(k_max <= k);
-
-
-    if (k > k_max) {
-        max_cutoff = p * k_max;
-        p_min = (1.0 - max_cutoff) / (k - k_max);
-    } else {
-        max_cutoff = 1.0;
-        p_min = 0.0;
-    }
-
-    for (int j = 0; j < k; j++) counts[j] = 0;
+int simulateCount(int k_effective, double p, uint64_t *xoshiro256starstarState) {
+    int counts[256] = {0};
+    int max_count = 0;
 
     for (int j = 0; j < 1000; j++) {
-        cur_rand = randomUnit(xoshiro256starstarState);
-        if (cur_rand < max_cutoff) {
-            current_symbol = floor(cur_rand / p);
-            assert((current_symbol >= 0) && (current_symbol < k_max));
-        } else {
-            current_symbol = floor((cur_rand - max_cutoff) / p_min) + k_max;
-            assert((current_symbol >= k_max) && (current_symbol < k));
-        }
-        counts[current_symbol]++;
+        counts[(int)floor(randomUnit(xoshiro256starstarState) / p)]++;
     }
 
-    for (int j = 0; j < k; j++) {
+    for (int j = 0; j < k_effective; j++) {
         if (max_count < counts[j]) max_count = counts[j];
     }
 
@@ -104,12 +75,18 @@ long int simulateCount(int k, double H_I, uint64_t *xoshiro256starstarState) {
 //This returns the bound (cutoff) for the test. Counts equal to this value should pass.
 //Larger values should fail.
 
-long int simulateBound(double alpha, int k, double H_I) {
+int simulateBound(double alpha, int k, double H_I, unsigned long int simulation_rounds) {
     uint64_t xoshiro256starstarMainSeed[4];
-    vector<long int> results(SIMULATION_ROUNDS, -1);
+    vector<int> results(simulation_rounds, -1);
     long int returnIndex;
+    double p;
+    int k_effective;
 
     assert((k > 1) && (k <= 256));
+
+    p = pow(2.0, -H_I);
+    k_effective = ceil(1.0 / p);
+    assert(k_effective <= k);
 
     seed(xoshiro256starstarMainSeed);
 
@@ -122,18 +99,17 @@ long int simulateBound(double alpha, int k, double H_I) {
         xoshiro_jump(omp_get_thread_num(), xoshiro256starstarSeed);
 
 #pragma omp for
-        for (int i = 0; i < SIMULATION_ROUNDS; i++) {
-            results[i] = simulateCount(k, H_I, xoshiro256starstarSeed);
+        for (unsigned long int i = 0; i < simulation_rounds; i++) {
+            results[i] = simulateCount(k_effective, p, xoshiro256starstarSeed);
         }
     }
 
     sort(results.begin(), results.end());
     assert((results[0] >= (1000 / k)) && (results[0] <= 1000));
-    assert((results[SIMULATION_ROUNDS - 1] >= (1000 / k)) && (results[SIMULATION_ROUNDS - 1] <= 1000));
-    assert(results[0] <= results[SIMULATION_ROUNDS - 1]);
+    assert((results[simulation_rounds - 1] >= (1000 / k)) && (results[simulation_rounds - 1] <= 1000));
 
-    returnIndex = ((size_t) floor((1.0 - alpha) * ((double) SIMULATION_ROUNDS))) - 1;
-    assert((returnIndex >= 0) && (returnIndex < SIMULATION_ROUNDS));
+    returnIndex = ((size_t) floor((1.0 - alpha) * ((double) simulation_rounds))) - 1;
+    assert((returnIndex >= 0) && (returnIndex < simulation_rounds));
 
     return (results[returnIndex]);
 }
@@ -145,11 +121,14 @@ int main(int argc, char* argv[]) {
     char *file_path;
     int r = 1000, c = 1000;
     int counts[256];
-    long int X_cutoff;
-    long i, j, X_i, X_r, X_c, X_max;
+    unsigned long int simulation_rounds = DEFAULT_SIMULATION_ROUNDS;
+    int X_cutoff;
+    int i, j;
+    int X_i, X_r, X_c, X_max;
     double H_I, H_r, H_c, alpha, ret_min_entropy;
 	double rawmean, median;
     uint8_t *rdata, *cdata;
+    unsigned long int inul;
     data_t data;
     int opt;
 
@@ -169,7 +148,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while ((opt = getopt(argc, argv, "invqo:")) != -1) {
+    while ((opt = getopt(argc, argv, "invqo:s:")) != -1) {
         switch (opt) {
             case 'i':
                 iid = true;
@@ -186,6 +165,14 @@ int main(int argc, char* argv[]) {
             case 'o':
                 jsonOutput = true;
                 outputfilename = optarg;
+                break;
+            case 's':
+                inul = strtoul(optarg, NULL, 10);
+		if((inul == 0) || (inul == ULONG_MAX) || (inul < simulation_rounds)) {
+                    print_usage();
+                } else {
+                    simulation_rounds = inul;
+                }
                 break;
             default:
                 print_usage();
@@ -407,8 +394,8 @@ int main(int argc, char* argv[]) {
     printf("H_I: %f\n", H_I);
 
     alpha = 1 - exp(log(0.99) / (r + c));
-    X_cutoff = simulateBound(alpha, data.alph_size, H_I);
-    if (verbose > 0) printf("ALPHA: %.17g, X_cutoff: %ld\n", alpha, X_cutoff);
+    X_cutoff = simulateBound(alpha, data.alph_size, H_I, simulation_rounds);
+    if (verbose > 0) printf("ALPHA: %.17g, X_cutoff: %d\n", alpha, X_cutoff);
 
     // get maximum row count
     X_r = 0;
@@ -439,7 +426,7 @@ int main(int argc, char* argv[]) {
 
     // perform sanity check on rows and columns of restart data (Section 3.1.4.3)
     X_max = max(X_r, X_c);
-    if (verbose > 0) printf("X_max: %ld\n", X_max);
+    if (verbose > 0) printf("X_max: %d\n", X_max);
     if (X_max > X_cutoff) {
         if (verbose > 0) printf("\n*** Restart Sanity Check Failed ***\n");
         if (jsonOutput) {
