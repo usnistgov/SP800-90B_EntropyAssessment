@@ -364,7 +364,10 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
     data.word_size = 0;
 
     //Read in the complete file.
-    read_file_subset(inputfilename.c_str(), &data, 0, 0);
+    if(!read_file_subset(inputfilename.c_str(), &data, 0, 0)) {
+      fprintf(stderr, "Can't read and trandlate supplied data.\n");
+      exit(-1);
+    }
 
     if (iid) {
         // IID path
@@ -445,7 +448,6 @@ int main(int argc, char* argv[]) {
     unsigned int n_in, n_out, nw, n;
     mpfr_prec_t precision;
     int opt;
-    char *file_path;
     unsigned int maxval;
 
     long double noutEpsilonExp = -1.0L;
@@ -489,7 +491,6 @@ int main(int argc, char* argv[]) {
                 break;
             case 'i':
                 inputfilename = optarg;
-                file_path = optarg;
                 break;
             case 'c':
                 iid = (strcmp(optarg, "iid") == 0);
@@ -514,7 +515,7 @@ int main(int argc, char* argv[]) {
     
         // Record hash of input file
         char hash[2*SHA256_DIGEST_LENGTH+1];
-        sha256_file(file_path, hash);
+        sha256_file(inputfilename.c_str(), hash);
         testRunNonIid.sha256 = hash;
     }
     
@@ -643,13 +644,10 @@ int main(int argc, char* argv[]) {
             if (!quietMode) {
                 printf("epsilon = 2^(-%.22Lg)", noutEpsilonExp);
 
-                //Should this qualify as "full entropy" under the 2012 draft of SP 800-90B?
-                //Should this qualify as "full entropy" under the 2021 SP 800-90C draft?
-                if (noutEpsilonExp >= 64.0L) {
-                    printf(": SP 800-90B 2012 Draft and SP 800-90C 2021 Draft Full Entropy");
-                } else if (noutEpsilonExp >= 32.0L) {
-                    printf(": SP 800-90C 2021 Full Entropy");
-                }
+                //Should this qualify as "full entropy" under FIPS 140-3 IG D.K Resolution 19
+		if (h_in >= n_out + 64.0) {
+                    printf(": FIPS 140-3 IG D.K Resolution 19 Full Entropy if the conditioning component security strength is >= %u", n_out);
+		}
                 printf("\n");
             }
         }
