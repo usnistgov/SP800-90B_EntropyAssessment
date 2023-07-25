@@ -486,26 +486,19 @@ int main(int argc, char* argv[]) {
     NonIidTestCase tc631nonIid;
     tc631nonIid.testCaseNumber = "Most Common Value";
     tc631nonIid.data_word_size = data.word_size;
-     
-    IidTestCase tc631Iid;
-    tc631Iid.testCaseNumber = "Most Common Value";
-    tc631Iid.data_word_size = data.word_size;
       
     ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
     if (verbose > 1) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
     tc631nonIid.h_r = ret_min_entropy;
-    tc631Iid.h_r = ret_min_entropy;
     
     H_r = min(ret_min_entropy, H_r);
 
     ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
     if (verbose > 1) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
     tc631nonIid.h_c = ret_min_entropy;
-    tc631Iid.h_c = ret_min_entropy;
     H_c = min(ret_min_entropy, H_c);
 
     testRunNonIid.testCases.push_back(tc631nonIid);
-    testRunIid.testCases.push_back(tc631Iid);
 
     IidTestCase tcOverallIid;
     tcOverallIid.h_r = H_r;
