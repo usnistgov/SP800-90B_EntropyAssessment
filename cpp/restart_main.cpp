@@ -54,17 +54,46 @@
     exit(-1);
 }
 
-//Here, we simulate a sort of "worst case" for this test, where there are a maximal number of symbols with maximal probability,
-//and the rest is distributed to the other symbols
-
-int simulateCount(int k_effective, double p, uint64_t *xoshiro256starstarState) {
-    int counts[256] = {0};
-    int max_count = 0;
+// Here, we simulate a "worst case" for the restart sanity test. This is "worst case" in the sense that the adopted distribution
+// results in the largest acceptable collision bound for a given assessed entropy level, so if a data sample fails this
+// test, it is likely to indicate an underlying problem.
+//
+// This "worst case" uses the "inverted near-uniform" family (see Hagerty-Draper "Entropy Bounds and Statistical Tests" for
+// a full definition of this distribution and justification for its use here).
+//
+// This distribution has as many maximal probability symbols as possible (each occurring with probability p), and possibly one
+// additional symbol that contains all the residual probability.
+//
+// If the probability for the most likely symbol is p, then there are floor(1/p) most likely symbols,
+// each occurring with probability p and possibly one additional symbol that has all the remaining (1 - p floor(1/p)) chance.
+// In this code, we generate a random unit value in the range [0, 1), and we need to map this to one of the ceil(1/p) possible
+// output symbols.
+//
+// Note that the function x -> floor(x/p) yields
+// [0p,1p) -> 0
+// [1p, 2p) -> 1
+// [2p, 3p) -> 2
+// ...
+// [(floor(1/p)-1)p, floor(1/p)p) -> floor(1/p)-1
+// [ floor(1/p)p, 1 ) -> floor(1/p)
+//
+// As such, each of the first floor(1/p) symbols (0 through floor(1/p)-1) have probability p of occurring, and
+// the symbol floor(1/p) has probability 1-floor(1/p)p of occurring, as desired.
+//
+// Note that if floor(1/p) = ceil(1/p) = 1/p, then there is no "residual" symbol, only 1/p most likely symbols.
+//
+// The array is 0-indexed, so we can use this map to establish the index directly.
+uint16_t simulateCount(int k_effective, double p, uint64_t *xoshiro256starstarState) {
+    uint16_t counts[256] = {0};
+    uint16_t max_count = 0;
 
     for (int j = 0; j < 1000; j++) {
+        // Note that (int)floor(randomUnit(xoshiro256starstarState) / p) is the index map discussed in the above comments.
         counts[(int)floor(randomUnit(xoshiro256starstarState) / p)]++;
     }
 
+    // We could have tracked this during the above loop, but that would yield 1000 comparisons,
+    // rather than k_effective (<= 256) comparisons, as here.
     for (int j = 0; j < k_effective; j++) {
         if (max_count < counts[j]) max_count = counts[j];
     }
@@ -77,14 +106,29 @@ int simulateCount(int k_effective, double p, uint64_t *xoshiro256starstarState) 
 
 int simulateBound(double alpha, int k, double H_I, unsigned long int simulation_rounds) {
     uint64_t xoshiro256starstarMainSeed[4];
-    vector<int> results(simulation_rounds, -1);
+    uint16_t *results;
     long int returnIndex;
     double p;
     int k_effective;
+    int returnValue;
 
     assert((k > 1) && (k <= 256));
 
+    // A few constraints:
+    // This array may be very large (many gigabytes) so can't go onto the stack
+    // Many of the C++ STL-derived types are not thread safe. Our mode of access is
+    // quite straight forward, but there are clearly issues in some cases.
+    // In C, calloc is possibly faster, but this is probably the best we can do
+    // using somewhat idiomatic C++.
+    results = new uint16_t[simulation_rounds];
+    memset(results, 0, sizeof(uint16_t)*simulation_rounds);
+
+    //The probability of the most likely symbol (MLS) only needs to be calculated once...
     p = pow(2.0, -H_I);
+
+    //if floor(1/p) = ceil(1/p) = 1/p, then there are exactly that many symbols (e.g., p=1/2, then there are 2 symbols expected).
+    //If ceil(1/p) > 1/p, then ceil(1/p) = floor(1/p)+1, that is there are the floor(1/p) most likely symbols, and then the extra
+    //symbol that fills the rest of the space (with probability < p).
     k_effective = ceil(1.0 / p);
     assert(k_effective <= k);
 
@@ -104,14 +148,18 @@ int simulateBound(double alpha, int k, double H_I, unsigned long int simulation_
         }
     }
 
-    sort(results.begin(), results.end());
+    sort(results, results+simulation_rounds);
     assert((results[0] >= (1000 / k)) && (results[0] <= 1000));
     assert((results[simulation_rounds - 1] >= (1000 / k)) && (results[simulation_rounds - 1] <= 1000));
 
     returnIndex = ((size_t) floor((1.0 - alpha) * ((double) simulation_rounds))) - 1;
     assert((returnIndex >= 0) && (returnIndex < simulation_rounds));
 
-    return (results[returnIndex]);
+    returnValue = (int)results[returnIndex];
+
+    delete results;
+
+    return returnValue;
 }
 
 int main(int argc, char* argv[]) {
@@ -139,7 +187,7 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename = timestamp + ".json";
     string commandline = recreateCommandLine(argc, argv);
-    
+
     for (int i = 0; i < argc; i++) {
         std::string Str = std::string(argv[i]);
         if ("--version" == Str) {
@@ -474,16 +522,16 @@ int main(int argc, char* argv[]) {
     NonIidTestCase tc631nonIid;
     tc631nonIid.testCaseNumber = "Most Common Value";
     tc631nonIid.data_word_size = data.word_size;
-     
+
     IidTestCase tc631Iid;
     tc631Iid.testCaseNumber = "Most Common Value";
     tc631Iid.data_word_size = data.word_size;
-      
+
     ret_min_entropy = most_common(rdata, data.len, data.alph_size, verbose, "Literal");
     if (verbose > 1) printf("\tMost Common Value Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
     tc631nonIid.h_r = ret_min_entropy;
     tc631Iid.h_r = ret_min_entropy;
-    
+
     H_r = min(ret_min_entropy, H_r);
 
     ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
@@ -653,7 +701,7 @@ int main(int argc, char* argv[]) {
         NonIidTestCase tc639;
         tc639.testCaseNumber = "Multi Markov Model with Counting Test (MultiMMC)";
         tc639.data_word_size = data.word_size;
-        
+
         ret_min_entropy = multi_mmc_test(rdata, data.len, data.alph_size, verbose, "Literal");
         if (ret_min_entropy >= 0) {
             if (verbose > 1) printf("\tMulti Markov Model with Counting (MultiMMC) Prediction Test Estimate (Rows) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
@@ -696,9 +744,9 @@ int main(int argc, char* argv[]) {
         bool chi_square_test_pass_row = chi_square_tests(rdata, sample_size, alphabet_size, verbose);
         bool chi_square_test_pass_col = chi_square_tests(cdata, sample_size, alphabet_size, verbose);
         bool chi_square_test_pass = chi_square_test_pass_row && chi_square_test_pass_col;
-        
+
         tcOverallIid.passed_chi_square_tests = chi_square_test_pass;
-        
+
         if ((verbose == 1) || (verbose == 2)) {
             if (chi_square_test_pass) {
                 printf("** Passed chi square tests\n\n");
@@ -715,7 +763,7 @@ int main(int argc, char* argv[]) {
                 printf("Chi square tests: Failed\n");
             }
         }
-    
+
         // Compute length of the longest repeated substring stats
         bool len_LRS_test_pass_row = len_LRS_test(rdata, sample_size, alphabet_size, verbose, "Literal");
         bool len_LRS_test_pass_col = len_LRS_test(cdata, sample_size, alphabet_size, verbose, "Literal");
@@ -749,7 +797,7 @@ int main(int argc, char* argv[]) {
 
         bool perm_test_pass_col = permutation_tests(&data_col, rawmean, median, verbose, tcOverallIid);
         bool perm_test_pass = perm_test_pass_row && perm_test_pass_col;
-        
+
         tcOverallIid.passed_iid_permutation_tests = perm_test_pass;
 
         if ((verbose == 1) || (verbose == 2)) {
@@ -802,7 +850,7 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    
+
     testRunIid.testCases.push_back(tcOverallIid);
     testRunIid.errorLevel = 0;
 
