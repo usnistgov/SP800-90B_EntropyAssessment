@@ -36,7 +36,7 @@
 #define ZALPHA 2.5758293035489008
 
 //Version of the tool
-#define VERSION "1.1.6"
+#define VERSION "1.1.7"
 
 typedef struct data_t data_t;
 
