@@ -34,6 +34,18 @@
 #define DBL_INFINITY __builtin_inf ()
 #define ITERMAX 1076
 #define ZALPHA 2.5758293035489008
+#define ZALPHA_L 2.575829303548900384158L
+
+//Make uint128_t a supported type (standard as of C23)
+#ifdef __SIZEOF_INT128__
+typedef unsigned __int128 uint128_t;
+typedef unsigned __int128 uint_least128_t;
+# define UINT128_MAX         ((uint128_t)-1)
+# define UINT128_WIDTH       128
+# define UINT_LEAST128_WIDTH 128
+# define UINT_LEAST128_MAX   UINT128_MAX
+# define UINT128_C(N)        ((uint_least128_t)+N ## WBU)
+#endif
 
 //Version of the tool
 #define VERSION "1.1.7"
@@ -50,6 +62,8 @@ struct data_t{
 	long len; 		// number of words in data
 	long blen; 		// number of bits in data
 };
+
+
 
 using namespace std;
 
@@ -593,7 +607,7 @@ void seed(uint64_t *xoshiro256starstarState){
   */
 uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 	uint64_t x;
-	__uint128_t m;
+	uint128_t m;
 	uint64_t l;
 
 	x = xoshiro256starstar(xoshiro256starstarState);
@@ -602,14 +616,14 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 		return x;
 	} else {
 		s++; // We want an integer in the range [0,s], not [0,s)
-		m = (__uint128_t)x * (__uint128_t)s;
+		m = (uint128_t)x * (uint128_t)s;
 		l = (uint64_t)m; //This is m mod 2^64
 
 		if(l<s) {
 			uint64_t t = ((uint64_t)(-s)) % s; //t = (2^64 - s) mod s (by definition of unsigned arithmetic in C)
 			while(l < t) {
 				x = xoshiro256starstar(xoshiro256starstarState);
-				m = (__uint128_t)x * (__uint128_t)s;
+				m = (uint128_t)x * (uint128_t)s;
 				l = (uint64_t)m; //This is m mod 2^64
 			}
 		}
