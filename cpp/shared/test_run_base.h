@@ -1,9 +1,9 @@
 #ifndef TESTRUN_H
 #define TESTRUN_H
 
+#include "utils.h"
 #include <string>
 #include <json/json.h>
-#include "utils.h"
 
 using namespace std;
 

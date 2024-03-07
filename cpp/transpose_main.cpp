@@ -1,7 +1,7 @@
 /* VERSION information is kept in utils.h. Please update when a new version is released */
 
 #include "shared/utils.h"
-
+#include "iid/iid_test_run.h"
 #include <stdio.h>
 #include <cstdlib>
 #include <limits>
@@ -80,8 +80,9 @@ int main(int argc, char* argv[]) {
         else printf("Opening file: '%s', reading block %ld of size %ld\n", argv[0], subsetIndex, subsetSize);
     }
 
-
-    if (!read_file_subset(argv[0], &data, subsetIndex, subsetSize)) {
+    IidTestRun testRun;
+    // TestRun logging currently not enabled for transpose
+    if (!read_file_subset(argv[0], &data, subsetIndex, subsetSize, &testRun)) {
         printf("Error reading file.\n");
         print_usage();
     }

@@ -208,10 +208,7 @@ int main(int argc, char* argv[]) {
         else printf("Opening file: '%s' (SHA-256 hash %s), reading block %ld of size %ld\n", file_path, hash, subsetIndex, subsetSize);
     }
 
-    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize)) {
-
-        testRun.errorLevel = -1;
-        testRun.errorMsg = "Error reading file.";
+    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, &testRun)) {
 
         if (jsonOutput) {
             ofstream output;
@@ -219,7 +216,6 @@ int main(int argc, char* argv[]) {
             output << testRun.GetAsJson();
             output.close();
         }
-
         printf("Error reading file.\n");
         print_usage();
     }

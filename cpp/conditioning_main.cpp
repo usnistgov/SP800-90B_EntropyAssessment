@@ -353,7 +353,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
 
 //This function performs statistical testing on the bitwise input data.
 //It returns h', which is a value in the range [0,1].
-static long double computeEntropyOfConditionedData(string inputfilename, bool iid) {
+static long double computeEntropyOfConditionedData(string inputfilename, bool iid, TestRunBase *testRun) {
 
     data_t data;
     double h_bitstring = 1.0;
@@ -364,7 +364,7 @@ static long double computeEntropyOfConditionedData(string inputfilename, bool ii
     data.word_size = 0;
 
     //Read in the complete file.
-    read_file_subset(inputfilename.c_str(), &data, 0, 0);
+    read_file_subset(inputfilename.c_str(), &data, 0, 0, testRun);
 
     if (iid) {
         // IID path
@@ -554,7 +554,7 @@ int main(int argc, char* argv[]) {
         if (!vetted) {
             if (argc == 4) {
                 // If h_p is not provided but a file is provided instead, compute the entropy of that
-                h_p = computeEntropyOfConditionedData(inputfilename, iid);
+                h_p = computeEntropyOfConditionedData(inputfilename, iid, &testRunNonIid);
             } else {
                 // If h_p is provided via command line, use that value
                 h_p = inputLongDoubleOption(argv[4], 0.0L, 1.0L, "h_p");
