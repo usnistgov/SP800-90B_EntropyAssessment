@@ -1,5 +1,5 @@
 //Version of the tool
-#define VERSION "1.1.6"
+#define VERSION "1.1.7"
 
 
 #pragma once
@@ -39,6 +39,18 @@
 #define DBL_INFINITY __builtin_inf ()
 #define ITERMAX 1076
 #define ZALPHA 2.5758293035489008
+#define ZALPHA_L 2.575829303548900384158L
+
+//Make uint128_t a supported type (standard as of C23)
+#ifdef __SIZEOF_INT128__
+typedef unsigned __int128 uint128_t;
+typedef unsigned __int128 uint_least128_t;
+# define UINT128_MAX         ((uint128_t)-1)
+# define UINT128_WIDTH       128
+# define UINT_LEAST128_WIDTH 128
+# define UINT_LEAST128_MAX   UINT128_MAX
+# define UINT128_C(N)        ((uint_least128_t)+N ## WBU)
+#endif
 
 typedef struct data_t data_t;
 
@@ -52,6 +64,8 @@ struct data_t{
 	long len; 		// number of words in data
 	long blen; 		// number of bits in data
 };
+
+
 
 using namespace std;
 
@@ -156,8 +170,10 @@ void free_data(data_t *dp){
 	if((dp->word_size > 1) && (dp->bsymbols != NULL)) free(dp->bsymbols);
 } 
 
+
 // Read in binary file to test
 bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize, TestRunBase *testRun) {
+
 	FILE *file; 
 	int mask, j, max_symbols;
 	long rc, i;
@@ -168,23 +184,24 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: could not open '%s'\n", file_path;
 		printf("Error: could not open '%s'\n", file_path);
+                errorMessage = "Could not open data file";
 		return false;
 	}
 
 	rc = (long)fseek(file, 0, SEEK_END);
-	if(rc < 0){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: fseek failed";
-                printf("Error: fseek failed\n");
+	if(rc < 0) {
+    testRun->errorLevel = -1;
+    testRun->errorMsg = "Error: fseek failed";
+    printf("Error: fseek failed\n");
 		fclose(file);
 		return false;
 	}
 
 	fileLen = ftell(file);
 	if(fileLen < 0){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: ftell failed";
-                printf("Error: ftell failed\n");
+    testRun->errorLevel = -1;
+    testRun->errorMsg = "Error: ftell failed";
+    printf("Error: ftell failed\n");
 		fclose(file);
 		return false;
 	}
@@ -199,6 +216,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: fseek failed";
 			printf("Error: fseek failed\n");
+                        errorMessage = "fseek failed";
 			fclose(file);
 			return false;
 		}
@@ -207,9 +225,9 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	}
 
 	if(dp->len == 0){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: '%s' is empty\n", file_path;
-                printf("Error: '%s' is empty\n", file_path);
+    testRun->errorLevel = -1;
+    testRun->errorMsg = "Error: '%s' is empty\n", file_path;
+    printf("Error: '%s' is empty\n", file_path);
 		fclose(file);
 		return false;
 	}
@@ -217,9 +235,9 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	dp->symbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
 	dp->rawsymbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
 	if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: failure to initialize memory for symbols";
-                printf("Error: failure to initialize memory for symbols\n");
+    testRun->errorLevel = -1;
+    testRun->errorMsg = "Error: failure to initialize memory for symbols";
+    printf("Error: failure to initialize memory for symbols\n");
 		fclose(file);
 		if(dp->symbols != NULL) {
 			free(dp->symbols);
@@ -234,9 +252,9 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	rc = fread(dp->symbols, sizeof(uint8_t), dp->len, file);
 	if(rc != dp->len){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: file read failure";
-                printf("Error: file read failure\n");
+    testRun->errorLevel = -1;
+    testRun->errorMsg = "Error: file read failure";
+    printf("Error: file read failure\n");
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
@@ -279,7 +297,8 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: Incorrect bit width specification: Data does not fit within described bit width.";
 			printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
-			free(dp->symbols);
+			errorMessage = "Incorrect bit width specification: Data does not fit within described bit width";
+                        free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
 			dp->rawsymbols = NULL;
@@ -314,6 +333,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
+                        errorMessage = "Failure to initialize memory for bsymbols";
 			free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -337,8 +357,15 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	return true;
 }
 
+bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
+    
+    string errorMessage;
+    return read_file_subset(file_path, dp, subsetIndex, subsetSize, errorMessage);
+
+}
 
 bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
+
 	FILE *file; 
 	int mask, j, max_symbols;
 	long rc, i;
@@ -348,6 +375,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: could not open '%s'\n", file_path;
 		printf("Error: could not open '%s'\n", file_path);
+                errorMessage = "Could not open data file";
 		return false;
 	}
 
@@ -356,6 +384,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: fseek failed";
 		printf("Error: fseek failed\n");
+                errorMessage = "fseek failed";
 		fclose(file);
 		return false;
 	}
@@ -365,6 +394,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: ftell failed";
 		printf("Error: ftell failed\n");
+                errorMessage = "ftell failed";
 		fclose(file);
 		return false;
 	}
@@ -375,6 +405,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: '%s' is empty\n", file_path;
 		printf("Error: '%s' is empty\n", file_path);
+                errorMessage = "Data file is empty";
 		fclose(file);
 		return false;
 	}
@@ -385,6 +416,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: failure to initialize memory for symbols";
                 printf("Error: failure to initialize memory for symbols\n");
+                errorMessage = "Failure to initialize memory for symbols";
                 fclose(file);
                 if(dp->symbols != NULL) {
                         free(dp->symbols);
@@ -402,6 +434,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: file read failure";       
 		printf("Error: file read failure\n");
+                errorMessage = "File read failure";
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
@@ -445,6 +478,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: Incorrect bit width specification: Data does not fit within described bit width.";
                         printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
+                        errorMessage = "Incorrect bit width specification: Data does not fit within described bit width.";
                         free(dp->symbols);
                         dp->symbols = NULL;
                         free(dp->rawsymbols);
@@ -483,7 +517,8 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: failure to initialize memory for bsymbols";
 			printf("Error: failure to initialize memory for bsymbols\n");
-			free(dp->symbols);
+			errorMessage = "Failure to initialize memory for bsymbols";
+                        free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
 			dp->rawsymbols = NULL;
@@ -503,6 +538,13 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	} 
 
 	return true;
+}
+
+bool read_file(const char *file_path, data_t *dp) {
+    
+    string errorMessage;
+    return read_file(file_path, dp, errorMessage);
+    
 }
 
 /* This is xoshiro256** 1.0*/
@@ -598,7 +640,7 @@ void seed(uint64_t *xoshiro256starstarState){
   */
 uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 	uint64_t x;
-	__uint128_t m;
+	uint128_t m;
 	uint64_t l;
 
 	x = xoshiro256starstar(xoshiro256starstarState);
@@ -607,14 +649,14 @@ uint64_t randomRange64(uint64_t s, uint64_t *xoshiro256starstarState){
 		return x;
 	} else {
 		s++; // We want an integer in the range [0,s], not [0,s)
-		m = (__uint128_t)x * (__uint128_t)s;
+		m = (uint128_t)x * (uint128_t)s;
 		l = (uint64_t)m; //This is m mod 2^64
 
 		if(l<s) {
 			uint64_t t = ((uint64_t)(-s)) % s; //t = (2^64 - s) mod s (by definition of unsigned arithmetic in C)
 			while(l < t) {
 				x = xoshiro256starstar(xoshiro256starstarState);
-				m = (__uint128_t)x * (__uint128_t)s;
+				m = (uint128_t)x * (uint128_t)s;
 				l = (uint64_t)m; //This is m mod 2^64
 			}
 		}

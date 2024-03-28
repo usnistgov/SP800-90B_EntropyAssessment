@@ -209,7 +209,6 @@ int main(int argc, char* argv[]) {
     }
 
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, &testRun)) {
-
         if (jsonOutput) {
             ofstream output;
             output.open(outputfilename);

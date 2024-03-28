@@ -206,9 +206,7 @@ int main(int argc, char* argv[]) {
             printf("Opening file: '%s' (SHA-256 hash %s), reading block %ld of size %ld\n", file_path, hash, subsetIndex, subsetSize);
         }
     }
-
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, &testRun)) {
-
         if (jsonOutput) {
             ofstream output;
             output.open(outputfilename);

@@ -59,7 +59,7 @@ void sha256_hash_string(unsigned char *hash, char *outputBuffer) {
     }
 }
 
-int sha256_file(char *path, char *outputBuffer) {
+int sha256_file(const char *path, char *outputBuffer) {
     unsigned char *buffer=NULL;
     unsigned char digest[SHA256_DIGEST_LENGTH];
     size_t bytesRead;
