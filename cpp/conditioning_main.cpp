@@ -513,9 +513,14 @@ int main(int argc, char* argv[]) {
     if(!inputfilename.empty()) {
         testRunNonIid.filename = inputfilename;
     
+        
+        
         // Record hash of input file
         char hash[2*SHA256_DIGEST_LENGTH+1];
-        sha256_file(inputfilename.c_str(), hash);
+        //sha256_file(inputfilename.c_str(), hash);
+        char* file_path;
+        file_path = argv[0];
+        sha256_file(file_path, hash);
         testRunNonIid.sha256 = hash;
     }
     

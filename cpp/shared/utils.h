@@ -1,7 +1,6 @@
 //Version of the tool
 #define VERSION "1.1.7"
 
-
 #pragma once
 #include <iostream>		// std::cout
 #include <string>		// std::string
@@ -352,14 +351,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	return true;
 }
-/*
-bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
-    
-    string errorMessage;
-    return read_file_subset(file_path, dp, subsetIndex, subsetSize, errorMessage);
 
-}
-*/
 bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 
 	FILE *file; 
@@ -527,14 +519,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 
 	return true;
 }
-/*
-bool read_file(const char *file_path, data_t *dp) {
-    
-    string errorMessage;
-    return read_file(file_path, dp, errorMessage);
-    
-}
-*/
+
 /* This is xoshiro256** 1.0*/
 /*This implementation is derived from David Blackman and Sebastiano Vigna, which they placed into
 the public domain. See http://xoshiro.di.unimi.it/xoshiro256starstar.c
