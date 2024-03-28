@@ -316,21 +316,18 @@ int main(int argc, char* argv[]) {
 
     if (verbose > 1) printf("Opening file: '%s' (SHA-256 hash %s)\n", file_path, hash);
 
-    string errorMessage = "Error reading file";
-    if (!read_file(file_path, &data, errorMessage)) {
+    if (!read_file(file_path, &data, &testRunNonIid)) {
         printf("Error reading file.\n");
 
         if (jsonOutput) {
             if (iid) {
-                testRunIid.errorLevel = -1;
-                testRunIid.errorMsg = errorMessage;
+                testRunNonIid.errorLevel = -1;
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunIid.GetAsJson();
                 output.close();
             } else {
                 testRunNonIid.errorLevel = -1;
-                testRunNonIid.errorMsg = errorMessage;
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunNonIid.GetAsJson();
@@ -537,11 +534,9 @@ int main(int argc, char* argv[]) {
     ret_min_entropy = most_common(cdata, data.len, data.alph_size, verbose, "Literal");
     if (verbose > 1) printf("\tMost Common Value Estimate (Cols) = %f / %d bit(s)\n", ret_min_entropy, data.word_size);
     tc631nonIid.h_c = ret_min_entropy;
-    tc631Iid.h_c = ret_min_entropy;
     H_c = min(ret_min_entropy, H_c);
 
     testRunNonIid.testCases.push_back(tc631nonIid);
-    testRunIid.testCases.push_back(tc631Iid);
 
     IidTestCase tcOverallIid;
     tcOverallIid.h_r = H_r;

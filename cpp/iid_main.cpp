@@ -16,6 +16,7 @@
 #include <iostream>
 #include <fstream>
 
+
 [[ noreturn ]] void print_usage() {
     printf("Usage is: ea_iid [-i|-c] [-a|-t] [-v] [-q] [-l <index>,<samples> ] <file_name> [bits_per_symbol]\n\n");
     printf("\t <file_name>: Must be relative path to a binary file with at least 1 million entries (samples).\n");
@@ -205,13 +206,7 @@ int main(int argc, char* argv[]) {
             printf("Opening file: '%s' (SHA-256 hash %s), reading block %ld of size %ld\n", file_path, hash, subsetIndex, subsetSize);
         }
     }
-    
-    string errorMessage = "Error reading file";
-    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, errorMessage)) {
-
-        testRun.errorLevel = -1;
-        testRun.errorMsg = errorMessage;
-
+    if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, &testRun)) {
         if (jsonOutput) {
             ofstream output;
             output.open(outputfilename);
