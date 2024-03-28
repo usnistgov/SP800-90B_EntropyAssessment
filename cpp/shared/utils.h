@@ -184,7 +184,6 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: could not open '%s'\n", file_path;
 		printf("Error: could not open '%s'\n", file_path);
-                errorMessage = "Could not open data file";
 		return false;
 	}
 
@@ -216,7 +215,6 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: fseek failed";
 			printf("Error: fseek failed\n");
-                        errorMessage = "fseek failed";
 			fclose(file);
 			return false;
 		}
@@ -297,7 +295,6 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: Incorrect bit width specification: Data does not fit within described bit width.";
 			printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
-			errorMessage = "Incorrect bit width specification: Data does not fit within described bit width";
                         free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -333,7 +330,6 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
 			printf("Error: failure to initialize memory for bsymbols\n");
-                        errorMessage = "Failure to initialize memory for bsymbols";
 			free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -356,14 +352,14 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	return true;
 }
-
+/*
 bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize) {
     
     string errorMessage;
     return read_file_subset(file_path, dp, subsetIndex, subsetSize, errorMessage);
 
 }
-
+*/
 bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 
 	FILE *file; 
@@ -375,7 +371,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: could not open '%s'\n", file_path;
 		printf("Error: could not open '%s'\n", file_path);
-                errorMessage = "Could not open data file";
 		return false;
 	}
 
@@ -384,7 +379,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: fseek failed";
 		printf("Error: fseek failed\n");
-                errorMessage = "fseek failed";
 		fclose(file);
 		return false;
 	}
@@ -394,7 +388,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: ftell failed";
 		printf("Error: ftell failed\n");
-                errorMessage = "ftell failed";
 		fclose(file);
 		return false;
 	}
@@ -405,7 +398,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: '%s' is empty\n", file_path;
 		printf("Error: '%s' is empty\n", file_path);
-                errorMessage = "Data file is empty";
 		fclose(file);
 		return false;
 	}
@@ -416,7 +408,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: failure to initialize memory for symbols";
                 printf("Error: failure to initialize memory for symbols\n");
-                errorMessage = "Failure to initialize memory for symbols";
                 fclose(file);
                 if(dp->symbols != NULL) {
                         free(dp->symbols);
@@ -434,7 +425,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: file read failure";       
 		printf("Error: file read failure\n");
-                errorMessage = "File read failure";
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
@@ -478,7 +468,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: Incorrect bit width specification: Data does not fit within described bit width.";
                         printf("Incorrect bit width specification: Data does not fit within described bit width.\n");
-                        errorMessage = "Incorrect bit width specification: Data does not fit within described bit width.";
                         free(dp->symbols);
                         dp->symbols = NULL;
                         free(dp->rawsymbols);
@@ -517,7 +506,6 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: failure to initialize memory for bsymbols";
 			printf("Error: failure to initialize memory for bsymbols\n");
-			errorMessage = "Failure to initialize memory for bsymbols";
                         free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -539,14 +527,14 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 
 	return true;
 }
-
+/*
 bool read_file(const char *file_path, data_t *dp) {
     
     string errorMessage;
     return read_file(file_path, dp, errorMessage);
     
 }
-
+*/
 /* This is xoshiro256** 1.0*/
 /*This implementation is derived from David Blackman and Sebastiano Vigna, which they placed into
 the public domain. See http://xoshiro.di.unimi.it/xoshiro256starstar.c
