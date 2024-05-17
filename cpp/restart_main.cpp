@@ -292,18 +292,18 @@ int main(int argc, char* argv[]) {
     // get H_I	
     H_I = atof(argv[0]);
     if (H_I < 0) {
-        printf("H_I must be nonnegative.\n");
+        printf("H_I %f must be nonnegative.\n", H_I);
         if (jsonOutput) {
             if (iid) {
                 testRunIid.errorLevel = -1;
-                testRunIid.errorMsg = "H_I must be nonnegative.";
+                testRunIid.errorMsg = "H_I must be nonnegative: " + std::to_string(H_I) + ".";
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunIid.GetAsJson();
                 output.close();
             } else {
                 testRunNonIid.errorLevel = -1;
-                testRunNonIid.errorMsg = "H_I must be nonnegative.";
+                testRunNonIid.errorMsg = "H_I must be nonnegative: " + std::to_string(H_I) + ".";
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunNonIid.GetAsJson();
@@ -341,18 +341,18 @@ int main(int argc, char* argv[]) {
     if (verbose > 1) printf("Loaded %ld samples made up of %d distinct %d-bit-wide symbols.\n", data.len, data.alph_size, data.word_size);
 
     if (H_I > data.word_size) {
-        printf("H_I must be at most 'bits_per_symbol'.\n");
+        printf("H_I (%f) must be at most 'bits_per_symbol' (%d).\n", H_I, data.word_size);
         if (jsonOutput) {
             if(iid) {
                 testRunIid.errorLevel = -1;
-                testRunIid.errorMsg = "H_I must be at most 'bits_per_symbol'.";
+                testRunIid.errorMsg = "H_I (" + std::to_string(H_I) + ") must be at most 'bits_per_symbol' (" + std::to_string(data.word_size) + ").";
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunIid.GetAsJson();
                 output.close();
             } else {
                 testRunNonIid.errorLevel = -1;
-                testRunNonIid.errorMsg = "H_I must be at most 'bits_per_symbol'.";
+                testRunNonIid.errorMsg = "H_I (" + std::to_string(H_I) + ") must be at most 'bits_per_symbol' (" + std::to_string(data.word_size) + ").";
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunNonIid.GetAsJson();
@@ -387,18 +387,18 @@ int main(int argc, char* argv[]) {
     }
 
     if (data.len != MIN_SIZE) {
-        printf("\n*** Error: data does not contain %d samples ***\n\n", MIN_SIZE);
+        printf("\n*** Error: data (len = %ld) does not contain %d samples ***\n\n", data.len, MIN_SIZE);
         if (jsonOutput) {
             if (iid) {
                 testRunIid.errorLevel = -1;
-                testRunIid.errorMsg = "*** Error: data does not contain " + std::to_string(MIN_SIZE) + " samples ***";
+                testRunIid.errorMsg = "*** Error: data (len = " + std::to_string(data.len) + ") does not contain " + std::to_string(MIN_SIZE) + " samples ***";
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunIid.GetAsJson();
                 output.close();
             } else {
                 testRunNonIid.errorLevel = -1;
-                testRunNonIid.errorMsg = "*** Error: data does not contain " + std::to_string(MIN_SIZE) + " samples ***";
+                testRunNonIid.errorMsg = "*** Error: data (len = " + std::to_string(data.len) + ") does not contain " + std::to_string(MIN_SIZE) + " samples ***";
                 ofstream output;
                 output.open(outputfilename);
                 output << testRunNonIid.GetAsJson();
