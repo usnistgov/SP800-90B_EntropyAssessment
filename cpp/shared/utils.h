@@ -292,7 +292,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
                         testRun->errorMsg = "Warning: Symbols appear to be narrower than described.";
 		} else if( i > dp->word_size ) {
                         testRun->errorLevel = -1;
-                        testRun->errorMsg = "Error: Incorrect bit width specification: Data (" + std::to_string(i) + ") does not fit within described bit width:" + std::to_string(dp->word_size) + ".";
+                        testRun->errorMsg = "Error: Incorrect bit width specification: Data (" + std::to_string(i) + ") does not fit within described bit width: " + std::to_string(dp->word_size) + ".";
 			printf("Incorrect bit width specification: Data (%ld) does not fit within described bit width: %d.\n",i,dp->word_size); 
                         free(dp->symbols);
 			dp->symbols = NULL;
@@ -458,7 +458,7 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                         testRun->errorMsg = "Warning: Symbols appear to be narrower than described.";                  
                 } else if( i > dp->word_size ) {
                         testRun->errorLevel = -1;
-                        testRun->errorMsg = "Error: Incorrect bit width specification: Data (" + std::to_string(i) + ") does not fit within described bit width:" + std::to_string(dp->word_size) + ".";
+                        testRun->errorMsg = "Error: Incorrect bit width specification: Data (" + std::to_string(i) + ") does not fit within described bit width: " + std::to_string(dp->word_size) + ".";
 			printf("Incorrect bit width specification: Data (%ld) does not fit within described bit width: %d.\n",i,dp->word_size);
                         free(dp->symbols);
                         dp->symbols = NULL;
