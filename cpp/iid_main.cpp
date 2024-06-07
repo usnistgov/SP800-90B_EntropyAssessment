@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
         if (data.word_size < 1 || data.word_size > 8) {
 
             testRun.errorLevel = -1;
-            testRun.errorMsg = "Invalid bits per symbol.";
+            testRun.errorMsg = "Invalid bits per symbol: " + std::to_string(data.word_size) + ".";
 
             if (jsonOutput) {
                 ofstream output;
@@ -189,7 +189,7 @@ int main(int argc, char* argv[]) {
                 output.close();
             }
 
-            printf("Invalid bits per symbol.\n");
+            printf("Invalid bits per symbol: %d.\n", data.word_size);
             print_usage();
         }
     }
