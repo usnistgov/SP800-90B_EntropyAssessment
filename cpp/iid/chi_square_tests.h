@@ -637,6 +637,7 @@ bool chi_square_tests(const uint8_t data[], const int sample_size, const int alp
 	double score = 0.0;
 	double pvalue;
 	int df = 0;
+	bool result = true;
 
 	// Chi Square independence test
 	if(alphabet_size == 2){
@@ -661,7 +662,7 @@ bool chi_square_tests(const uint8_t data[], const int sample_size, const int alp
 
 	// Check result to return if test failed
 	if(pvalue < 0.001){
-		return false;
+		result = false;
 	}
 
 	// Reset score and df
@@ -691,8 +692,8 @@ bool chi_square_tests(const uint8_t data[], const int sample_size, const int alp
 
 	// Check result to return if test failed
 	if(pvalue < 0.001){
-		return false;
+		result = false;
 	}
 
-	return true;
+	return result;
 }
