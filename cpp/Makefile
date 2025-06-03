@@ -20,10 +20,10 @@ INC =
 # Main operations
 ######
 
-all:    iid non_iid restart conditioning transpose
+all:    iid non_iid restart conditioning transpose compression_only
 
 clean:
-	rm -f ea_iid ea_non_iid ea_restart ea_conditioning ea_transpose selftest/*.res
+	rm -f ea_iid ea_non_iid ea_restart ea_conditioning ea_transpose ea_compression_only selftest/*.res
 
 iid: iid_main.o
 iid_main.o: iid_main.cpp
@@ -44,3 +44,7 @@ conditioning_main.o: conditioning_main.cpp
 transpose: transpose_main.o
 transpose_main.o: transpose_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) transpose_main.cpp -o ea_transpose $(LIB) $(SHARED_LIB)
+
+
+compression_only: $(SHARED_SOURCES) $(NON_IID_SOURCES) compression_only_main.cpp
+	$(CXX) $(CXXFLAGS) $(SHARED_SOURCES) $(NON_IID_SOURCES) compression_only_main.cpp $(LDFLAGS) -o ea_compression_only
