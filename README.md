@@ -18,11 +18,41 @@ Issues on this repository are strictly for problems or questions concerning the 
 
 This code package requires a C++11 compiler. The code uses OpenMP directives, so compiler support for OpenMP is expected. GCC is preferred (and the only platform tested). There is one method that involves a GCC built-in function (`chi_square_tests.h -> binary_goodness_of_fit() -> __builtin_popcount()`). To run this you will need some compiler that supplies this GCC built-in function (GCC and clang both do so).
 
-The resulting binary is linked with bzlib, divsufsort, jsoncpp, GMP MP and GNU MPFR, so these libraries (and their associated include files) must be installed and accessible to the compiler.
-
-On Ubuntu they can be installed with `apt-get install libbz2-dev libdivsufsort-dev libjsoncpp-dev libssl-dev libmpfr-dev`.
+The resulting binary is linked with libbz2, divsufsort, jsoncpp, GMP MP and GNU MPFR, so these libraries (and their associated include files) must be installed and accessible to the compiler.
 
 See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Installing-Packages) for some distribution-specific instructions on installing the mentioned packages.
+
+### FreeBSD
+
+**Important**: [this Phabricator patch](https://reviews.freebsd.org/D56885) must be applied and the math/libdivsufsort port must be rebuilt in order to build with the 64-bit version of the library (libdivsufsort64).
+
+```
+% sudo pkg install -y gmp jsoncpp libdivsufsort mpfr
+% cmake .
+% make all
+% make install
+```
+
+### macOS
+
+Recommended build/installation process using [Homebrew](https://brew.sh):
+```
+% brew install bz2 gmp jsoncpp libdivsufsort libomp mpfr
+% cmake . -DOpenMP_ROOT="$(brew --prefix libomp)"
+% make all
+% make install
+```
+
+### Ubuntu
+
+Recommended build/installation process:
+
+```
+% sudo apt-get install -y build-essential cmake libbz2-dev libdivsufsort-dev libjsoncpp-dev libssl-dev libmpfr-dev pkg-config
+% cmake .
+% make all
+% make install
+```
 
 ## Overview
 
@@ -33,89 +63,19 @@ See [the wiki](https://github.com/usnistgov/SP800-90B_EntropyAssessment/wiki/Ins
 
 The project is divided into two sections, IID tests and non-IID tests. They are intended to be separate. One provides an assurance that a dataset is IID [(independent and identically distributed)](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) and the other provides an estimate for min-entropy for any data provided. Please note that most commonly used entropy sources are not IID; see IG7.18 for the additional justification necessary to support any IID claim.
 
-One can make all the binaries using:
+For IID tests you can run the program via `ea_iid` (if the binary is in your `$PATH`) or from `cpp/ea_iid` if built in-tree.
 
-	make
+To run the non-IID tests you can run the program via `ea_non_iid` (if the binary is in your `$PATH`) or from `cpp/ea_non_iid` if built in-tree.
 
-After compiling, one can test that your compilation behaves as expected by using the self-test functionality:
-	
-	cd selftest
-	./selftest
+To run the restart tests you can run the program via `ea_restart` (if the binary is in your `$PATH`) or from `cpp/ea_restart` if built in-tree.
 
-Any observed delta less than 1.0E-6 is considered a pass for the self test.
-
-For IID tests use the Makefile to compile the program:
-
-    make iid
-
-Then you can run the program with
-
-    ./ea_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples>] <file_name> [bits_per_symbol]
-
-You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond to the following:
-
-* `-i`: Indicates the data is unconditioned and returns an initial entropy estimate. This is the default.
-* `-c`: Indicates the data is conditioned, and should only be assessed as a bitstring.
-* `-a`: The calculated `H_bitstring` assessment is produced using all data that is read.
-* `-t`: Truncates the data used to calculate the `H_bitstring` assessment to the first one million bits.
-* Note: When testing binary data, no `H_bitstring` assessment is produced, so the `-a` and `-t` options produce the same results for the initial assessment of binary data.
-* `-l`: Reads (at most) `samples` data samples after indexing into the file by `index*samples` bytes.
-* `-v`: Optional verbosity flag for more output. Can be used multiple times.
-* bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
-
-To run the non-IID tests, use the Makefile to compile:
-
-    make non_iid
-
-Running this works the same way. This looks like
-
-	./ea_non_iid [-i|-c] [-a|-t] [-v] [-l <index>,<samples> ] <file_name> [bits_per_symbol]
-
-To run the restart testing, use the Makefile to compile:
-    
-    make restart
-
-Running this is similar.
-	
-	./ea_restart [-i|-n] [-v] <file_name> [bits_per_symbol] <H_I>
-
-The file should be in the "row dataset" format described in SP800-90B Section 3.1.4.1.
-
-* `-i`: Indicates IID data.
-* `-n`: Indicates non-IID data.
-* `-v`: Optional verbosity flag for more output. Can be used multiple times.
-* bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
-* `H_I` is the assessed entropy.
-
-To calculate the entropy reduction due to conditioning, use the Makefile to compile:
-    
-    make conditioning
-
-Running this is similar.
-
-    ./ea_conditioning [-v] <n_in> <n_out> <nw> <h_in>
-
-or
-
-    ea_conditioning -n <n_in> <n_out> <nw> <h_in> <h'>
-
-* `-v`: The conditioning function is vetted.
-* `-n`: The conditioning function is non-vetted.
-* `n_in`: The number of bits entering the conditioning step per output.
-* `n_out`: The number of bits per conditioning step output.
-* `nw`: The narrowest width of the conditioning step.
-* `h_in`: The amount of entropy entering the conditioning step per output. Must be less than n_in.
-* `h'`:  The entropy estimate per bit of conditioned sequential dataset (only for '-n' option).
-
-## Make
-
-A `Makefile` is provided.
+To calculate the entropy reduction due to conditioning, you can run the program via `ea_conditioning` (if the binary is in your `$PATH`) or from `cpp/ea_conditioning` if built in-tree.
 
 ## How to cross-compile
 
-To cross-compiling for a different CPU architecture, set `ARCH` and `CROSS_COMPILE` variables in you Makefile commandline
+This [Cmake manual chapter](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Cross%20Compiling%20With%20CMake.html) describes how to cross-build in general using Cmake
 
-    make ARCH=aarch64 CROSS_COMPILE=aarch64-linux-gnu-
+Many items should work relatively out of the box with an appropriate values set for `CXX`, `CXXFLAGS`, etc.
 
 ## More Information
 
