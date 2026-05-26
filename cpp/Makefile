@@ -20,27 +20,37 @@ INC =
 # Main operations
 ######
 
+	# note tha these names are convenience names - not the names of actual files
 all:    iid non_iid restart conditioning transpose
 
 clean:
 	rm -f ea_iid ea_non_iid ea_restart ea_conditioning ea_transpose selftest/*.res
 
-iid: iid_main.o
-iid_main.o: iid_main.cpp
+ea_iid: iid_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) iid_main.cpp -o ea_iid $(LIB) $(SHARED_LIB)
 	
-non_iid: non_iid_main.o	
-non_iid_main.o: non_iid_main.cpp
+ea_non_iid: non_iid_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) non_iid_main.cpp -o ea_non_iid $(LIB) $(SHARED_LIB)
 
-restart: restart_main.o
-restart_main.o: restart_main.cpp
+ea_restart: restart_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) restart_main.cpp -o ea_restart $(LIB) $(SHARED_LIB)
 
-conditioning: conditioning_main.o
-conditioning_main.o: conditioning_main.cpp
+ea_conditioning: conditioning_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) conditioning_main.cpp -o ea_conditioning $(LIB) $(COND_LIB) $(SHARED_LIB)
 
-transpose: transpose_main.o
-transpose_main.o: transpose_main.cpp
+ea_transpose: transpose_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) transpose_main.cpp -o ea_transpose $(LIB) $(SHARED_LIB)
+
+
+.PHONY: all clean
+.PHONY: iid non_iid restart conditioning transpose
+
+iid: ea_iid
+
+non_iid: ea_non_iid
+
+restart: ea_restart
+
+conditioning: ea_conditioning
+
+transpose: ea_transpose
