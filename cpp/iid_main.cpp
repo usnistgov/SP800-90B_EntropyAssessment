@@ -284,6 +284,13 @@ int main(int argc, char* argv[]) {
     tc.h_bitstring = H_bitstring;
 
     double h_assessed = data.word_size;
+    if ((data.alph_size > 2) || !initial_entropy) {
+        h_assessed = min(h_assessed, H_bitstring * data.word_size);
+    }
+    if (initial_entropy) {
+        h_assessed = min(h_assessed, H_original);
+    }
+
     if ((verbose == 1) || (verbose == 2)) {
         if (initial_entropy) {
             printf("H_original: %f\n", H_original);
@@ -295,16 +302,12 @@ int main(int argc, char* argv[]) {
             printf("h': %f\n", H_bitstring);
         }
     } else if (verbose > 2) {
-        h_assessed = data.word_size;
-
         if ((data.alph_size > 2) || !initial_entropy) {
-            h_assessed = min(h_assessed, H_bitstring * data.word_size);
             printf("H_bitstring = %.17g\n", H_bitstring);
             printf("H_bitstring Per Symbol = %.17g\n", H_bitstring * data.word_size);
         }
 
         if (initial_entropy) {
-            h_assessed = min(h_assessed, H_original);
             printf("H_original = %.17g\n", H_original);
         }
 
