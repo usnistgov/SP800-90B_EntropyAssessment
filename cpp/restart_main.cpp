@@ -107,7 +107,7 @@ uint16_t simulateCount(int k_effective, double p, uint64_t *xoshiro256starstarSt
 int simulateBound(double alpha, int k, double H_I, unsigned long int simulation_rounds) {
     uint64_t xoshiro256starstarMainSeed[4];
     uint16_t *results;
-    long int returnIndex;
+    unsigned long int returnIndex;
     double p;
     int k_effective;
     int returnValue;
@@ -153,11 +153,11 @@ int simulateBound(double alpha, int k, double H_I, unsigned long int simulation_
     assert((results[simulation_rounds - 1] >= (1000 / k)) && (results[simulation_rounds - 1] <= 1000));
 
     returnIndex = ((size_t) floor((1.0 - alpha) * ((double) simulation_rounds))) - 1;
-    assert((returnIndex >= 0) && (returnIndex < simulation_rounds));
+    assert(returnIndex < simulation_rounds);
 
     returnValue = (int)results[returnIndex];
 
-    delete results;
+    delete[] results;
 
     return returnValue;
 }

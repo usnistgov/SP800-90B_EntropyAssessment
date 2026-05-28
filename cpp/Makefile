@@ -2,7 +2,7 @@ ARCH ?= x86
 
 CXX ?= $(CROSS_COMPILE)g++
 
-CXXFLAGS = -std=c++11 -fopenmp -O2 -ffloat-store -I/usr/include/jsoncpp
+CXXFLAGS = -std=c++11 -fopenmp -O2 -ffloat-store -I/usr/include/jsoncpp -Wall -Wextra -Werror
 ifeq ($(ARCH),x86)
 CXXFLAGS += -march=native
 endif
@@ -28,8 +28,8 @@ clean:
 iid: iid_main.o
 iid_main.o: iid_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) iid_main.cpp -o ea_iid $(LIB) $(SHARED_LIB)
-	
-non_iid: non_iid_main.o	
+
+non_iid: non_iid_main.o
 non_iid_main.o: non_iid_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) non_iid_main.cpp -o ea_non_iid $(LIB) $(SHARED_LIB)
 

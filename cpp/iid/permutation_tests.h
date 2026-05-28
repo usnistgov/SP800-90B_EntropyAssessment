@@ -463,7 +463,7 @@ void run_tests(const data_t *dp, const uint8_t data[], const uint8_t rawdata[], 
  * ---------------------------------------------
  */
 
-void print_results(int C[][3], const int verbose){
+void print_results(int C[][3]){
 	cout << endl << endl;
 	cout << "                statistic  C[i][0]  C[i][1]  C[i][2]" << endl;
 	cout << "----------------------------------------------------" << endl;
@@ -725,7 +725,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
         	delete[](rawdata);
 	} //end parallel
 
-	if(verbose > 1) print_results(C, verbose);
+	if(verbose > 1) print_results(C);
         
     populateTestCase(tc, C);
 	

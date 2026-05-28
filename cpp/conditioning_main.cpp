@@ -464,7 +464,6 @@ int main(int argc, char* argv[]) {
     string timestamp = getCurrentTimestamp();
     string outputfilename;
     string inputfilename;
-    char *file_path;
     string commandline = recreateCommandLine(argc, argv);
     
     for (int i = 0; i < argc; i++) {
@@ -492,7 +491,6 @@ int main(int argc, char* argv[]) {
                 break;
             case 'i':
                 inputfilename = optarg;
-                file_path = optarg;
                 break;
             case 'c':
                 iid = (strcmp(optarg, "iid") == 0);
@@ -518,7 +516,7 @@ int main(int argc, char* argv[]) {
         // Record hash of input file
         char hash[2*SHA256_DIGEST_LENGTH+1];
 
-        sha256_file(file_path, hash);
+        sha256_file(inputfilename.c_str(), hash);
         testRunNonIid.sha256 = hash;
     }
     
