@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <cfloat>
 #include <math.h>
+#include <sstream>
 #include "test_run_base.h"
 
 #define SWAP(x, y) do { int s = x; x = y; y = s; } while(0)
@@ -180,8 +181,10 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	file = fopen(file_path, "rb");
 	if(!file){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: could not open '%s'\n", file_path;
+		stringstream ss;
+		testRun->errorLevel = -1;
+		ss << "Error: could not open '" << file_path << "'";
+		testRun->errorMsg = ss.str();
 		printf("Error: could not open '%s'\n", file_path);
 		return false;
 	}
@@ -222,9 +225,11 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	}
 
 	if(dp->len == 0){
-    testRun->errorLevel = -1;
-    testRun->errorMsg = "Error: '%s' is empty\n", file_path;
-    printf("Error: '%s' is empty\n", file_path);
+		stringstream ss;
+		testRun->errorLevel = -1;
+		ss << "Error: '" << file_path << "' is empty";
+		testRun->errorMsg = ss.str();
+		printf("Error: '%s' is empty\n", file_path);
 		fclose(file);
 		return false;
 	}
@@ -360,8 +365,10 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 
 	file = fopen(file_path, "rb");
 	if(!file){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: could not open '%s'\n", file_path;
+		stringstream ss;
+		testRun->errorLevel = -1;
+		ss << "Error: could not open '" << file_path << "'";
+		testRun->errorMsg = ss.str();
 		printf("Error: could not open '%s'\n", file_path);
 		return false;
 	}
@@ -387,8 +394,10 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	rewind(file);
 
 	if(dp->len == 0){
-                testRun->errorLevel = -1;
-                testRun->errorMsg = "Error: '%s' is empty\n", file_path;
+		stringstream ss;
+		testRun->errorLevel = -1;
+		ss << "Error: '" << file_path << "' is empty";
+		testRun->errorMsg = ss.str();
 		printf("Error: '%s' is empty\n", file_path);
 		fclose(file);
 		return false;
@@ -749,14 +758,14 @@ void map_init(map<pair<uint8_t, uint8_t>, int> &m) {
 
 // Calculates proportions of each value as an index
 void calc_proportions(const uint8_t data[], vector<double> &p, const int sample_size) {
-	unsigned int symbolNumber = p.size();
+	size_t symbolNumber = p.size();
 	
 	for (int i = 0; i < sample_size; i++) {
 		p[data[i]] ++;
 	}
 
 	//p now contains symbol counts. Normalize to the per-symbol probability
-	for (int i = 0; i < symbolNumber; i++) {
+	for (size_t i = 0; i < symbolNumber; i++) {
 		p[i] /= (double)sample_size;
 	}
 }
@@ -999,7 +1008,7 @@ double predictionEstimate(long C, long N, long max_run_len, long k, const char *
 //We then multiply this by 2 (as each pattern is associated with a length-2 array) by left shifting by 1.
 #define BINARYDICTLOC(d, b) (binaryDict[(d)-1] + (((b) & ((1U << (d)) - 1))<<1))
 
-static uint32_t compressedBitSymbols(const uint8_t *S, long length)
+uint32_t compressedBitSymbols(const uint8_t *S, long length)
 {
    uint32_t retPattern;
    long j;
@@ -1027,7 +1036,7 @@ static void printVersion(string name) {
     cout << "\n\n";
 }
 
-static string recreateCommandLine(int argc, char* argv[]) {
+string recreateCommandLine(int argc, char* argv[]) {
     string commandLine = "";
     for(int i = 0; i < argc; ++i) {
         commandLine.append(argv[i]);
