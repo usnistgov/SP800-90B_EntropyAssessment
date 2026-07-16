@@ -56,6 +56,25 @@
     exit(-1);
 }
 
+inline void writeJsonOutput(const std::string& jsonContent, const std::string& outputfilename) {
+
+    // Check if the filename is blank
+    if (outputfilename.empty()) {
+        // If so, write directly to the console
+        std::cout << jsonContent << std::endl;
+    }
+    else {
+        // Write to the specified file path
+        std::ofstream outFile(outputfilename.c_str());
+        if (outFile.is_open()) {
+            outFile << jsonContent << std::endl;
+            outFile.close();
+        } else {
+            std::cerr << "Error: Could not open file '" << outputfilename << "' for writing." << std::endl;
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
 
     bool initial_entropy, all_bits;
@@ -91,7 +110,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while ((opt = getopt(argc, argv, "icatvl:qo:")) != -1) {
+    while ((opt = getopt(argc, argv, "icatvl:qo::")) != -1) {
         switch (opt) {
             case 'i':
                 initial_entropy = true;
@@ -116,10 +135,7 @@ int main(int argc, char* argv[]) {
                     testRun.errorMsg = "Error on index/samples.";
 
                     if (jsonOutput) {
-                        ofstream output;
-                        output.open(outputfilename);
-                        output << testRun.GetAsJson();
-                        output.close();
+                        writeJsonOutput(testRun.GetAsJson(), outputfilename);
                     }
                     print_usage();
                 }
@@ -133,10 +149,7 @@ int main(int argc, char* argv[]) {
                     testRun.errorMsg = "Error on index/samples.";
 
                     if (jsonOutput) {
-                        ofstream output;
-                        output.open(outputfilename);
-                        output << testRun.GetAsJson();
-                        output.close();
+                        writeJsonOutput(testRun.GetAsJson(), outputfilename);
                     }
                     print_usage();
                 }
@@ -148,7 +161,11 @@ int main(int argc, char* argv[]) {
                 break;
             case 'o':
                 jsonOutput = true;
-                outputfilename = optarg;
+                if(optarg != nullptr){
+                    outputfilename = optarg;
+                } else {
+                    outputfilename = "";
+                }
                 break;
             default:
                 print_usage();
@@ -183,10 +200,7 @@ int main(int argc, char* argv[]) {
             testRun.errorMsg = "Invalid bits per symbol: " + std::to_string(data.word_size) + ".";
 
             if (jsonOutput) {
-                ofstream output;
-                output.open(outputfilename);
-                output << testRun.GetAsJson();
-                output.close();
+                writeJsonOutput(testRun.GetAsJson(), outputfilename);
             }
 
             printf("Invalid bits per symbol: %d.\n", data.word_size);
@@ -208,10 +222,7 @@ int main(int argc, char* argv[]) {
     }
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, &testRun)) {
         if (jsonOutput) {
-            ofstream output;
-            output.open(outputfilename);
-            output << testRun.GetAsJson();
-            output.close();
+            writeJsonOutput(testRun.GetAsJson(), outputfilename);
         }
 
         printf("Error reading file.\n");
@@ -226,10 +237,7 @@ int main(int argc, char* argv[]) {
         testRun.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
 
         if (jsonOutput) {
-            ofstream output;
-            output.open(outputfilename);
-            output << testRun.GetAsJson();
-            output.close();
+            writeJsonOutput(testRun.GetAsJson(), outputfilename);
         }
 
         printf("Symbol alphabet consists of 1 symbol. No entropy awarded...\n");
@@ -370,10 +378,7 @@ int main(int argc, char* argv[]) {
     testRun.errorLevel = 0;
 
     if (jsonOutput) {
-        ofstream output;
-        output.open(outputfilename);
-        output << testRun.GetAsJson();
-        output.close();
+        writeJsonOutput(testRun.GetAsJson(), outputfilename);
     }
 
     free_data(&data);
