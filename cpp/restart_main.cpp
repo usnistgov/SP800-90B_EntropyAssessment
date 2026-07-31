@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while ((opt = getopt(argc, argv, "invqo:s:")) != -1) {
+    while ((opt = getopt(argc, argv, "invq::o::s:")) != -1) {
         switch (opt) {
             case 'i':
                 iid = true;
@@ -212,7 +212,11 @@ int main(int argc, char* argv[]) {
                 break;
             case 'o':
                 jsonOutput = true;
-                outputfilename = optarg;
+                if(optarg != nullptr){
+                    outputfilename = optarg;
+                } else {
+                    outputfilename = "";
+                }
                 break;
             case 's':
                 inul = strtoul(optarg, NULL, 10);
@@ -269,17 +273,11 @@ int main(int argc, char* argv[]) {
                 if (iid) {
                     testRunIid.errorLevel = -1;
                     testRunIid.errorMsg = "Invalid bits per symbol.";
-                    ofstream output;
-                    output.open(outputfilename);
-                    output << testRunIid.GetAsJson();
-                    output.close();
+                    writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
                 } else {
                     testRunNonIid.errorLevel = -1;
                     testRunNonIid.errorMsg = "Invalid bits per symbol.";
-                    ofstream output;
-                    output.open(outputfilename);
-                    output << testRunNonIid.GetAsJson();
-                    output.close();
+                    writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
                 }
             }
 
@@ -297,17 +295,11 @@ int main(int argc, char* argv[]) {
             if (iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "H_I must be nonnegative: " + std::to_string(H_I) + ".";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "H_I must be nonnegative: " + std::to_string(H_I) + ".";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
 
@@ -322,16 +314,10 @@ int main(int argc, char* argv[]) {
         if (jsonOutput) {
             if (iid) {
                 testRunNonIid.errorLevel = -1;
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
 
@@ -346,17 +332,11 @@ int main(int argc, char* argv[]) {
             if(iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "H_I (" + std::to_string(H_I) + ") must be at most 'bits_per_symbol' (" + std::to_string(data.word_size) + ").";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "H_I (" + std::to_string(H_I) + ") must be at most 'bits_per_symbol' (" + std::to_string(data.word_size) + ").";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
         free_data(&data);
@@ -369,17 +349,11 @@ int main(int argc, char* argv[]) {
             if(iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
         free_data(&data);
@@ -392,17 +366,11 @@ int main(int argc, char* argv[]) {
             if (iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "*** Error: data (len = " + std::to_string(data.len) + ") does not contain " + std::to_string(MIN_SIZE) + " samples ***";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "*** Error: data (len = " + std::to_string(data.len) + ") does not contain " + std::to_string(MIN_SIZE) + " samples ***";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
         exit(-1);
@@ -421,17 +389,11 @@ int main(int argc, char* argv[]) {
             if(iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "Error: failure to initialize memory for columns";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "Error: failure to initialize memory for columns";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
         if(cdata != NULL) free(cdata);
@@ -439,7 +401,9 @@ int main(int argc, char* argv[]) {
         exit(-1);
     }
 
-    printf("H_I: %f\n", H_I);
+    if(verbose > 0){
+        printf("H_I: %f\n", H_I);
+    }
 
     alpha = 1 - exp(log(0.99) / (r + c));
     X_cutoff = simulateBound(alpha, data.alph_size, H_I, simulation_rounds);
@@ -482,17 +446,11 @@ int main(int argc, char* argv[]) {
             if(iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "Restart Sanity Check Failed.";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "Restart Sanity Check Failed.";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
         exit(-1);
@@ -837,17 +795,11 @@ int main(int argc, char* argv[]) {
             if(iid) {
                 testRunIid.errorLevel = -1;
                 testRunIid.errorMsg = "min(H_r, H_c) < H_I/2, Validation Testing Failed.";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
             } else {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "min(H_r, H_c) < H_I/2, Validation Testing Failed.";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
         }
         exit(-1);
@@ -867,15 +819,11 @@ int main(int argc, char* argv[]) {
 
 
     if (jsonOutput) {
-        ofstream output;
-        output.open(outputfilename);
         if (iid) {
-            output << testRunIid.GetAsJson();
+            writeJsonOutput(testRunIid.GetAsJson(), outputfilename);
         } else {
-            output << testRunNonIid.GetAsJson();
+            writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
         }
-        output.close();
-
     }
     if (verbose > 0) {
         printf("Validation Test Passed...\n\n");

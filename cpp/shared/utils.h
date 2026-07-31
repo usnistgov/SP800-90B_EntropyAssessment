@@ -2,6 +2,7 @@
 #define VERSION "1.1.8"
 
 #pragma once
+#include <fstream>
 #include <iostream>		// std::cout
 #include <string>		// std::string
 #include <map>			// std::map
@@ -1071,3 +1072,27 @@ public:
 		return newEntry;
 	}
 };
+
+/*
+	Utility function used to write out the result.  If a filename is provided, 
+	i.e. the -o parameter is given a value in the original program, then write to that file.  
+	Otherwise, write to stdout.
+*/
+void writeJsonOutput(const std::string& jsonContent, const std::string& outputfilename) {
+
+    // Check if the filename is blank
+    if (outputfilename.empty()) {
+        // If so, write directly to the console
+        std::cout << jsonContent << std::endl;
+    }
+    else {
+        // Write to the specified file path
+        std::ofstream outFile(outputfilename.c_str());
+        if (outFile.is_open()) {
+            outFile << jsonContent << std::endl;
+            outFile.close();
+        } else {
+            std::cerr << "Error: Could not open file '" << outputfilename << "' for writing." << std::endl;
+        }
+    }
+}

@@ -161,11 +161,13 @@ static long double calculateEpsilon(mpfr_t calcValue, mpfr_t maxValue, mpfr_prec
 // General goal: want to round to cause psi and omega to be as large as possible (to provide a conservative estimate)
 // If any estimate is not appropriate, increase the precision and start again
 
-static long double computeEntropyWithPrecision(mpfr_prec_t precision, long double h_in, unsigned int n_in, unsigned int n, unsigned int n_out, unsigned int nw, long double &noutEpsilonExp, long double &hinEpsilonExp, long double &nwEpsilonExp) {
+static long double computeEntropyWithPrecision(mpfr_prec_t precision, long double h_in, unsigned int n_in, unsigned int n, unsigned int n_out, unsigned int nw, long double &noutEpsilonExp, long double &hinEpsilonExp, long double &nwEpsilonExp, bool quietMode = false) {
     long double value;
 
     // TODO quietmode?
-    printf("Attempting to compute entropy with %ld bits of precision.\n", precision);
+    if(!quietMode){
+        printf("Attempting to compute entropy with %ld bits of precision.\n", precision);
+    }
 
     // Initialize all the arbitrary precision values
     mpfr_t ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out;
@@ -175,7 +177,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // We want to make sure not to lose precision here.
     if (mpfr_set_ld(ap_h_in, h_in, MPFR_RNDZ) != 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Compute Output Entropy (Section 3.1.5.1.2)
@@ -188,12 +190,12 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // p_high must be in the interval (0,1)
     if (mpfr_cmp_ui(ap_p_high, 0UL) <= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     if (mpfr_cmp_ui(ap_p_high, 1UL) >= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // p_low = 1 - p_high
@@ -203,7 +205,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // ap_inputSpaceSize = 2^(n_in)
     if (mpfr_ui_pow_ui(ap_inputSpaceSize, 2UL, n_in, MPFR_RNDZ) != 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // ap_denom = 2^(n_in) - 1
@@ -214,7 +216,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     if (mpfr_cmp_ui(ap_diff, 1UL) != 0) {
         // Evidently not. Increase the precision.
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // p_low = (1-p_high)/(2^(n_in)-1)
@@ -223,12 +225,12 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // p_low must be in the interval (0,1)
     if (mpfr_cmp_ui(ap_p_low, 0UL) <= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     if (mpfr_cmp_ui(ap_p_low, 1UL) >= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Prior to moving on, calculate a reused power term
@@ -236,7 +238,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // power_term = 2^(n_in - n)
     if (mpfr_ui_pow_ui(ap_power_term, 2UL, n_in - n, MPFR_RNDU) != 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Step 3: Calculate Psi
@@ -249,7 +251,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // h_in > 0 so Psi > P_high. If this isn't so, then we're doing the calculation at too low of a precision.
     if (mpfr_cmp(ap_p_high, ap_psi) >= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Psi > 0 is expected
@@ -258,7 +260,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // If we have equality, then we didn't use adaquate precision.
     if (mpfr_cmp_ui(ap_psi, 0UL) == 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Is psi > 1?
@@ -272,7 +274,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // omega = 2
     if (mpfr_set_ui(ap_omega, 2U, MPFR_RNDZ) != 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // omega = log(2)
@@ -293,7 +295,7 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     if (mpfr_cmp_ui(ap_omega, 0UL) == 0) {
         // Omega is expected to be non-zero for all parameters
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Is omega > 1?
@@ -320,13 +322,13 @@ static long double computeEntropyWithPrecision(mpfr_prec_t precision, long doubl
     // We know that n_out > ap_outputEntropy for all finite inputs...
     if (mpfr_cmp_ui(ap_outputEntropy, n_out) >= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     //We know that h_in > ap_outputEntropy for all finite inputs...
     if (mpfr_cmp(ap_outputEntropy, ap_h_in) >= 0) {
         mpfr_clears(ap_h_in, ap_entexp, ap_p_high, ap_p_low, ap_denom, ap_inputSpaceSize, ap_diff, ap_power_term, ap_psi, ap_omega, ap_outputEntropy, ap_nw, ap_n_out, NULL);
-        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+        return computeEntropyWithPrecision(precision * 2, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
     }
 
     // Check to see if meets the definition of "full entropy".
@@ -475,7 +477,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while ((opt = getopt(argc, argv, "vnqo:i:c:")) != -1) {
+    while ((opt = getopt(argc, argv, "vnqo::i:c:")) != -1) {
         switch (opt) {
             case 'v':
                 vetted = true;
@@ -488,11 +490,14 @@ int main(int argc, char* argv[]) {
                 break;
             case 'o':
                 jsonOutput = true;
-                outputfilename = optarg;
+                if(optarg != nullptr){
+                    outputfilename = optarg;
+                } else {
+                    outputfilename = "";
+                }
                 break;
             case 'i':
                 inputfilename = optarg;
-                file_path = optarg;
                 break;
             case 'c':
                 iid = (strcmp(optarg, "iid") == 0);
@@ -518,7 +523,7 @@ int main(int argc, char* argv[]) {
         // Record hash of input file
         char hash[2*SHA256_DIGEST_LENGTH+1];
 
-        sha256_file(file_path, hash);
+        sha256_file(inputfilename.c_str(), hash);
         testRunNonIid.sha256 = hash;
     }
     
@@ -547,10 +552,7 @@ int main(int argc, char* argv[]) {
             if (jsonOutput) {
                 testRunNonIid.errorLevel = -1;
                 testRunNonIid.errorMsg = "Error with input: generating h_in.";
-                ofstream output;
-                output.open(outputfilename);
-                output << testRunNonIid.GetAsJson();
-                output.close();
+                writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
             }
             print_usage();
         }
@@ -566,10 +568,7 @@ int main(int argc, char* argv[]) {
                     if (jsonOutput) {
                         testRunNonIid.errorLevel = -1;
                         testRunNonIid.errorMsg = "Error with input: generating h_p.";
-                        ofstream output;
-                        output.open(outputfilename);
-                        output << testRunNonIid.GetAsJson();
-                        output.close();
+                        writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
                     }
                     print_usage();
                 }
@@ -603,7 +602,7 @@ int main(int argc, char* argv[]) {
     assert(mpfr_get_emin() < -maxval);
 
     // Compute entropy
-    outputEntropy = computeEntropyWithPrecision(precision, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp);
+    outputEntropy = computeEntropyWithPrecision(precision, h_in, n_in, n, n_out, nw, noutEpsilonExp, hinEpsilonExp, nwEpsilonExp, quietMode);
 
     // Check some basic bounds.
     assert(outputEntropy <= (long double) n_out);
@@ -685,10 +684,7 @@ int main(int argc, char* argv[]) {
     testRunNonIid.errorLevel = 0;
 
     if (jsonOutput) {
-        ofstream output;
-        output.open(outputfilename);
-        output << testRunNonIid.GetAsJson();
-        output.close();
+        writeJsonOutput(testRunNonIid.GetAsJson(), outputfilename);
     }
 
     return 0;

@@ -56,25 +56,6 @@
     exit(-1);
 }
 
-inline void writeJsonOutput(const std::string& jsonContent, const std::string& outputfilename) {
-
-    // Check if the filename is blank
-    if (outputfilename.empty()) {
-        // If so, write directly to the console
-        std::cout << jsonContent << std::endl;
-    }
-    else {
-        // Write to the specified file path
-        std::ofstream outFile(outputfilename.c_str());
-        if (outFile.is_open()) {
-            outFile << jsonContent << std::endl;
-            outFile.close();
-        } else {
-            std::cerr << "Error: Could not open file '" << outputfilename << "' for writing." << std::endl;
-        }
-    }
-}
-
 int main(int argc, char* argv[]) {
 
     bool initial_entropy, all_bits;

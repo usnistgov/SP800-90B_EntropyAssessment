@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    while ((opt = getopt(argc, argv, "icatvql:o:")) != -1) {
+    while ((opt = getopt(argc, argv, "icatvl:qo::")) != -1) {
         switch (opt) {
             case 'i':
                 initial_entropy = true;
@@ -123,10 +123,7 @@ int main(int argc, char* argv[]) {
                     testRun.errorMsg = "Error on index/samples.";
 
                     if (jsonOutput) {
-                        ofstream output;
-                        output.open(outputfilename);
-                        output << testRun.GetAsJson();
-                        output.close();
+                        writeJsonOutput(testRun.GetAsJson(), outputfilename);
                     }
                     print_usage();
                 }
@@ -140,10 +137,7 @@ int main(int argc, char* argv[]) {
                     testRun.errorMsg = "Error on index/samples.";
 
                     if (jsonOutput) {
-                        ofstream output;
-                        output.open(outputfilename);
-                        output << testRun.GetAsJson();
-                        output.close();
+                        writeJsonOutput(testRun.GetAsJson(), outputfilename);
                     }
                     print_usage();
                 }
@@ -151,7 +145,11 @@ int main(int argc, char* argv[]) {
                 break;
             case 'o':
                 jsonOutput = true;
-                outputfilename = optarg;
+                if(optarg != nullptr){
+                    outputfilename = optarg;
+                } else {
+                    outputfilename = "";
+                }
                 break;
             default:
                 print_usage();
@@ -190,10 +188,7 @@ int main(int argc, char* argv[]) {
             testRun.errorMsg = "Invalid bits per symbol.";
 
             if (jsonOutput) {
-                ofstream output;
-                output.open(outputfilename);
-                output << testRun.GetAsJson();
-                output.close();
+                writeJsonOutput(testRun.GetAsJson(), outputfilename);
             }
 
             printf("Invalid bits per symbol.\n");
@@ -210,10 +205,7 @@ int main(int argc, char* argv[]) {
 
     if (!read_file_subset(file_path, &data, subsetIndex, subsetSize, &testRun)) {
         if (jsonOutput) {
-            ofstream output;
-            output.open(outputfilename);
-            output << testRun.GetAsJson();
-            output.close();
+            writeJsonOutput(testRun.GetAsJson(), outputfilename);
         }
         printf("Error reading file.\n");
         print_usage();
@@ -229,10 +221,7 @@ int main(int argc, char* argv[]) {
         testRun.errorMsg = "Symbol alphabet consists of 1 symbol. No entropy awarded...";
 
         if (jsonOutput) {
-            ofstream output;
-            output.open(outputfilename);
-            output << testRun.GetAsJson();
-            output.close();
+            writeJsonOutput(testRun.GetAsJson(), outputfilename);
         }
 
         free_data(&data);
@@ -536,10 +525,7 @@ int main(int argc, char* argv[]) {
     testRun.errorLevel = 0;
 
     if (jsonOutput) {
-        ofstream output;
-        output.open(outputfilename);
-        output << testRun.GetAsJson();
-        output.close();
+        writeJsonOutput(testRun.GetAsJson(), outputfilename);
     }
 
     free_data(&data);
