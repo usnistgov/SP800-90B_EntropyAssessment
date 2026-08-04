@@ -172,7 +172,7 @@ void free_data(data_t *dp){
 
 
 // Read in binary file to test
-bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize, TestRunBase *testRun) {
+bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetIndex, unsigned long subsetSize, TestRunBase *testRun, bool quietMode = false) {
 
 	FILE *file; 
 	int mask, j, max_symbols;
@@ -189,21 +189,25 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	rc = (long)fseek(file, 0, SEEK_END);
 	if(rc < 0) {
-    testRun->errorLevel = -1;
-    testRun->errorMsg = "Error: fseek failed";
-    printf("Error: fseek failed\n");
+		testRun->errorLevel = -1;
+		testRun->errorMsg = "Error: fseek failed";
+		if(!quietMode){
+			printf("Error: fseek failed\n");
+		}
 		fclose(file);
 		return false;
 	}
 
-	fileLen = ftell(file);
-	if(fileLen < 0){
-    testRun->errorLevel = -1;
-    testRun->errorMsg = "Error: ftell failed";
-    printf("Error: ftell failed\n");
-		fclose(file);
-		return false;
-	}
+		fileLen = ftell(file);
+		if(fileLen < 0){
+			testRun->errorLevel = -1;
+			testRun->errorMsg = "Error: ftell failed";
+			if(!quietMode){
+				printf("Error: ftell failed\n");
+			}
+			fclose(file);
+			return false;
+		}
 
 	rewind(file);
 
@@ -212,9 +216,11 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	} else {
 		rc = (long)fseek(file, subsetIndex*subsetSize, SEEK_SET);
 		if(rc < 0){
-                        testRun->errorLevel = -1;
-                        testRun->errorMsg = "Error: fseek failed";
-			printf("Error: fseek failed\n");
+			testRun->errorLevel = -1;
+			testRun->errorMsg = "Error: fseek failed";
+			if(!quietMode){
+				printf("Error: fseek failed\n");
+			}
 			fclose(file);
 			return false;
 		}
@@ -223,9 +229,11 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	}
 
 	if(dp->len == 0){
-    testRun->errorLevel = -1;
-    testRun->errorMsg = "Error: '%s' is empty\n", file_path;
-    printf("Error: '%s' is empty\n", file_path);
+		testRun->errorLevel = -1;
+		testRun->errorMsg = "Error: '%s' is empty\n", file_path;
+		if(!quietMode){
+			printf("Error: '%s' is empty\n", file_path);
+		}
 		fclose(file);
 		return false;
 	}
@@ -233,9 +241,11 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	dp->symbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
 	dp->rawsymbols = (uint8_t*)malloc(sizeof(uint8_t)*dp->len);
 	if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
-    testRun->errorLevel = -1;
-    testRun->errorMsg = "Error: failure to initialize memory for symbols";
-    printf("Error: failure to initialize memory for symbols\n");
+		testRun->errorLevel = -1;
+		testRun->errorMsg = "Error: failure to initialize memory for symbols";
+		if(!quietMode){
+			printf("Error: failure to initialize memory for symbols\n");
+		}
 		fclose(file);
 		if(dp->symbols != NULL) {
 			free(dp->symbols);
@@ -250,10 +260,12 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 
 	rc = fread(dp->symbols, sizeof(uint8_t), dp->len, file);
 	if(rc != dp->len){
-    testRun->errorLevel = -1;
-    testRun->errorMsg = "Error: file read failure";
-    printf("Error: file read failure\n");
-		fclose(file);
+		testRun->errorLevel = -1;
+		testRun->errorMsg = "Error: file read failure";
+		if(!quietMode){
+			printf("Error: file read failure\n");
+		}
+			fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
 		free(dp->rawsymbols);
@@ -289,12 +301,16 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 		}
 
 		if( i < dp->word_size ) {
-			printf("Warning: Symbols appear to be narrower than described.\n");
-                        testRun->errorMsg = "Warning: Symbols appear to be narrower than described.";
+			if(!quietMode){
+				printf("Warning: Symbols appear to be narrower than described.\n");
+			}
+            testRun->errorMsg = "Warning: Symbols appear to be narrower than described.";
 		} else if( i > dp->word_size ) {
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: Incorrect bit width specification: Data (" + std::to_string(i) + ") does not fit within described bit width: " + std::to_string(dp->word_size) + ".";
-			printf("Incorrect bit width specification: Data (%ld) does not fit within described bit width: %d.\n",i,dp->word_size); 
+			if(!quietMode){
+				printf("Incorrect bit width specification: Data (%ld) does not fit within described bit width: %d.\n",i,dp->word_size); 
+			}
                         free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -329,7 +345,9 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	else{
 		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
-			printf("Error: failure to initialize memory for bsymbols\n");
+			if(!quietMode){
+				printf("Error: failure to initialize memory for bsymbols\n");
+			}
 			free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
@@ -353,7 +371,7 @@ bool read_file_subset(const char *file_path, data_t *dp, unsigned long subsetInd
 	return true;
 }
 
-bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
+bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun, bool quietMode){
 
 	FILE *file; 
 	int mask, j, max_symbols;
@@ -363,7 +381,9 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	if(!file){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: could not open '%s'\n", file_path;
-		printf("Error: could not open '%s'\n", file_path);
+		if(!quietMode){
+			printf("Error: could not open '%s'\n", file_path);
+		}
 		return false;
 	}
 
@@ -371,7 +391,9 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	if(rc < 0){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: fseek failed";
-		printf("Error: fseek failed\n");
+		if(!quietMode){
+			printf("Error: fseek failed\n");
+		}
 		fclose(file);
 		return false;
 	}
@@ -380,7 +402,9 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	if(dp->len < 0){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: ftell failed";
-		printf("Error: ftell failed\n");
+		if(!quietMode){
+			printf("Error: ftell failed\n");
+		}
 		fclose(file);
 		return false;
 	}
@@ -390,7 +414,9 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	if(dp->len == 0){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: '%s' is empty\n", file_path;
-		printf("Error: '%s' is empty\n", file_path);
+		if(!quietMode){
+			printf("Error: '%s' is empty\n", file_path);
+		}
 		fclose(file);
 		return false;
 	}
@@ -400,7 +426,9 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
         if((dp->symbols == NULL) || (dp->rawsymbols == NULL)){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: failure to initialize memory for symbols";
-                printf("Error: failure to initialize memory for symbols\n");
+				if(!quietMode){
+                	printf("Error: failure to initialize memory for symbols\n");
+				}
                 fclose(file);
                 if(dp->symbols != NULL) {
                         free(dp->symbols);
@@ -417,7 +445,9 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	if(rc != dp->len){
                 testRun->errorLevel = -1;
                 testRun->errorMsg = "Error: file read failure";       
-		printf("Error: file read failure\n");
+		if(!quietMode){
+			printf("Error: file read failure\n");
+		}
 		fclose(file);
 		free(dp->symbols);
 		dp->symbols = NULL;
@@ -455,12 +485,16 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
                 }
 
                 if( i < dp->word_size ) {
+					if(!quietMode){
                         printf("Warning: Symbols appear to be narrower than described.\n");
-                        testRun->errorMsg = "Warning: Symbols appear to be narrower than described.";                  
+					}
+            		testRun->errorMsg = "Warning: Symbols appear to be narrower than described.";                  
                 } else if( i > dp->word_size ) {
                         testRun->errorLevel = -1;
                         testRun->errorMsg = "Error: Incorrect bit width specification: Data (" + std::to_string(i) + ") does not fit within described bit width: " + std::to_string(dp->word_size) + ".";
-			printf("Incorrect bit width specification: Data (%ld) does not fit within described bit width: %d.\n",i,dp->word_size);
+						if(!quietMode){
+							printf("Incorrect bit width specification: Data (%ld) does not fit within described bit width: %d.\n",i,dp->word_size);
+						}
                         free(dp->symbols);
                         dp->symbols = NULL;
                         free(dp->rawsymbols);
@@ -496,10 +530,12 @@ bool read_file(const char *file_path, data_t *dp, TestRunBase *testRun){
 	else{
 		dp->bsymbols = (uint8_t*)malloc(dp->blen);
 		if(dp->bsymbols == NULL){
-                        testRun->errorLevel = -1;
-                        testRun->errorMsg = "Error: failure to initialize memory for bsymbols";
-			printf("Error: failure to initialize memory for bsymbols\n");
-                        free(dp->symbols);
+				testRun->errorLevel = -1;
+				testRun->errorMsg = "Error: failure to initialize memory for bsymbols";
+			if(!quietMode){
+				printf("Error: failure to initialize memory for bsymbols\n");
+			}
+            free(dp->symbols);
 			dp->symbols = NULL;
 			free(dp->rawsymbols);
 			dp->rawsymbols = NULL;

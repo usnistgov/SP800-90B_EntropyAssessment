@@ -308,7 +308,7 @@ int main(int argc, char* argv[]) {
 
     if (verbose > 1) printf("Opening file: '%s' (SHA-256 hash %s)\n", file_path, hash);
 
-    if (!read_file(file_path, &data, &testRunNonIid)) {
+    if (!read_file(file_path, &data, &testRunNonIid, quietMode)) {
         printf("Error reading file.\n");
 
         if (jsonOutput) {
