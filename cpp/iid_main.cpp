@@ -283,35 +283,6 @@ int main(int argc, char* argv[]) {
     }
     tc.h_bitstring = H_bitstring;
 
-    double h_assessed = data.word_size;
-    if ((verbose == 1) || (verbose == 2)) {
-        if (initial_entropy) {
-            printf("H_original: %f\n", H_original);
-            if (data.alph_size > 2) {
-                printf("H_bitstring: %f\n", H_bitstring);
-                printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size * H_bitstring));
-            }
-        } else {
-            printf("h': %f\n", H_bitstring);
-        }
-    } else if (verbose > 2) {
-        h_assessed = data.word_size;
-
-        if ((data.alph_size > 2) || !initial_entropy) {
-            h_assessed = min(h_assessed, H_bitstring * data.word_size);
-            printf("H_bitstring = %.17g\n", H_bitstring);
-            printf("H_bitstring Per Symbol = %.17g\n", H_bitstring * data.word_size);
-        }
-
-        if (initial_entropy) {
-            h_assessed = min(h_assessed, H_original);
-            printf("H_original = %.17g\n", H_original);
-        }
-
-        printf("Assessed min entropy: %.17g\n", h_assessed);
-    }
-    tc.h_assessed = h_assessed;
-
     // Compute chi square stats
     bool chi_square_test_pass = chi_square_tests(data.symbols, sample_size, alphabet_size, verbose);
     tc.passed_chi_square_tests = chi_square_test_pass;
@@ -366,8 +337,59 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    const bool iid_test_suite_pass =
+        chi_square_test_pass &&
+        len_LRS_test_pass &&
+        perm_test_pass;
+
+    double h_assessed = data.word_size;
+
+    if (!iid_test_suite_pass) {
+        h_assessed = -1.0;
+        tc.h_assessed = -1.0;
+        testRun.errorLevel = 2;
+        testRun.errorMsg = "IID test suite failed; min-entropy estimate not returned.";
+
+        if ((verbose == 1) || (verbose == 2)) {
+            printf("IID test suite failed: min-entropy estimate not returned.\n");
+        } else {
+            printf("IID test suite failed: min-entropy estimate not returned.\n");
+        }
+    } else {
+        if ((verbose == 1) || (verbose == 2)) {
+            if (initial_entropy) {
+                printf("H_original: %f\n", H_original);
+                if (data.alph_size > 2) {
+                    printf("H_bitstring: %f\n", H_bitstring);
+                    printf("min(H_original, %d X H_bitstring): %f\n", data.word_size, min(H_original, data.word_size * H_bitstring));
+                }
+            } else {
+                printf("h': %f\n", H_bitstring);
+            }
+        } else if (verbose > 2) {
+            h_assessed = data.word_size;
+
+            if ((data.alph_size > 2) || !initial_entropy) {
+                h_assessed = min(h_assessed, H_bitstring * data.word_size);
+                printf("H_bitstring = %.17g\n", H_bitstring);
+                printf("H_bitstring Per Symbol = %.17g\n", H_bitstring * data.word_size);
+            }
+
+            if (initial_entropy) {
+                h_assessed = min(h_assessed, H_original);
+                printf("H_original = %.17g\n", H_original);
+            }
+
+            printf("Assessed min entropy: %.17g\n", h_assessed);
+        }
+
+        tc.h_assessed = h_assessed;
+    }
+
     testRun.testCases.push_back(tc);
-    testRun.errorLevel = 0;
+    if (testRun.errorLevel != 2) {
+        testRun.errorLevel = 0;
+    }
 
     if (jsonOutput) {
         ofstream output;
