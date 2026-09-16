@@ -63,6 +63,8 @@ You may specify either `-i` or `-c`, and either `-a` or `-t`. These correspond t
 * `-v`: Optional verbosity flag for more output. Can be used multiple times.
 * bits_per_symbol are the number of bits per symbol. Each symbol is expected to fit within a single byte.
 
+Note that the final min-entropy value will not be returned if any of the test suites fail to demonstrate that the data passes the IID assumption. The text output will indicate that the IID test suite failed, and h_assessed will be set to -1.0 in the JSON output file.
+
 To run the non-IID tests, use the Makefile to compile:
 
     make non_iid
