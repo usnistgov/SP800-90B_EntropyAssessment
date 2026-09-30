@@ -31,7 +31,12 @@ static double binaryMultiMMCPredictionEstimate(const uint8_t *S, long L, const i
    }
 
    // initialize MMC counts
-   for(d=0; d<D_MMC; d++) {
+   // Bound the prefix length by the input: the loop reads S[d+1], which only
+   // exists for d+1 < L. Without this bound, inputs of 4 <= L <= 16 read past
+   // the end of the sample buffer (the non-binary path guards the same loop
+   // with d < N). For L >= 17 the bound is never reached, so behaviour there
+   // is unchanged.
+   for(d=0; (d<D_MMC) && (d+1<L); d++) {
       curPattern = ((curPattern << 1) | (S[d]&1));
 
       //This is necessarily the first symbol of this length
