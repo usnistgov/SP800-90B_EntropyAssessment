@@ -103,8 +103,12 @@ double compression_test(uint8_t* data, long len, const int verbose, const char *
 	d = 1000;
 	num_blocks = len/b;
 
-	if(num_blocks <= d){
-		printf("\t*** Warning: not enough samples to run compression test (need more than %d) ***\n", d);
+	// The sample standard deviation below divides by v-1 = num_blocks-d-1, so at
+	// least two test blocks (num_blocks >= d+2) are required. With exactly d+1
+	// blocks the previous check passed and sigma became NaN (0/0) or inf (x/0),
+	// yielding an estimate of 1.0 or 0 from undefined arithmetic.
+	if(num_blocks < d + 2){
+		printf("\t*** Warning: not enough samples to run compression test (need at least %d blocks of %d bits) ***\n", d + 2, b);
 		return -1.0;
 	}
 
