@@ -31,7 +31,12 @@ static double binaryMultiMMCPredictionEstimate(const uint8_t *S, long L, const i
    }
 
    // initialize MMC counts
-   for(d=0; d<D_MMC; d++) {
+   // Guard d+1 < L so S[d+1] is never read past the buffer: with only
+   // assert(L>3) above, the original loop ran d up to D_MMC-1 = 15 and read
+   // S[16] for any 4 <= L <= 16 (a heap over-read). For L > 16 the guard is
+   // always true, so in-bounds behaviour is unchanged; the generic path guards
+   // the identical loop with `if(d < N)`.
+   for(d=0; (d<D_MMC) && (d+1 < L); d++) {
       curPattern = ((curPattern << 1) | (S[d]&1));
 
       //This is necessarily the first symbol of this length
