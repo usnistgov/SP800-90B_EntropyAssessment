@@ -23,7 +23,7 @@ INC =
 all:    iid non_iid restart conditioning transpose
 
 clean:
-	rm -f ea_iid ea_non_iid ea_restart ea_conditioning ea_transpose selftest/*.res
+	rm -f ea_iid ea_non_iid ea_restart ea_conditioning ea_transpose selftest/restart-report-label-test selftest/*.res
 
 iid: iid_main.o
 iid_main.o: iid_main.cpp
@@ -36,6 +36,9 @@ non_iid_main.o: non_iid_main.cpp
 restart: restart_main.o
 restart_main.o: restart_main.cpp
 	$(CXX) $(CXXFLAGS) $(INC) restart_main.cpp -o ea_restart $(LIB) $(SHARED_LIB)
+
+selftest/restart-report-label-test: selftest/restart-report-label-test.cpp
+	$(CXX) $(CXXFLAGS) $(INC) selftest/restart-report-label-test.cpp -o $@ $(LIB) $(SHARED_LIB)
 
 conditioning: conditioning_main.o
 conditioning_main.o: conditioning_main.cpp

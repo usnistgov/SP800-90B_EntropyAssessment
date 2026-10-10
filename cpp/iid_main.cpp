@@ -349,7 +349,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Compute permutation stats
-    bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc);
+    bool perm_test_pass = permutation_tests(&data, rawmean, median, verbose, tc, "input");
     tc.passed_iid_permutation_tests = perm_test_pass;
 
     if ((verbose == 1) || (verbose == 2)) {

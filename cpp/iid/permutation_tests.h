@@ -481,7 +481,7 @@ void print_results(int C[][3], const int verbose){
 	cout << endl;
 }
 
-void populateTestCase(IidTestCase &tc, int C[][3]){
+void populateTestCase(IidTestCase &tc, int C[][3], const char *dataLayout){
 
     PermutationTestResult tr0;
     PermutationTestResult tr1;
@@ -490,6 +490,9 @@ void populateTestCase(IidTestCase &tc, int C[][3]){
     tr0.iteration = 0;
     tr1.iteration = 1;
     tr2.iteration = 2;
+    tr0.dataLayout = dataLayout;
+    tr1.dataLayout = dataLayout;
+    tr2.dataLayout = dataLayout;
     
     tr0.excursion = C[0][0];
     tr1.excursion = C[0][1];
@@ -572,7 +575,7 @@ void populateTestCase(IidTestCase &tc, int C[][3]){
     tc.testResults.push_back(tr2);
 }
 
-bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose, IidTestCase &tc){
+bool permutation_tests(const data_t *dp, const double rawmean, const double median, const int verbose, IidTestCase &tc, const char *dataLayout){
 	uint64_t xoshiro256starstarMainSeed[4];
 	bool istty;
 
@@ -727,7 +730,7 @@ bool permutation_tests(const data_t *dp, const double rawmean, const double medi
 
 	if(verbose > 1) print_results(C, verbose);
         
-    populateTestCase(tc, C);
+    populateTestCase(tc, C, dataLayout);
 	
     for(unsigned int i = 0; i < num_tests; ++i){
 		if((C[i][0] + C[i][1] <= 5) || (C[i][1] + C[i][2] <= 5)){

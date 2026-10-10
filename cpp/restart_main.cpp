@@ -788,7 +788,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Compute permutation stats
-        bool perm_test_pass_row = permutation_tests(&data, rawmean, median, verbose, tcOverallIid);
+        bool perm_test_pass_row = permutation_tests(&data, rawmean, median, verbose, tcOverallIid, "rows");
 
         data_t data_col;
         // He rest of the data_col entries are invariant under permutation, so we just copy them.
@@ -797,7 +797,7 @@ int main(int argc, char* argv[]) {
         data_col.symbols = cdata;
         data_col.rawsymbols = crawdata;
 
-        bool perm_test_pass_col = permutation_tests(&data_col, rawmean, median, verbose, tcOverallIid);
+        bool perm_test_pass_col = permutation_tests(&data_col, rawmean, median, verbose, tcOverallIid, "columns");
 
         bool perm_test_pass = perm_test_pass_row && perm_test_pass_col;
 
