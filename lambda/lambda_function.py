@@ -137,7 +137,11 @@ def conditioning_component(event, context):
     # Since we don't accept them otherwise
     command = ["ea_conditioning", "-n"]
 
-    # Passing the usual variables
+    if bool(event.get("iid")):
+        command.extend(["-c", "iid"])
+    else:
+        command.extend(["-c", "non-iid"])
+    
     command.append(str(event.get("n_in")))
     command.append(str(event.get("n_out")))
     command.append(str(event.get("n_w")))
