@@ -1,0 +1,57 @@
+#--------------------------------------------------#
+# NOTE: When building, be sure to set the build context as
+#       the root of this repo, not this folder
+#--------------------------------------------------#
+FROM public.ecr.aws/lambda/python:3.12
+
+# Install necessary tools and dependencies explicitly
+RUN dnf update -y && \
+    dnf install -y gcc gcc-c++ make && \
+    dnf install -y bzip2-devel jsoncpp-devel openssl-devel mpfr-devel gmp-devel cmake wget git libgomp zip
+
+WORKDIR /build
+
+# Build libdivsufsort (with both 32-bit and 64-bit support)
+RUN git clone https://github.com/y-256/libdivsufsort.git && \
+    cd libdivsufsort && \
+    cmake -DBUILD_SHARED_LIBS=ON -DBUILD_DIVSUFSORT64=ON -DCMAKE_BUILD_TYPE="Release" . && \
+    make && make install
+
+# Fix jsoncpp include path for AL2023
+RUN ln -s /usr/include/jsoncpp/json /usr/include/json
+
+COPY cpp/ SP800-90B_EntropyAssessment/cpp/
+
+# The "sed" line below removes the -march flag, which, when included, tells the compiler
+# to auto-detect the CPU architecture of the machine doing the compiling 
+# (the "native" machine) and to generate assembly code optimized specifically
+# for that exact processor. It unlocks all the specific hardware instructions
+# available on your local CPU (such as SSE4, AVX, or AVX2 instructions on modern x86 chips)
+# As such, we remove it, to make the code as neutral x86 as possible, since we don't know what
+# CPU the lambda host in AWS might be running or not.
+# See documentation of the flag here: https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html, which 
+# describes the issue as such: "-march=cpu-type allows GCC to generate code that 
+# may not run at all on processors other than the one indicated"
+RUN cd SP800-90B_EntropyAssessment/cpp/ && \
+    sed -i 's/-march=native//g' Makefile && \
+    make
+
+# Create the AWS Lambda package directory structure.
+WORKDIR /build/lambda_package
+RUN mkdir -p ${LAMBDA_TASK_ROOT}/bin ${LAMBDA_TASK_ROOT}/lib
+
+# Copy the compiled binaries
+RUN cp /build/SP800-90B_EntropyAssessment/cpp/ea_iid ${LAMBDA_TASK_ROOT}/bin/ &&  \
+    cp /build/SP800-90B_EntropyAssessment/cpp/ea_non_iid ${LAMBDA_TASK_ROOT}/bin/ && \
+    cp /build/SP800-90B_EntropyAssessment/cpp/ea_conditioning ${LAMBDA_TASK_ROOT}/bin/ && \
+    cp /build/SP800-90B_EntropyAssessment/cpp/ea_restart ${LAMBDA_TASK_ROOT}/bin/
+
+# Copy all necessary shared libraries
+RUN cp /usr/local/lib/libdivsufsort*.so* ${LAMBDA_TASK_ROOT}/lib/
+RUN cp /usr/lib64/libjsoncpp.so* ${LAMBDA_TASK_ROOT}/lib/
+RUN cp /usr/lib64/libmpfr.so* ${LAMBDA_TASK_ROOT}/lib/
+RUN cp /usr/lib64/libgmp.so* ${LAMBDA_TASK_ROOT}/lib/
+RUN cp /usr/lib64/libgomp.so* ${LAMBDA_TASK_ROOT}/lib/
+
+# Copy in the Python Lambda handler script
+COPY lambda/lambda_function.py ${LAMBDA_TASK_ROOT}/lambda_function.py 
